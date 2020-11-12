@@ -16,13 +16,29 @@ def read_n():
 	pass
 
 def get_next_layer(d):
+
 	imagee = original_image.get_image()
+	Y = np.array(np.float64(imagee))
+	print(Y)
 	X = np.array(np.float64(imagee)/np.float64(255))
+
 	padding = 1
 	padded_image = np.zeros([X.shape[0] +2*padding, X.shape[1]+2*padding])
 	padded_image[:X.shape[0],:X.shape[1]] = X
-	print(padded_image)
-	print(padded_image.shape)
+	
+	#padded_image[1][1] = 1.0
+	#padded_image[1][2] = 1.0
+	'''for i in range(1,29):
+		padded_image[1][i]=1.0
+		padded_image[2][i]=1.0'''
+	for j in range(1,25):
+		for k in range(1,29):
+			padded_image[j][k]= 1.0
+
+	#--------------printting the padded image------------------#
+	#print(padded_image)
+	#print(padded_image.shape)
+
 	kernal_x = len(d)
 	kernal_y = len(d[0])
 	stride = 2
@@ -30,12 +46,13 @@ def get_next_layer(d):
 	# 4 * 4 Kernal for multiplication
 	ker = [[[0 for k in range(4)] for i in range(4)] for j in range(32)]
 	kernal = np.array(ker, dtype = float)
+	
 	for i in range(len(d)):
 		for j in range(len(d[0])):
 			t = d[i][j][0]
 			for k in range(len(t)):
 				kernal[k][i][j] = t[k]
-	
+
 	ans = [[[0 for k in range(14)] for i in range(14)] for j in range(32)]
 	
 	ans = np.array(ans, dtype = float)
@@ -57,6 +74,20 @@ def get_next_layer(d):
 				final = np.multiply(req_image,kernal[ker])
 				finalvalue = np.sum(final)
 				ans[ker][pos_x][pos_y] = finalvalue + bias[ker]
+				# for debugging check 16 values
+				if ker == 5 and pos_x == 2 and pos_y == 5:
+					print(xx)
+					print(i)
+					print(j)
+					print(kernal[5])
+					print(bias[5])
+					final = np.multiply(req_image,kernal[5])
+					finalvalue = np.sum(final)
+					print(final)
+					print(finalvalue)
+					anss = finalvalue + bias[5]
+					print("check the va")
+					print(anss)
 			j += stride
 			pos_y += 1
 		pos_x += 1
@@ -68,13 +99,22 @@ def get_next_layer(d):
 			for row in ker:
 				for ele in row:
 					f.write(str(ele) + "\n")
-	with open("mynewresult.txt", "w") as f:
+	with open("mynewresult_new.txt", "w") as f:
 		k_len = len(ans)
 		i_len = len(ans[0])
 		j_len = len(ans[0][0])
+		#as we have to check 1043th value find the 
+		#corresponding kernal, i ,j at 1043th value
+		countt = 0
 		for i in range(0, i_len):
 			for j in range(0, j_len):
 				for k in range(0, k_len):
+					countt += 1
+					if countt == 1062:
+						print("get the values")
+						print(i)
+						print(j)
+						print(k)
 					if(ans[k][i][j] < 0):
 						f.write(str(0.0) +"\n")
 					else:
@@ -92,7 +132,8 @@ if __name__ == "__main__" :
 	netname = argumentList[1]
 	filename, file_extension = os.path.splitext(netname)
 	#model, _, means, stds = read_tensorflow_net(netname, 784, True)
-	model, d, inp, means, stds = read_tensorflow_net(netname, 784, True)
+	#model, d, inp, means, stds = read_tensorflow_net(netname, 784, True)#N
+	model, d, inp, means, stds = read_tensorflow_net(netname, 28, True)#N
 	#print(model.summary())
 	'''-------'''
 	#predict = tf.argmax(model, 1)
@@ -103,22 +144,63 @@ if __name__ == "__main__" :
 			print(d.shape)
 			print("correct label:" +test[0])
 			lbl = test[0]
+
 			#newtest = np.array(np.float64(test[1:len(test)]))
-			newtest= np.array(np.float64(test[1:len(test)])/np.float64(255))
+			newtestt= np.array(np.float64(test[1:len(test)])/np.float64(255))
+
+			#pass @@2D image to tensor
+
+			newtest = np.reshape(newtestt, (-1, 28))
+
+			#Printing  @2D image used 
+
+			imagee = original_image.get_image()
+			Y = np.array(np.float64(imagee))
+			print(Y)
+
+			rbsaise = np.array(np.float64(test[1:len(test)]))
+			bsaise = np.reshape(rbsaise, (-1, 28))
+			
+			print(bsaise)
+			
+			print(Y == bsaise)
+
+			#newtest[0] = 1.0
+			#newtest[1] = 1.0
+			#--------other methods for evaluating tensor#
+
 			#pred = model.eval({inp:newtest})
 			#inp = tf.placeholder(tf.float64, [None, 784])
+			
+			#--------evalating tensorflow----------------#
+			'''for i in range(0,28):
+				newtest[0][i]=1.0
+				newtest[1][i]=1.0'''
+			for j in range(0,24):
+				for k in range(0,28):
+					newtest[j][k]=1.0
 			with tf.Session() as sess:
 				pred = sess.run(model, feed_dict={inp: newtest})
 			get_next_layer(d)
 			
 			#pred = model.eval({inp:newtest})
-			with open("predict.txt", "w") as f:
+			myset = set()
+			bias = original_image.get_bias()
+			count = 0
+			with open("predict_new.txt", "w") as f:
 				for fir in pred:
 					for sec in fir:
 						for thi in sec:
 							for fo in thi:
+								#count += 1
 								f.write(str(fo) + "\n")
-								
+								#myset.add(fo)
+								#if fo not in bias and fo != 0:
+									#print(count)
+
+			#print(myset)'''
+			
+
 			'''with open("predict.txt", "wb") as fp:
 				pickle.dump(pred, fp)
 			#print(pred)
@@ -130,11 +212,11 @@ if __name__ == "__main__" :
 			#print(len(pred[0]))
 			#print(len(pred[0][0]))
 			#print(len(pred[0][0][0]))
-			newpred = pred.flatten()
+			#newpred = pred.flatten()
 			#print(newpred)
-			maximum = np.argmax(newpred)
+			#maximum = np.argmax(newpred)
 			#index = np.where(newpred == maximum)
-			#print(index)
+			#print(maximum)
 			'''modl = z3_format_converter.solve_cons(lbl)
 			image= np.float64(test[1:len(test)])/np.float64(255)
 			epsilon = 0.1

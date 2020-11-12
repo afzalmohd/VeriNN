@@ -78,8 +78,9 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
     std = 0.0
     net = open(net_file,'r')
 
-    x = tf.placeholder(tf.float64, [in_len], name = "x")
-    #x = tf.placeholder(tf.float64, [[None, 784]])
+    x = tf.placeholder(tf.float64, [None, in_len], name = "x")#N
+    #x = tf.placeholder(tf.float64, [in_len], name = "x")
+    #x = tf.placeholder(tf.float64, [[None, 784]])#N
     #return x, x, mean, std
     inp = x
     y = None
