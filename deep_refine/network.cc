@@ -4,7 +4,9 @@
 #include<vector>
 
 
-
+Fppoly_t::Fppoly_t(){
+    printf("\nNetwork constructor called\n");
+}
 
 std::vector<std::string> parse_string(std::string ft){
     char delimeter = ',';
@@ -25,20 +27,7 @@ std::vector<std::string> parse_string(std::string ft){
     return vec;
 }
 
-layer_t* create_layer(bool is_activation,std::string activation){
-    layer_t *layer = (layer_t*)malloc(sizeof(layer_t));
-    layer->is_activation = is_activation;
-    return layer;
-}
-
-neuron_t* create_neuron(std::string lb, std::string ub){
-    neuron_t *neuron = (neuron_t*)malloc(sizeof(neuron_t));
-    neuron->lb = lb;
-    neuron->ub = ub;
-    return neuron;
-}
-
-void add_expr(neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
+void add_expr(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
     if(is_upper){
         for(int i = 1; i < coeffs.size(); i++){
             nt->ucoeffs.push_back(std::stod(coeffs[i]));
@@ -52,19 +41,20 @@ void add_expr(neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
     
 }
 
-void init_network(fppoly_t *fp, std::string file_path){
+void init_network(z3::context &c, Fppoly_t* fp, std::string file_path){
     std::fstream newfile;
     newfile.open(file_path, std::ios::in);
     int layer_index = 0;
     int neuron_index = 0;
     if(newfile.is_open()){
         std::string tp;
-        layer_t* curr_layer;
-        neuron_t* curr_neuron;
+        Layer_t* curr_layer;
+        Neuron_t* curr_neuron;
         while (getline(newfile, tp)){
             if(tp != ""){
                 std::vector<std::string> tokens =  parse_string(tp);
                 if(tokens[0] == "layer"){
+                    curr_layer = new Layer_t();
                     layer_index = stoi(tokens[1]);
                     bool is_activation;
                     if(tokens[2] == "1"){
@@ -74,15 +64,19 @@ void init_network(fppoly_t *fp, std::string file_path){
                         is_activation = false;
                     }
                     std::string activation = "";
-                    curr_layer = create_layer(is_activation,activation);
-                    fp->layer_map.push_back(curr_layer);
+                    curr_layer->activation = activation;
+                    curr_layer->is_activation = is_activation;
+                    curr_layer->layer_index = layer_index;
+                    curr_layer->dims=0;
+                    fp->layer_vec.push_back(curr_layer);
                 }
                 else if(tokens[0] == "neuron"){
+                    curr_neuron = new Neuron_t();
                     neuron_index = stoi(tokens[1]);
-                    std::string lb = tokens[2];
-                    std::string ub = tokens[3];
-                    curr_neuron = create_neuron(lb,ub);
+                    curr_neuron->lb = tokens[2];
+                    curr_neuron->ub = tokens[3];
                     curr_layer->neurons.push_back(curr_neuron);
+                    curr_layer->dims++;
                 }
                 else if(tokens[0] == "upper"){
                     add_expr(curr_neuron,tokens,true);
@@ -99,10 +93,28 @@ void init_network(fppoly_t *fp, std::string file_path){
     }
 }
 
+void init_z3_layer_expr(z3::context &c, Layer_t* layer){
+    size_t ind = layer->layer_index;
+    for(size_t i=0;i<layer->dims;i++){
+        std::string x = "x_"+std::to_string(ind)+","+std::to_string(i);
+        z3::expr ex_temp = c.real_const(x.c_str());
+        layer->vars.push_back(ex_temp);
+    }
+}
+
+void init_z3_expr(z3::context &c, Fppoly_t *fp){
+    for(auto layer : fp->layer_vec){
+        init_z3_layer_expr(c,layer);
+    }
+}
+
 int main(){
     std::string filepath = "/home/u1411251/Documents/Phd/tools/ERAN/tf_verify/fppolyForward.txt";
-    fppoly_t *fp = (fppoly_t*)malloc(sizeof(fppoly_t));
-    init_network(fp,filepath);
+    Fppoly_t* fp = new Fppoly_t();
+    z3::context c;
+    init_network(c,fp,filepath);
+    init_z3_expr(c,fp);
+    printf("\nCheck..\n");
     return 0;
 }
 
