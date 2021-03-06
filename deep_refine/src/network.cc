@@ -1,4 +1,4 @@
-#include "network.hh"
+#include "network.hh" // network.hh is included in parser.hh
 #include<stdio.h>
 #include<fstream>
 #include<vector>
@@ -25,6 +25,41 @@ std::vector<std::string> parse_string(std::string ft){
         vec.push_back(acc);
     }     
     return vec;
+}
+
+void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, size_t layer_index){
+    std::vector<double> weight_vec;
+    char comma = ',';
+    char left_brac = '[';
+    char right_brac = ']';
+    std::vector<std::string> vec;
+    std::string acc = "";
+    for(int i=0; i<weights.size();i++){
+        if(weights[i] == comma || weights[i] == right_brac){
+            if(acc != ""){
+                double val = std::stod(acc);
+                weight_vec.push_back(val);
+                acc = "";    
+            }    
+        }
+        else if(weights[i] != left_brac && !std::isspace(weights[i])){
+            acc += weights[i];
+        }
+    }
+    if(acc != ""){
+         double val = std::stod(acc);
+         weight_vec.push_back(val);
+    }
+
+    std::tuple<size_t,size_t,size_t> t = net->layer_vec[layer_index]->w_shape;
+    if(is_bias){
+        std::vector<size_t> shape = {std::get<2>(t)};
+        net->layer_vec[layer_index]->b = xt::adapt(weight_vec, shape);
+    }
+    else{
+        std::vector<size_t> shape = {std::get<1>(t), std::get<2>(t)};
+        net->layer_vec[layer_index]->w = xt::adapt(weight_vec, shape);
+    }
 }
 
 void init_expr_coeffs(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
@@ -65,7 +100,10 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
         while (getline(newfile, tp)){
             if(tp != ""){
                 std::vector<std::string> tokens =  parse_string(tp);
-                if(tokens[0] == "layer"){
+                if(tokens[0] == "inputdim"){
+                    net->input_dim = stoi(tokens[1]);
+                }
+                else if(tokens[0] == "layer"){
                     curr_layer = new Layer_t();
                     layer_index = stoi(tokens[1]);
                     bool is_activation;
@@ -79,8 +117,9 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                     curr_layer->activation = activation;
                     curr_layer->is_activation = is_activation;
                     curr_layer->layer_index = layer_index;
-                    curr_layer->dims=0;
+                    curr_layer->dims=stoi(tokens[3]);//number of neurons in current layer
                     net->layer_vec.push_back(curr_layer);
+                    net->numlayers++;
                 }
                 else if(tokens[0] == "neuron"){
                     curr_neuron = new Neuron_t();
@@ -89,7 +128,6 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                     curr_neuron->lb = tokens[2];
                     curr_neuron->ub = tokens[3];
                     curr_layer->neurons.push_back(curr_neuron);
-                    curr_layer->dims++;
                 }
                 else if(tokens[0] == "upper"){
                     init_expr_coeffs(curr_neuron,tokens,true);
@@ -99,6 +137,8 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                 }
             }
         }
+
+        net->output_dim = net->layer_vec.back()->dims;
         
     }
     else{
@@ -106,80 +146,138 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
     }
 
     init_input_layer(c,net);
+    set_weight_dims(net);
 }
 
-void set_predecessor_layer_activation(z3::context& c, Layer_t* layer, Layer_t* prev_layer){
-    for(int i=0;i<layer->neurons.size();i++){
-        Neuron_t* nt = layer->neurons[i];
-        std::string nt_str = "nt_"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-        nt->nt_z3_var = c.real_const(nt_str.c_str());
-        nt->pred_neurons.push_back(prev_layer->neurons[i]);
+
+
+void set_weight_dims(Network_t* net){
+    for(int i=0;i<net->numlayers;i++){
+        size_t t0 = 0;
+        Layer_t* curr_layer = net->layer_vec[i];
+        if(!curr_layer->is_activation){
+            if(i == 0){
+                size_t t1 = net->input_dim;
+                size_t t2 = curr_layer->dims;
+                net->wt_shapes.push_back(std::make_tuple(t0,t1,t2));
+                curr_layer->w_shape = std::make_tuple(t0,t1,t2);
+            }
+            else{
+                size_t t1 = net->layer_vec[i-1]->dims; //prevlayer's dimension
+                size_t t2 = curr_layer->dims;
+                net->wt_shapes.push_back(std::make_tuple(t0,t1,t2));
+                curr_layer->w_shape = std::make_tuple(t0,t1,t2);
+            }    
+        }   
     }
 }
 
-void set_predecessor_layer_matmul(z3::context& c, Layer_t* layer, Layer_t* prev_layer){
-    for(int i=0; i<layer->neurons.size(); i++){
-        Neuron_t* nt = layer->neurons[i];
-        std::string nt_str = "nt_"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-        nt->nt_z3_var = c.real_const(nt_str.c_str());
-        nt->pred_neurons.assign(prev_layer->neurons.begin(), prev_layer->neurons.end());
+void init_net_weights(Network_t* net, std::string &filepath){
+    std::fstream newfile;
+    newfile.open(filepath, std::ios::in);
+    if(newfile.is_open()){
+        std::string tp;
+        std::string relu_str = "ReLU";
+        size_t layer_index = 0;
+        while (getline(newfile, tp)){
+            if(tp != ""){
+                if(tp == relu_str){
+                    getline(newfile, tp);
+                    parse_string_to_xarray(net, tp, false, layer_index);
+                    getline(newfile, tp);
+                    parse_string_to_xarray(net, tp, true, layer_index);
+                    layer_index = layer_index + 2;
+                }
+            }
+        }
     }
 }
 
-void set_predecessor_and_z3_var(z3::context &c, Network_t* net){
-    Layer_t* prev_layer = new Layer_t();
-    for(auto layer:net->layer_vec){
-        if(layer->layer_index == 0){
-            prev_layer = net->input_layer;
+void Neuron_t::print_neuron(){
+    std::cout<<this->nt_z3_var<<", upper: "<<this->z_uexpr<<", lower: "<<this->z_lexpr<<"\n";
+}
+
+void Layer_t::print_layer(){
+    std::cout<<"Layer index: "<<this->layer_index<<"\n";
+    for(auto nt : this->neurons){
+        nt->print_neuron();
+    }
+}
+
+void Network_t::print_network(){
+    this->input_layer->print_layer();
+    for(auto layer : this->layer_vec){
+        layer->print_layer();
+    }
+}
+
+void Network_t::forward_propgate_one_layer(size_t layer_index, 
+                                           xt::xarray<double> &inp){
+    Layer_t* layer = this->layer_vec[layer_index];
+    if(layer->is_activation){
+        layer->res = xt::maximum(inp, 0);
+    }
+    else{
+        xt::xarray<double> matmul = xt::linalg::dot(inp, layer->w);
+        layer->res = matmul + layer->b;
+    }
+
+}
+
+void Network_t::forward_propgate_network(size_t layer_index, 
+                              xt::xarray<double> &inp){
+    bool is_first = true;
+    for(size_t i = layer_index; i < this->numlayers; i++){
+        if(is_first){
+            this->forward_propgate_one_layer(i,inp);
+            is_first = false;
         }
         else{
-            prev_layer = net->layer_vec[layer->layer_index - 1];
-        }
-        if(layer->is_activation){
-            set_predecessor_layer_activation(c,layer,prev_layer);
-        }
-        else{
-            set_predecessor_layer_matmul(c,layer,prev_layer);
+            this->forward_propgate_one_layer(i, this->layer_vec[i-1]->res);
         }
     }
 }
 
-z3::expr get_expr_from_double(z3::context &c, double item){
-    std::string item_str = std::to_string(item);
-    return c.real_val(item_str.c_str());
-}
-
-void init_z3_expr_neuron(z3::context &c, Neuron_t* nt){
-    z3::expr sum1 = get_expr_from_double(c,nt->ucoeffs.back());
-    z3::expr sum2 = get_expr_from_double(c,nt->lcoeffs.back());
-
-    for(size_t i=0; i<nt->pred_neurons.size();i++){
-        z3::expr u_coef = get_expr_from_double(c,nt->ucoeffs[i]);
-        z3::expr l_coef = get_expr_from_double(c, nt->lcoeffs[i]);
-        sum1 = sum1 + u_coef*nt->pred_neurons[i]->nt_z3_var;
-        sum2 = sum2 + l_coef*nt->pred_neurons[i]->nt_z3_var;
+void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
+    char delimeter = ',';
+    std::vector<double> vec;
+    std::string acc = "";
+    for(int i=1; i<image_str.size();i++){
+        if(image_str[i] == delimeter){
+            std::cout<<acc<<std::endl;
+            std::cout<<acc.size()<<std::endl;
+            //double val = std::stod(acc);
+            //vec.push_back(val);
+            acc = "";
+        }
+        else if(!std::isspace(image_str[i])){
+            acc += image_str[i];
+        }
     }
-    nt->z_uexpr = nt->nt_z3_var <= sum1;
-    nt->z_lexpr = nt->nt_z3_var >= sum2;
-}
-
-
-void init_z3_expr_layer(z3::context &c, Layer_t* layer){   
-    z3::expr t_expr = c.bool_val(true);
-    for(auto nt:layer->neurons){
-        init_z3_expr_neuron(c,nt);
-        t_expr = t_expr && nt->z_uexpr && nt->z_lexpr;
+    if(acc != ""){
+        std::cout<<acc<<std::endl;
+        std::cout<<acc.size()<<std::endl;
+        //double val = std::stod(acc);
+        //vec.push_back(val);
     }
-    layer->layer_expr = t_expr;
+    std::vector<size_t> shape = {net->input_dim};
+    net->im = xt::adapt(vec,shape);
 }
 
-void init_z3_expr(z3::context &c, Network_t *net){
-    for(auto layer : net->layer_vec){
-        if(layer->layer_index != 0){
-            init_z3_expr_layer(c,layer);
+void parse_image_string_to_xarray(Network_t* net, std::string &image_path){
+    std::fstream newfile;
+    newfile.open(image_path, std::ios::in);
+    if(newfile.is_open()){
+        std::string tp;
+        while (getline(newfile, tp)){
+            if(tp != ""){
+                std::cout<<tp<<std::endl;
+                parse_image_string_to_xarray_one(net,tp);
+            }
         }
     }
 }
+
 
 
 
