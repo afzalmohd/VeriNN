@@ -2,6 +2,7 @@
 #include <map>
 #include <vector>
 #include <xtensor/xarray.hpp>
+#include <xtensor/xsort.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xadapt.hpp>
 
@@ -56,6 +57,9 @@ class Network_t{
 		Layer_t* input_layer;
 		size_t input_dim=2;//has to be change as per the input
 		size_t output_dim=0;
+		double epsilon;
+		z3::context c;
+		z3::expr prop_expr = c.bool_val(true);
 		xt::xarray<double> im;
 		Network_t();
 		void print_network();
@@ -72,3 +76,9 @@ std::vector<std::string> parse_string(std::string ft);
 void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, size_t layer_index);
 void parse_image_string_to_xarray(Network_t* net, std::string &image_path);
 void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str);
+void create_prop(z3::context &c, Network_t* net);
+void init_input_box(z3::context &c, Network_t* net);
+
+void back_substitute_neuron(z3::context &c, Neuron_t* nt);
+void back_substitute_layer(z3::context& c, Layer_t* layer);
+void back_substitute(Network_t* net);

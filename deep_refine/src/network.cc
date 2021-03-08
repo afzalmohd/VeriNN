@@ -57,8 +57,9 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
         net->layer_vec[layer_index]->b = xt::adapt(weight_vec, shape);
     }
     else{
-        std::vector<size_t> shape = {std::get<1>(t), std::get<2>(t)};
-        net->layer_vec[layer_index]->w = xt::adapt(weight_vec, shape);
+        std::vector<size_t> shape = {std::get<2>(t), std::get<1>(t)};
+        xt::xarray<double> temp = xt::adapt(weight_vec, shape);
+        net->layer_vec[layer_index]->w = xt::transpose(temp);
     }
 }
 
@@ -102,6 +103,7 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                 std::vector<std::string> tokens =  parse_string(tp);
                 if(tokens[0] == "inputdim"){
                     net->input_dim = stoi(tokens[1]);
+                    net->input_dim = 784;
                 }
                 else if(tokens[0] == "layer"){
                     curr_layer = new Layer_t();
@@ -199,6 +201,8 @@ void Neuron_t::print_neuron(){
 
 void Layer_t::print_layer(){
     std::cout<<"Layer index: "<<this->layer_index<<"\n";
+    std::cout<<"weight: "<<this->w<<"\n";
+    std::cout<<"biases: "<<this->b<<"\n";
     for(auto nt : this->neurons){
         nt->print_neuron();
     }
@@ -242,26 +246,26 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
     char delimeter = ',';
     std::vector<double> vec;
     std::string acc = "";
+    //std::cout<<image_str<<std::endl;
     for(int i=1; i<image_str.size();i++){
         if(image_str[i] == delimeter){
-            std::cout<<acc<<std::endl;
-            std::cout<<acc.size()<<std::endl;
-            //double val = std::stod(acc);
-            //vec.push_back(val);
-            acc = "";
+            if(acc != ""){
+                double val = std::stod(acc);
+                vec.push_back(val);
+                acc = "";
+            }
         }
         else if(!std::isspace(image_str[i])){
             acc += image_str[i];
         }
     }
     if(acc != ""){
-        std::cout<<acc<<std::endl;
-        std::cout<<acc.size()<<std::endl;
-        //double val = std::stod(acc);
-        //vec.push_back(val);
+        double val = std::stod(acc);
+        vec.push_back(val);
     }
     std::vector<size_t> shape = {net->input_dim};
-    net->im = xt::adapt(vec,shape);
+    net->im = xt::adapt(vec,shape) / 255;
+    //std::cout<<net->im<<std::endl;
 }
 
 void parse_image_string_to_xarray(Network_t* net, std::string &image_path){
@@ -269,13 +273,48 @@ void parse_image_string_to_xarray(Network_t* net, std::string &image_path){
     newfile.open(image_path, std::ios::in);
     if(newfile.is_open()){
         std::string tp;
+        int image_counter = 0;
         while (getline(newfile, tp)){
             if(tp != ""){
-                std::cout<<tp<<std::endl;
-                parse_image_string_to_xarray_one(net,tp);
+                if(image_counter < 1){
+                    parse_image_string_to_xarray_one(net,tp);
+                    image_counter++;
+                }
             }
         }
     }
+}
+
+void create_prop(z3::context &c, Network_t* net){
+    net->forward_propgate_network(0, net->im);
+    Layer_t* last_layer = net->layer_vec.back();
+    xt::xarray<std::size_t> out = xt::argmax(last_layer->res);
+    size_t cl = out[0];
+    z3::expr prop = c.bool_val(true);
+    for(size_t i=0; i<last_layer->vars.size(); i++){
+        if(i != cl){
+            prop = prop && (last_layer->vars[cl] >= last_layer->vars[i]);
+        }
+    }
+    net->prop_expr = prop;
+}
+
+void init_input_box(z3::context &c, Network_t* net){
+    z3::expr t_expr = c.bool_val(true);
+    for(int i = 0; i < net->input_layer->vars.size(); i++){
+        double upper_bound = net->im[i] + net->epsilon;
+        double lower_bound = net->im[i] - net->epsilon;
+        if(upper_bound > 1.0){
+            upper_bound = 1.0;
+        }
+        if(lower_bound < 0.0){
+            lower_bound = 0.0;
+        }
+        std::string upper_str = std::to_string(upper_bound);
+        std::string lower_str = std::to_string(lower_bound);
+        t_expr = t_expr && net->input_layer->vars[i] <= c.real_val(upper_str.c_str()) && net->input_layer->vars[i] >= c.real_val(lower_str.c_str());
+    }
+    net->input_layer->layer_expr = t_expr;
 }
 
 

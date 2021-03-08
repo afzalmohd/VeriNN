@@ -122,19 +122,23 @@ void init_z3_expr(z3::context &c, Network_t *net){
 
 int main(){
     std::string filepath = "/home/u1411251/Documents/Phd/tools/ERAN/tf_verify/fppolyForward.txt";
-    std::string net_path = "/home/u1411251/Documents/Phd/tools/networks/mnist_relu_3_50_mod.tf";
+    std::string net_path = "/home/u1411251/Documents/Phd/tools/networks/mnist_relu_3_50.tf";
     std::string dataset_path = "/home/u1411251/Documents/Phd/tools/ERAN/data/mnist_test.csv";
+    double epsilon = 0.01;
     Network_t* net = new Network_t();
+    net->epsilon = epsilon;
     z3::context c;
     init_network(c,net,filepath);
     init_net_weights(net, net_path);
-    printf("\nCheck..1\n");
     parse_image_string_to_xarray(net, dataset_path);
-    net->forward_propgate_network(0,net->im);
+    //net->forward_propgate_network(0,net->im);
     std::cout<<net->layer_vec.back()->res<<std::endl;
-    //set_predecessor_and_z3_var(c,net);
-    //init_z3_expr(c,net);
+    set_predecessor_and_z3_var(c,net);
+    init_z3_expr(c,net);
+    create_prop(c,net);
+    init_input_box(c,net);
     //net->print_network();
-    printf("\nCheck..\n");
+    back_substitute(net);
+    printf("\nEnded\n");
     return 0;
 }
