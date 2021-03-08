@@ -1,9 +1,9 @@
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 import re
 import onnx
-flag  = False
-d = []
+import sys
 def product(it):
     product = 1
     for x in it:
@@ -44,15 +44,6 @@ def numel(x):
     return product([int(i) for i in x.shape])
 
 def parseVec(net):
-    temp = np.array(eval(net.readline()[:-1])) #N
-    #print('temp') #N
-    #print(temp) #N
-    global flag
-    global d
-    if  flag == False:
-        d = temp
-        flag = True
-    return temp #N
     return np.array(eval(net.readline()[:-1]))
 
 def myConst(vec):
@@ -77,12 +68,10 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
     mean = 0.0
     std = 0.0
     net = open(net_file,'r')
-
-    x = tf.placeholder(tf.float64, [None, in_len], name = "x")#N
-    #x = tf.placeholder(tf.float64, [in_len], name = "x")
-    #x = tf.placeholder(tf.float64, [[None, 784]])#N
-    #return x, x, mean, std
+    ls_obj = []
+    x = tf.placeholder(tf.float64, [in_len], name = "x")
     inp = x
+    prev = x
     y = None
     z1 = None
     z2 = None
@@ -91,8 +80,7 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
     is_conv = False
     while True:
         curr_line = net.readline()[:-1]
-        print("hey i am still")
-        print(curr_line)
+        
         if 'Normalize' in curr_line:
             mean = extract_mean(curr_line)
             std = extract_std(curr_line)
@@ -165,9 +153,6 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
             args = None
             #print(line[-10:-3])
             start = 0
-            #print("hrhrhrhhr")
-            #print(line)
-            #print("ergregt")
             if("ReLU" in line):
                 start = 5
             elif("Sigmoid" in line):
@@ -182,7 +167,6 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
                 args = runRepl(line[start:-1], ["filters", "input_shape", "kernel_size"])
 
             W = myConst(parseVec(net))
-            #W = parseVec(net) #N
             print("W shape", W.shape)
             #W = myConst(permutation(parseVec(net), h, w, c).transpose())
             b = None
@@ -200,38 +184,34 @@ def read_tensorflow_net(net_file, in_len, is_trained_with_pytorch):
                 stride_arg = [1,1,1,1]
 
             x = tf.nn.conv2d(tf.reshape(x, [1] + args["input_shape"]), filter=W, strides=stride_arg, padding=padding_arg)
-            print("i am print")
+            
             #print(x)
-            #return x
             b = myConst(parseVec(net))
-            #b = parseVec(net)
-            #print(b)
             h, w, c = [int(i) for i in x.shape ][1:]
             print("Conv2D", args, "W.shape:",W.shape, "b.shape:", b.shape)
             print("\tOutShape: ", x.shape)
             if("ReLU" in line):
                 x = tf.nn.relu(tf.nn.bias_add(x, b))
-                #return x, inp, mean, std
             elif("Sigmoid" in line):
                 x = tf.nn.sigmoid(tf.nn.bias_add(x, b))
             elif("Tanh" in line):
                 x = tf.nn.tanh(tf.nn.bias_add(x, b))
             elif("Affine" in line):
                 x = tf.nn.bias_add(x, b)
-
             else:
                 raise Exception("Unsupported activation: ", curr_line)
-            return x, d, inp, mean, std #n
         elif curr_line == "":
             break
         else:
             raise Exception("Unsupported Operation: ", curr_line)
         last_layer = curr_line
-
+        ls_obj.append(x)
+        #@@@@@ my code to print each node value#
+        
+        #--------------------------------------#
+        
     model = x
-    #print("myyy")
-    #print(model)
-    return model, d, inp, mean, std #n
+    return model, inp, mean, std, ls_obj #n
     #return model, is_conv, mean, std
 
 

@@ -1,12 +1,13 @@
 import sys
 import os
 def remove_empty_lines(filename):
-	with open(filename) as infile, open('modified_cons.txt', 'w') as outfile:
+	with open(filename) as infile, open('modified_mar8_cons.txt', 'w') as outfile:
 		for line in infile:
 			if not line.strip(): continue
 			outfile.write(line)  
 orig_stdout = sys.stdout
-f = open("original_const.txt", "r+")
+f = open("mar8.txt", "r+")
+#f = open(sys.argv[1], 'w+')
 s = ""
 for x in f:
 	if x.find(';') == -1:

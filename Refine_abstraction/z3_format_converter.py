@@ -3,9 +3,10 @@ from read_net_file import *
 import sys
 import csv
 import pickle
+
 def solve_cons(lbl):
-	f = open("modified_cons.txt", "r+")
-	set_option(html_mode=False)
+	f = open("modified_out_mar8.txt", "r+")
+	#set_option(html_mode=False)
 	s = Solver()
 	nodes = []
 	lbound = []
@@ -48,13 +49,14 @@ def solve_cons(lbl):
 			ubound.append(ub)
 			s.add(nodes[ind] <= ub, nodes[ind] >= lb)
 			ind = ind + 1
+	#for eta_dash we are doing this#
 	A=[]
 	for i in range(0, 10):
 		if i!= lbl:
-			A.append(nodes[i] > nodes[int(lbl)])
+			A.append(nodes[i] >= nodes[int(lbl)])
 	s.add(Or(A))
 	print(s.check())
-	set_option(max_args=10000000, max_lines=1000000, max_depth=10000000, max_visited=1000000)
+	#set_option(max_args=10000000, max_lines=1000000, max_depth=10000000, max_visited=1000000)
 	m = s.model()
 	#newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
 	return m
