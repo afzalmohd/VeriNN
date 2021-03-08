@@ -1,4 +1,4 @@
-#include "backprop.hh"
+#include "network.hh"
 
 void back_substitute_neuron(z3::context &c, Neuron_t* nt){
     size_t upper_size = nt->ucoeffs.size()-1;//last element is just a constant d, i.e. cx+d
