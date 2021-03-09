@@ -25,9 +25,11 @@ def solve_cons(cons_file_name, lbl):
                         while i < len(newcon):
                                 newconn = newcon[i].strip()
                                 if newconn.find("eps") == -1:
+                                        newconn = round(float(newconn),4)
                                         expr = expr + RealVal(newconn)
                                 else:
                                         coef = newconn.split('.(')[0]
+                                        coef = round(float(coef),4)
                                         varr = newconn.split('.(')[1]
                                         var = varr.replace(')', '')
                                         var = Real(var)
@@ -74,10 +76,12 @@ def solve_cons(cons_file_name, lbl):
         #set_option(max_args=10000000, max_lines=1000000, max_depth=10000000, max_visited=1000000)
         m = s.model()
 
-        for c in A:
-                print(c)
-                print(m.eval(c))
-        # print(m)
+        # for c in A:
+        #         print(c)
+        #         print(m.eval(c))
+        for a in m:
+                print(a)
+                print(m[a])
         exit()
         #newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
         return m
