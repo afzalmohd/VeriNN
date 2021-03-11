@@ -1,4 +1,4 @@
-#include "network.hh"
+#include "backprop.hh"
 
 void back_substitute_neuron(z3::context &c, Neuron_t* nt){
     size_t upper_size = nt->ucoeffs.size()-1;//last element is just a constant d, i.e. cx+d
@@ -39,7 +39,8 @@ void back_substitute_neuron(z3::context &c, Neuron_t* nt){
 }
 
 void back_substitute_layer(z3::context& c, Layer_t* layer){
-     z3::expr t_expr = c.bool_val(true);
+    printf("\nCheck..\n");
+    z3::expr t_expr = c.bool_val(true);
     for(auto nt:layer->neurons){
         back_substitute_neuron(c,nt);
         t_expr = t_expr && nt->nt_z3_var <= nt->z_uexpr && nt->nt_z3_var >= nt->z_lexpr;
@@ -47,11 +48,10 @@ void back_substitute_layer(z3::context& c, Layer_t* layer){
     t_expr.simplify();
 }
 
-void back_substitute(Network_t* net){
+void back_substitute(z3::context& c, Network_t* net){
     for(auto layer:net->layer_vec){
         if(layer->layer_index != 0){
-            Layer_t* prev_layer = net->layer_vec[layer->layer_index -1];
-
+            back_substitute_layer(c,layer);
         }
     }
 }

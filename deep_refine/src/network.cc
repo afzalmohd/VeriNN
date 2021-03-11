@@ -104,6 +104,9 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                 if(tokens[0] == "inputdim"){
                     net->input_dim = stoi(tokens[1]);
                     net->input_dim = 784;
+                    if(net->is_my_test){
+                        net->input_dim = 2;
+                    }
                 }
                 else if(tokens[0] == "layer"){
                     curr_layer = new Layer_t();
@@ -201,17 +204,19 @@ void Neuron_t::print_neuron(){
 
 void Layer_t::print_layer(){
     std::cout<<"Layer index: "<<this->layer_index<<"\n";
-    std::cout<<"weight: "<<this->w<<"\n";
-    std::cout<<"biases: "<<this->b<<"\n";
-    for(auto nt : this->neurons){
-        nt->print_neuron();
-    }
+    //std::cout<<"Number of neuron: "<<this->vars.size()<<std::endl;
+    // std::cout<<"weight: "<<this->w<<"\n";
+    // std::cout<<"biases: "<<this->b<<"\n";
+     for(auto nt : this->neurons){
+         nt->print_neuron();
+     }
 }
 
 void Network_t::print_network(){
     this->input_layer->print_layer();
     for(auto layer : this->layer_vec){
-        layer->print_layer();
+        //if(layer->layer_index == 5)
+            layer->print_layer();
     }
 }
 
@@ -291,17 +296,21 @@ void create_prop(z3::context &c, Network_t* net){
     xt::xarray<std::size_t> out = xt::argmax(last_layer->res);
     size_t cl = out[0];
     z3::expr prop = c.bool_val(true);
-    for(size_t i=0; i<last_layer->vars.size(); i++){
+    for(size_t i=0; i<last_layer->neurons.size(); i++){
         if(i != cl){
-            prop = prop && (last_layer->vars[cl] >= last_layer->vars[i]);
+            prop = prop && (last_layer->neurons[cl]->nt_z3_var >= last_layer->neurons[i]->nt_z3_var);
         }
     }
     net->prop_expr = prop;
+    //printf("\nCheck..\n");
+    std::cout<<net->prop_expr<<std::endl;
 }
 
 void init_input_box(z3::context &c, Network_t* net){
     z3::expr t_expr = c.bool_val(true);
-    for(int i = 0; i < net->input_layer->vars.size(); i++){
+    Layer_t* inp_layer = net->input_layer;
+    for(int i = 0; i < inp_layer->neurons.size(); i++){
+        Neuron_t* nt = inp_layer->neurons[i];
         double upper_bound = net->im[i] + net->epsilon;
         double lower_bound = net->im[i] - net->epsilon;
         if(upper_bound > 1.0){
@@ -312,9 +321,18 @@ void init_input_box(z3::context &c, Network_t* net){
         }
         std::string upper_str = std::to_string(upper_bound);
         std::string lower_str = std::to_string(lower_bound);
-        t_expr = t_expr && net->input_layer->vars[i] <= c.real_val(upper_str.c_str()) && net->input_layer->vars[i] >= c.real_val(lower_str.c_str());
+        if(net->is_my_test){
+            upper_str = "1.0";
+            lower_str = "-1.0";
+            t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
+        }
+        else{
+            t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
+        }
+        
     }
-    net->input_layer->layer_expr = t_expr;
+    inp_layer->layer_expr = t_expr;
+    //std::cout<<net->input_layer->layer_expr<<std::endl;
 }
 
 
