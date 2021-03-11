@@ -79,9 +79,9 @@ def solve_cons(cons_file_name, lbl):
         # for c in A:
         #         print(c)
         #         print(m.eval(c))
-        for a in m:
-                print(a)
-                print(m[a])
-        exit()
+        # for a in m:
+        #         print(a)
+        #         print(m[a])
+        # exit()
         #newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
         return m

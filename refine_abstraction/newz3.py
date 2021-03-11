@@ -134,11 +134,11 @@ if __name__ == "__main__" :
         
         '''
         modl = z3_format_converter.solve_cons("modified_out_mar8.txt",lbl)
-        print(modl)
-        exit()
+        # print(modl)
+        # exit()
         #break
         newimage = generate_new_image(lbl, test, modl)
-        #print(newimage)
+        print(newimage)
         #print(newtest)
         #break
 
