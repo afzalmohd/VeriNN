@@ -21,8 +21,8 @@ debug :  $(BUILDDIR)/buildd/Makefile
 	rm -rf $(DREFINE)
 	ln -s $(BUILDDIR)/buildd/$(DREFINE) $(DREFINE)
 
-# $(BUILDDIR)/z3/buildr/libz3.so
-$(BUILDDIR)/buildr/Makefile: 
+
+$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/z3/buildr/libz3.so
 	mkdir -p $(BUILDDIR)/buildr
 	cd $(BUILDDIR)/buildr; cmake -DCMAKE_BUILD_TYPE=Release -DDREFINE=$(DREFINE) $(SRCDIR)
 
@@ -41,17 +41,17 @@ deepclean: clean
 	rm -rf $(BUILDDIR)/*
 
 #-----------------------------------------------------------------------------
-# Z3 fetch and patch generation
+# Z3 fetch and install
 
 $(BUILDDIR)/z3/README.md :
 	mkdir -p $(BUILDDIR)
 	cd $(BUILDDIR);$(git) clone https://github.com/Z3Prover/z3.git
 
-# $(BUILDDIR)/z3/buildr/libz3.so : $(BUILDDIR)/z3/README.md
-# 	rm -rf $(BUILDDIR)/z3/buildr
-# 	mkdir -p $(BUILDDIR)/z3/buildr
-# 	cd $(BUILDDIR)/z3/buildr; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ../
-# 	+make -C $(BUILDDIR)/z3/buildr
+$(BUILDDIR)/z3/buildr/libz3.so : $(BUILDDIR)/z3/README.md
+	rm -rf $(BUILDDIR)/z3/buildr
+	mkdir -p $(BUILDDIR)/z3/buildr
+	cd $(BUILDDIR)/z3/buildr; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ../
+	+make -C $(BUILDDIR)/z3/buildr
 
 # $(BUILDDIR)/z3/buildr/libz3.a : $(BUILDDIR)/z3/buildr/libz3.so
 
@@ -60,6 +60,10 @@ $(BUILDDIR)/z3/buildd/libz3.so : $(BUILDDIR)/z3/README.md
 	mkdir -p $(BUILDDIR)/z3/buildd
 	cd $(BUILDDIR)/z3/buildd; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ../
 	+make -C $(BUILDDIR)/z3/buildd
+
+
+#-----------------------------------------------------------------------------
+# Xtensor-blas fetch and install
 
 
 

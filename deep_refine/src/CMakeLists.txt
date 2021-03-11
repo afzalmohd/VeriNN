@@ -23,11 +23,12 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 
-find_package(XTENSOR REQUIRED CONFIG)
-find_package(XTL REQUIRED CONFIG)
-find_package(Z3 REQUIRED CONFIG)
+find_package(xtensor REQUIRED CONFIG)
+find_package(xtl REQUIRED CONFIG)
+# include_directories()
+include_directories(${xtl_INCLUDE_DIRS})
 
-message(STATUS "Found XTENSOR ${XTENSOR_PACKAGE_VERSION}")
+message(STATUS "Found XTENSOR ${xtensor_FOUND}")
 message(STATUS "Found XTL ${XTENSOR_PACKAGE_VERSION}")
 
 # message(STATUS "DEBUG : LLVM - ${LLVM_DEBUG}")
