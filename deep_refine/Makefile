@@ -62,9 +62,5 @@ $(BUILDDIR)/z3/buildd/libz3.so : $(BUILDDIR)/z3/README.md
 	+make -C $(BUILDDIR)/z3/buildd
 
 
-#-----------------------------------------------------------------------------
-# Xtensor-blas fetch and install
-
-
 
 test: release runtest

@@ -123,5 +123,6 @@ SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc)
 add_executable(${DREFINE} ${SOURCES})
 
 SET(LIBZ3 z3)
+SET(xtensor_libs blas)
 
-target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs} ${xtl_libs})
+target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs})
