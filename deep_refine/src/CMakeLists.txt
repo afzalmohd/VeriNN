@@ -118,7 +118,7 @@ LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
 
 # lib/bmc/bmc_loop_pass.cpp
 # main.cpp
-SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc) 
+SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc main.cpp) 
 
 add_executable(${DREFINE} ${SOURCES})
 

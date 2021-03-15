@@ -151,10 +151,7 @@ void model_to_image(z3::model &modl, Network_t* net){
 }
 
 
-int main(){
-    std::string filepath = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine/benchmarks/fppolyForward.txt";
-    std::string net_path = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine/benchmarks/mnist_relu_3_50.tf";
-    std::string dataset_path = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine/benchmarks/mnist_test.csv";
+int find_refine_nodes(std::string filepath, std::string net_path, std::string dataset_path) {
     //std::string filepath = "../../benchmarks/fppolyForward.txt";
     //std::string net_path = "../../benchmarks/mnist_relu_3_50.tf";
     //std::string dataset_path = "../../benchmarks/mnist_test.csv";
@@ -192,3 +189,5 @@ int main(){
     printf("\nEnded\n");
     return 0;
 }
+
+
