@@ -159,11 +159,11 @@ def solve_cons_out(s,ls_obj,m,l,l_max, lbl, output_cons):
 			ind = ind + 1
 			ls_i = ls_i + 1
 	
-	'''A=[]
+	A=[]
 	for i in range(0, 10):
 		if i!= int(lbl):
 			A.append(nodes[i] >= nodes[int(lbl)])
-	s.add(Or(A))'''
+	s.add(Or(A))
 	'''for c in A:
     	print(c)
         print(m.eval(c))'''

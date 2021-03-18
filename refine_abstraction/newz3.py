@@ -159,7 +159,7 @@ if __name__ == "__main__" :
         #exit()
         #break
         newimage = generate_new_image(lbl, test, modl)
-        
+        print(newimage)
         '''
         
         save the image 
