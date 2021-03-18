@@ -209,3 +209,14 @@ find position of max value in list
 
 #index = np.where(newpred == maximum)
 ------------------------------------------------------
+some important imports
+
+#sys.setrecursionlimit(1000000000)
+#sys.path.insert(0, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/ELINA/python_interface/')
+#sys.path.insert(0, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/deepg/code/')
+#sys.path.insert(1, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/tf_verify')
+#from eran import ERAN
+#import __main__
+#from read_zonotope_file import read_zonotope
+
+------------------------------------------------------
