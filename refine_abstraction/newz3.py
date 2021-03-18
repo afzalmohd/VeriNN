@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 import os
 from z3 import *
 from read_net_file import *
@@ -11,39 +10,48 @@ import tensorflow.compat.v1 as tf
 from tensorflow.python.keras import backend as K
 import modifier
 import z3_format_converter
-import original_image
 import numpy as np
 import eta_d_dash
 from maxsat import *
-#sys.setrecursionlimit(1000000000)
-#sys.path.insert(0, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/ELINA/python_interface/')
-#sys.path.insert(0, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/deepg/code/')
-#sys.path.insert(1, '../../Downloads/semester-2/Refinement/ERAAn/ERAN/tf_verify')
-#from eran import ERAN
-#import __main__
-#from read_zonotope_file import read_zonotope
 tf.disable_v2_behavior()
 def read_n():
         pass
-#               @@      Normalization  @                #
+'''
+
+Normalization of image
+
+'''
+
 def normalize(image, means, stds):
         for i in range(len(image)):
                 image[i] = (image[i] - means)/stds
 
-#               @@ getting dataset @            #
+
+'''
+
+Read csv file to get all images
+present in dataset
+
+'''
+
 def get_data(dataset):
         csvfile = open('{}_test.csv'.format(dataset), 'r')
         tests = csv.reader(csvfile, delimiter=',')
         return tests
 
-#   generate new image                  #
+'''
+
+generate new image using eta values we get 
+from model              
+
+'''
 
 def generate_new_image(lbl,test,modl):
         image= np.float64(test[1:len(test)])/np.float64(255)
         epsilon = 0.05
-                        #lower bound of image
+        #lower bound of image
         specLB = np.clip(image - epsilon,0,1)
-                        #upper bound of image
+        #upper bound of image
         specUB = np.clip(image + epsilon,0,1)
         newimage = []
         for j in range(0, 784):
@@ -53,17 +61,21 @@ def generate_new_image(lbl,test,modl):
                 x = float(res.numerator_as_long())/float(res.denominator_as_long())
                 diff = np.float64(specUB[j]) - np.float64(specLB[j])
                 newdiff = np.float64(image[j]) + epsilon*x
+
                 newimage.append(np.float64(newdiff))
         return newimage
 
-#                       main function           #
+'''
 
+main function is present here
+
+'''
 
 if __name__ == "__main__" :
         argumentList = sys.argv
         netname = argumentList[1]
         filename, file_extension = os.path.splitext(netname)
-        
+        epsilon = 0.05
         '''
         
         Below line helps to read network line by line and 
@@ -76,10 +88,14 @@ if __name__ == "__main__" :
         it helps to print all nodes values. 
 
         '''
+        
         model, inp, means, stds, ls_obj = read_tensorflow_net(netname, 784, True)#N
         
         dataset=argumentList[2]
+        output_cons = argumentList[3]
+        internal_cons = argumentList[4]
         tests = get_data(dataset)
+        
         '''
         Below is loop over all images in dataset
         but fo now we are using only first image
@@ -102,7 +118,9 @@ if __name__ == "__main__" :
         newtest= np.array(np.float64(test[1:len(test)])/np.float64(255))
 
         '''
+        
         it is just to avoid divide by 0
+        
         '''
         # why?
         if stds != 0:
@@ -128,20 +146,20 @@ if __name__ == "__main__" :
         maximum = np.argmax(newpred)
                         
         print("classified label:" + str(maximum))
+        
         '''
+        
         Here we pass actual label of image to sat solver
         which solve some relevant constraints
         
         '''
-        modl = z3_format_converter.solve_cons("modified_out_mar8.txt",lbl)
-        print(modl)
-        exit()
+        
+        modl = z3_format_converter.solve_cons(output_cons, lbl, epsilon, newtest)
+        #print(modl)
+        #exit()
         #break
         newimage = generate_new_image(lbl, test, modl)
-        #print(newimage)
-        #print(newtest)
-        #break
-
+        
         '''
         
         save the image 
@@ -170,12 +188,16 @@ if __name__ == "__main__" :
         c_maximum = np.argmax(c_newpred)
 
         print(c_maximum)
-        print(len(ls_val[1]))
-        #break
-        maxsa = Optimize()
+        
+        maxsa = Solver()
         initial(modl, maxsa, 784)
+        #print(maxsa.check())
+        #print(maxsa.model())
+        #exit()
         #break
-        solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val)
-        mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl)
+        solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons)
+        
+        mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons)
         print(mod)
+        exit()
         read_n()

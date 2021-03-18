@@ -4,9 +4,8 @@ import sys
 import csv
 import pickle
 
-def solve_cons(cons_file_name, lbl):
-        f = open(cons_file_name, "r+")
-        #set_option(html_mode=False)
+def solve_cons(output_cons, lbl, epsilon, img):
+        f = open(output_cons, "r+")
         s = Solver()
         nodes = []
         lbound = []
@@ -23,6 +22,7 @@ def solve_cons(cons_file_name, lbl):
                         i = 0
                         expr = 0
                         while i < len(newcon):
+                                #set_option(precision=5)
                                 newconn = newcon[i].strip()
                                 if newconn.find("eps") == -1:
                                         expr = expr + RealVal(newconn)
@@ -30,12 +30,16 @@ def solve_cons(cons_file_name, lbl):
                                         coef = newconn.split('.(')[0]
                                         varr = newconn.split('.(')[1]
                                         var = varr.replace(')', '')
+                                        numb = var[3:]
+                                        numb = int(numb)
                                         var = Real(var)
+                                        if numb >= 0 and numb < 784:
+                                                s.add(epsilon*var + img[numb] >= 0,epsilon*var + img[numb] <= 1)
                                         s.add(var <= 1 , -1<=var)
+                                        #print(coef)
                                         expr = expr + (RealVal(coef) * var)
                                 i = i + 1
-                        s.add(node == expr)
-                                
+                        s.add(node == expr) 
                         # while True:
                         #         try:
                         #                 newconn = newcon[i].strip()
@@ -78,6 +82,6 @@ def solve_cons(cons_file_name, lbl):
                 print(c)
                 print(m.eval(c))
         # print(m)
-        exit()
+        #exit()
         #newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
         return m

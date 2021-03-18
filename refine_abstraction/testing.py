@@ -1,0 +1,11 @@
+from z3 import *
+x = Int('x')
+y = Int('y')
+s = Solver()
+s.add(x == 5, y == 6)
+print(s.check())
+x = Int('x')
+y = Int('y')
+s.add(x < y)
+print(s.check())
+print(s.model())
