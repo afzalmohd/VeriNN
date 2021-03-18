@@ -1,0 +1,42 @@
+
+Dependencies : Install xtl,xtensor,xtensor-blas 
+--------------------------------
+
+Use the following commands
+
+git clone https://github.com/xtensor-stack/xtl.git
+cd xtl
+cmake ./
+make install
+cd ..
+git clone https://github.com/xtensor-stack/xtensor.git
+cd xtensor
+cmake ./
+make install
+cd ..
+git clone https://github.com/xtensor-stack/xtensor-blas.git
+cd xtensor-blas
+cmake ./
+make install
+cd ..
+
+
+
+
+
+Old junk
+--------
+
+
+
+-- installing xtensor
+--------------------
+
+Issue with Ubuntu 20.04 xtensor may be missing
+
+
+http://archive.ubuntu.com/ubuntu/pool/universe/x/xtensor/xtensor-dev_0.10.11-1_all.deb
+
+
+sudo dpkg --install xtensor-dev_0.10.11-1_all.deb
+

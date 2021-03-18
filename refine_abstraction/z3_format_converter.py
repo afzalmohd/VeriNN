@@ -25,9 +25,11 @@ def solve_cons(output_cons, lbl, epsilon, img):
                                 #set_option(precision=5)
                                 newconn = newcon[i].strip()
                                 if newconn.find("eps") == -1:
+                                        newconn = round(float(newconn),4)
                                         expr = expr + RealVal(newconn)
                                 else:
                                         coef = newconn.split('.(')[0]
+                                        coef = round(float(coef),4)
                                         varr = newconn.split('.(')[1]
                                         var = varr.replace(')', '')
                                         numb = var[3:]
@@ -85,3 +87,4 @@ def solve_cons(output_cons, lbl, epsilon, img):
         #exit()
         #newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
         return m
+
