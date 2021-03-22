@@ -12,7 +12,7 @@ std::vector<std::string> parse_string(std::string ft){
     char delimeter = ',';
     std::vector<std::string> vec;
     std::string acc = "";
-    for(int i=0; i<ft.size();i++){
+    for(size_t i=0; i<ft.size();i++){
         if(ft[i] == delimeter){
             vec.push_back(acc);
             acc = "";
@@ -34,7 +34,7 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
     char right_brac = ']';
     std::vector<std::string> vec;
     std::string acc = "";
-    for(int i=0; i<weights.size();i++){
+    for(size_t i=0; i<weights.size();i++){
         if(weights[i] == comma || weights[i] == right_brac){
             if(acc != ""){
                 double val = std::stod(acc);
@@ -65,12 +65,12 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
 
 void init_expr_coeffs(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
     if(is_upper){
-        for(int i = 1; i < coeffs.size(); i++){
+        for(size_t i = 1; i < coeffs.size(); i++){
             nt->ucoeffs.push_back(std::stod(coeffs[i]));
         }
     }
     else{
-        for(int i = 1; i < coeffs.size(); i++){
+        for(size_t i = 1; i < coeffs.size(); i++){
             nt->lcoeffs.push_back(std::stod(coeffs[i]));
         }
     }
@@ -157,7 +157,7 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
 
 
 void set_weight_dims(Network_t* net){
-    for(int i=0;i<net->numlayers;i++){
+    for(size_t i=0;i<net->numlayers;i++){
         size_t t0 = 0;
         Layer_t* curr_layer = net->layer_vec[i];
         if(!curr_layer->is_activation){
@@ -252,7 +252,7 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
     std::vector<double> vec;
     std::string acc = "";
     //std::cout<<image_str<<std::endl;
-    for(int i=1; i<image_str.size();i++){
+    for(size_t i=1; i<image_str.size();i++){
         if(image_str[i] == delimeter){
             if(acc != ""){
                 double val = std::stod(acc);
@@ -309,7 +309,7 @@ void create_prop(z3::context &c, Network_t* net){
 void init_input_box(z3::context &c, Network_t* net){
     z3::expr t_expr = c.bool_val(true);
     Layer_t* inp_layer = net->input_layer;
-    for(int i = 0; i < inp_layer->neurons.size(); i++){
+    for(size_t i = 0; i < inp_layer->neurons.size(); i++){
         Neuron_t* nt = inp_layer->neurons[i];
         double upper_bound = net->im[i] + net->epsilon;
         double lower_bound = net->im[i] - net->epsilon;

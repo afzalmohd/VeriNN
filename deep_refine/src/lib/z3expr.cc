@@ -2,7 +2,7 @@
 #include "backprop.hh"
 #include <ctime>
 void set_predecessor_layer_activation(z3::context& c, Layer_t* layer, Layer_t* prev_layer){
-    for(int i=0;i<layer->neurons.size();i++){
+    for(size_t i=0;i<layer->neurons.size();i++){
         Neuron_t* nt = layer->neurons[i];
         std::string nt_str = "nt_"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
         nt->nt_z3_var = c.real_const(nt_str.c_str());
@@ -11,7 +11,7 @@ void set_predecessor_layer_activation(z3::context& c, Layer_t* layer, Layer_t* p
 }
 
 void set_predecessor_layer_matmul(z3::context& c, Layer_t* layer, Layer_t* prev_layer){
-    for(int i=0; i<layer->neurons.size(); i++){
+    for(size_t i=0; i<layer->neurons.size(); i++){
         Neuron_t* nt = layer->neurons[i];
         std::string nt_str = "nt_"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
         nt->nt_z3_var = c.real_const(nt_str.c_str());
