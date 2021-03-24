@@ -127,7 +127,7 @@ void check_sat_output_layer(z3::context& c, Network_t* net){
     s.add(net->input_layer->layer_expr);
     s.add(!net->prop_expr);
     s.add(net->layer_vec.back()->layer_expr);
-    std::cout << s;
+    //std::cout << s;
     auto sat_out = s.check();
     std::cout<<sat_out<<std::endl;
     if(sat_out == z3::sat){
