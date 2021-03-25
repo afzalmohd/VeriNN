@@ -41,15 +41,33 @@ void init_z3_expr(z3::context& c, Network_t* net){
     for(auto layer : net->layer_vec){
         init_z3_expr_layer(c, layer);
     }
+    for(size_t i=net->layer_vec.size(); i>=0 ; i--){
+
+    }
+    //merged_constraints(c,net);
 }
 
 void init_z3_expr_layer(z3::context& c, Layer_t* layer){
     z3::expr t_expr = c.bool_val(true);
+    z3::expr t_expr1 = c.bool_val(true);
     for(auto nt:layer->neurons){
         init_z3_expr_neuron(c,nt);
         t_expr = t_expr && nt->nt_z3_var <= nt->z_uexpr && nt->nt_z3_var >= nt->z_lexpr;
+        if(!std::isnan(nt->ub)){
+            std::string str = std::to_string(nt->ub);
+            z3::expr b = c.real_val(str.c_str());
+            t_expr1 = t_expr1 && nt->nt_z3_var <= b;
+        }
+
+        if(!std::isnan(nt->lb)){
+            std::string str = std::to_string(nt->lb);
+            z3::expr b = c.real_val(str.c_str());
+            t_expr1 = t_expr1 && nt->nt_z3_var >= b;
+        }
+
     }
-    layer->layer_expr = t_expr.simplify();
+    layer->c_expr = t_expr.simplify();
+    layer->b_expr = t_expr1;
     
 }
 
@@ -71,12 +89,24 @@ void init_z3_expr_neuron(z3::context &c, Neuron_t* nt){
     nt->z_lexpr = sum2;
 }
 
+void merged_constraints(z3::context& c, Network_t* net){
+    for(size_t i=0; i<net->layer_vec.size(); i++){
+        Layer_t* curr_layer = net->layer_vec[i];
+        if(i==0){
+            curr_layer->merged_expr = curr_layer->b_expr && curr_layer->c_expr && net->input_layer->b_expr;
+        }
+        else{
+            curr_layer->merged_expr = curr_layer->b_expr && curr_layer->c_expr && net->layer_vec[i-1]->merged_expr;
+        }
+    }
+}
+
 void check_sat_output_layer(z3::context& c, Network_t* net){
     z3::solver s(c);
     z3::set_param("pp.decimal-precision", 5);
-    s.add(net->input_layer->layer_expr);
+    //s.add(net->input_layer->b_expr);
     s.add(!net->prop_expr);
-    s.add(net->layer_vec.back()->layer_expr);
+    s.add(net->layer_vec.back()->merged_expr);
     //std::cout << s;
     auto sat_out = s.check();
     std::cout<<sat_out<<std::endl;
@@ -113,29 +143,29 @@ int find_refine_nodes(std::string filepath, std::string net_path, std::string da
     z3::context c;
     time_t curr_time = time(NULL);
     init_network(c,net,filepath);
-    init_net_weights(net, net_path);
+    //init_net_weights(net, net_path);
     if(net->is_my_test){
         net->im = {117,211};
         net->im = net->im/255;
         std::cout<<net->im<<std::endl;
     }
     else{
-        parse_image_string_to_xarray(net, dataset_path);
+       // parse_image_string_to_xarray(net, dataset_path);
     }
     
     //net->forward_propgate_network(0,net->im);
     //std::cout<<net->layer_vec.back()->res<<std::endl;
     std::cout<<"Time in parser: "<<time(NULL) - curr_time<<std::endl;
-    set_predecessor_and_z3_var(c,net);
+    //set_predecessor_and_z3_var(c,net);
     curr_time = time(NULL);
-    init_z3_expr(c,net);
+    //init_input_box(c,net);
+    //init_z3_expr(c,net);
     std::cout<<"Time in z3expr init: "<<time(NULL) - curr_time<<std::endl;  
-    create_prop(c,net);
-    init_input_box(c,net); 
+    //create_prop(c,net); 
     
-    net->print_network();
+    //net->print_network();
     curr_time = time(NULL);
-    check_sat_output_layer(c,net);
+    //check_sat_output_layer(c,net);
     std::cout<<"Time to check satisfiability: "<<time(NULL) - curr_time<<std::endl;
     printf("\nEnded\n");
     return 0;

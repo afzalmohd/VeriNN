@@ -10,4 +10,5 @@ void model_to_image(z3::model &modl, Network_t* net);
 void init_z3_expr(z3::context& c, Network_t* net);
 void init_z3_expr_layer(z3::context& c, Layer_t* layer);
 void init_z3_expr_neuron(z3::context &c, Neuron_t* nt);
+void merged_constraints(z3::context& c, Network_t* net);
 #endif

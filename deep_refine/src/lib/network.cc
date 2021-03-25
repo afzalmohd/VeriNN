@@ -13,6 +13,19 @@ z3::expr get_expr_from_double(z3::context &c, double item){
     return c.real_val(item_str.c_str());
 }
 
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end()){
+        if(!(std::isdigit(*it) || *it == '.' || *it == '-')){
+            std::cout<<*it<<std::endl;
+            return false;
+        }
+        ++it;
+    } 
+    return !s.empty();
+}
+
 std::vector<std::string> parse_string(std::string ft){
     char delimeter = ',';
     std::vector<std::string> vec;
@@ -135,8 +148,13 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                     curr_neuron = new Neuron_t();
                     neuron_index = stoi(tokens[1]);
                     curr_neuron->neuron_index = neuron_index;
-                    curr_neuron->lb = tokens[2];
-                    curr_neuron->ub = tokens[3];
+                    if(is_number(tokens[2])){
+                        curr_neuron->lb = std::stod(tokens[2]);
+                    }
+                    if(is_number(tokens[3])){
+                        curr_neuron->ub = std::stod(tokens[3]);
+                    }
+
                     curr_layer->neurons.push_back(curr_neuron);
                 }
                 else if(tokens[0] == "upper"){
@@ -204,6 +222,7 @@ void init_net_weights(Network_t* net, std::string &filepath){
 }
 
 void Neuron_t::print_neuron(){
+    std::cout<<this->lb<<" <= "<<this->nt_z3_var<<" <= "<<this->ub<<"\n";
     std::cout<<this->nt_z3_var<<", upper: "<<this->z_uexpr<<", lower: "<<this->z_lexpr<<"\n";
 }
 
@@ -329,14 +348,18 @@ void init_input_box(z3::context &c, Network_t* net){
         if(net->is_my_test){
             upper_str = "1.0";
             lower_str = "-1.0";
+            nt->ub = 1.0;
+            nt->lb = -1.0;
             t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
         }
         else{
+            nt->lb = lower_bound;
+            nt->ub = upper_bound;
             t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
         }
         
     }
-    inp_layer->layer_expr = t_expr;
+    inp_layer->b_expr = t_expr;
     //std::cout<<net->input_layer->layer_expr<<std::endl;
 }
 
