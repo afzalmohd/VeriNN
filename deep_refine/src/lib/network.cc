@@ -8,6 +8,11 @@ Network_t::Network_t(){
     printf("\nNetwork constructor called\n");
 }
 
+z3::expr get_expr_from_double(z3::context &c, double item){
+    std::string item_str = std::to_string(item);
+    return c.real_val(item_str.c_str());
+}
+
 std::vector<std::string> parse_string(std::string ft){
     char delimeter = ',';
     std::vector<std::string> vec;
