@@ -8,7 +8,7 @@ void back_substitute_neuron(z3::context &c, Neuron_t* nt){
     Z3_ast dest_l [upper_size];
     size_t u_count = 0;
     size_t l_count = 0;
-    for(int i=0; i < upper_size; i++){
+    for(size_t i=0; i < upper_size; i++){
         Neuron_t* pred_nt = nt->pred_neurons[i];
         if(nt->ucoeffs[i] > 0.0){
             src_u[u_count] = pred_nt->nt_z3_var;

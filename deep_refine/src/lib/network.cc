@@ -8,11 +8,29 @@ Network_t::Network_t(){
     printf("\nNetwork constructor called\n");
 }
 
+z3::expr get_expr_from_double(z3::context &c, double item){
+    std::string item_str = std::to_string(item);
+    return c.real_val(item_str.c_str());
+}
+
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end()){
+        if(!(std::isdigit(*it) || *it == '.' || *it == '-')){
+            std::cout<<*it<<std::endl;
+            return false;
+        }
+        ++it;
+    } 
+    return !s.empty();
+}
+
 std::vector<std::string> parse_string(std::string ft){
     char delimeter = ',';
     std::vector<std::string> vec;
     std::string acc = "";
-    for(int i=0; i<ft.size();i++){
+    for(size_t i=0; i<ft.size();i++){
         if(ft[i] == delimeter){
             vec.push_back(acc);
             acc = "";
@@ -34,7 +52,7 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
     char right_brac = ']';
     std::vector<std::string> vec;
     std::string acc = "";
-    for(int i=0; i<weights.size();i++){
+    for(size_t i=0; i<weights.size();i++){
         if(weights[i] == comma || weights[i] == right_brac){
             if(acc != ""){
                 double val = std::stod(acc);
@@ -65,12 +83,12 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
 
 void init_expr_coeffs(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_upper){
     if(is_upper){
-        for(int i = 1; i < coeffs.size(); i++){
+        for(size_t i = 1; i < coeffs.size(); i++){
             nt->ucoeffs.push_back(std::stod(coeffs[i]));
         }
     }
     else{
-        for(int i = 1; i < coeffs.size(); i++){
+        for(size_t i = 1; i < coeffs.size(); i++){
             nt->lcoeffs.push_back(std::stod(coeffs[i]));
         }
     }
@@ -130,8 +148,13 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                     curr_neuron = new Neuron_t();
                     neuron_index = stoi(tokens[1]);
                     curr_neuron->neuron_index = neuron_index;
-                    curr_neuron->lb = tokens[2];
-                    curr_neuron->ub = tokens[3];
+                    if(is_number(tokens[2])){
+                        curr_neuron->lb = std::stod(tokens[2]);
+                    }
+                    if(is_number(tokens[3])){
+                        curr_neuron->ub = std::stod(tokens[3]);
+                    }
+
                     curr_layer->neurons.push_back(curr_neuron);
                 }
                 else if(tokens[0] == "upper"){
@@ -157,7 +180,7 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
 
 
 void set_weight_dims(Network_t* net){
-    for(int i=0;i<net->numlayers;i++){
+    for(size_t i=0;i<net->numlayers;i++){
         size_t t0 = 0;
         Layer_t* curr_layer = net->layer_vec[i];
         if(!curr_layer->is_activation){
@@ -199,6 +222,7 @@ void init_net_weights(Network_t* net, std::string &filepath){
 }
 
 void Neuron_t::print_neuron(){
+    std::cout<<this->lb<<" <= "<<this->nt_z3_var<<" <= "<<this->ub<<"\n";
     std::cout<<this->nt_z3_var<<", upper: "<<this->z_uexpr<<", lower: "<<this->z_lexpr<<"\n";
 }
 
@@ -252,7 +276,7 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
     std::vector<double> vec;
     std::string acc = "";
     //std::cout<<image_str<<std::endl;
-    for(int i=1; i<image_str.size();i++){
+    for(size_t i=1; i<image_str.size();i++){
         if(image_str[i] == delimeter){
             if(acc != ""){
                 double val = std::stod(acc);
@@ -309,7 +333,7 @@ void create_prop(z3::context &c, Network_t* net){
 void init_input_box(z3::context &c, Network_t* net){
     z3::expr t_expr = c.bool_val(true);
     Layer_t* inp_layer = net->input_layer;
-    for(int i = 0; i < inp_layer->neurons.size(); i++){
+    for(size_t i = 0; i < inp_layer->neurons.size(); i++){
         Neuron_t* nt = inp_layer->neurons[i];
         double upper_bound = net->im[i] + net->epsilon;
         double lower_bound = net->im[i] - net->epsilon;
@@ -324,14 +348,18 @@ void init_input_box(z3::context &c, Network_t* net){
         if(net->is_my_test){
             upper_str = "1.0";
             lower_str = "-1.0";
+            nt->ub = 1.0;
+            nt->lb = -1.0;
             t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
         }
         else{
+            nt->lb = lower_bound;
+            nt->ub = upper_bound;
             t_expr = t_expr && nt->nt_z3_var <= c.real_val(upper_str.c_str()) && nt->nt_z3_var >= c.real_val(lower_str.c_str());
         }
         
     }
-    inp_layer->layer_expr = t_expr;
+    inp_layer->b_expr = t_expr;
     //std::cout<<net->input_layer->layer_expr<<std::endl;
 }
 

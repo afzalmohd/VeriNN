@@ -19,8 +19,8 @@ class Expr_t{
 class Neuron_t{
 	public:
 		size_t neuron_index;
-		std::string lb; //datatype string since some bounds are "inf"
-		std::string ub;
+		double lb=NAN; //datatype string since some bounds are "inf"
+		double ub=NAN;
 		std::vector<double> lcoeffs;
 		std::vector<double> ucoeffs;
 		std::vector<Neuron_t*> pred_neurons;
@@ -41,7 +41,9 @@ class Layer_t{
 		std::string activation;
 		size_t layer_index;
 		z3::context c;
-		z3::expr layer_expr = c.bool_val(true);
+		z3::expr c_expr = c.bool_val(true);
+		z3::expr b_expr = c.bool_val(true);
+		z3::expr merged_expr = c.bool_val(true);
 		std::tuple<size_t,size_t,size_t> w_shape;
 		xt::xarray<double> w;
         xt::xarray<double> b;
@@ -60,7 +62,7 @@ class Network_t{
 		size_t input_dim=2;//has to be change as per the input
 		size_t output_dim=0;
 		double epsilon;
-		bool is_my_test = true;
+		bool is_my_test = false;
 		z3::context c;
 		z3::expr prop_expr = c.bool_val(true);
 		xt::xarray<double> im;
@@ -82,6 +84,8 @@ void parse_image_string_to_xarray(Network_t* net, std::string &image_path);
 void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str);
 void create_prop(z3::context &c, Network_t* net);
 void init_input_box(z3::context &c, Network_t* net);
+z3::expr get_expr_from_double(z3::context &c, double item);
+bool is_number(const std::string& s);
 
 
 #endif
