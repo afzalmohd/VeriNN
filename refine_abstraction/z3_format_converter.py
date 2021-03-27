@@ -3,73 +3,12 @@ from read_net_file import *
 import sys
 import csv
 import pickle
-
-def solve_cons(output_cons, lbl, epsilon, img):
+from parsing import *
+def solve_cons(s, eta_set, output_cons, lbl, epsilon, img):
         f = open(output_cons, "r+")
-        s = Solver()
         nodes = []
-        lbound = []
-        ubound = []
-        ind  = 0
-        for line in f:
-                if line.find(':=') != -1:
-                        y = line.split(':=')
-                        node = (y[0].strip())
-                        node = Real(node)
-                        nodes.append(node)
-                        con = (y[1].strip())
-                        newcon = con.split('+')
-                        i = 0
-                        expr = 0
-                        while i < len(newcon):
-                                #set_option(precision=5)
-                                newconn = newcon[i].strip()
-                                if newconn.find("eps") == -1:
-                                        newconn = round(float(newconn),4)
-                                        expr = expr + RealVal(newconn)
-                                else:
-                                        coef = newconn.split('.(')[0]
-                                        coef = round(float(coef),4)
-                                        varr = newconn.split('.(')[1]
-                                        var = varr.replace(')', '')
-                                        numb = var[3:]
-                                        numb = int(numb)
-                                        var = Real(var)
-                                        if numb >= 0 and numb < 784:
-                                                s.add(epsilon*var + img[numb] >= 0,epsilon*var + img[numb] <= 1)
-                                        s.add(var <= 1 , -1<=var)
-                                        #print(coef)
-                                        expr = expr + (RealVal(coef) * var)
-                                i = i + 1
-                        s.add(node == expr) 
-                        # while True:
-                        #         try:
-                        #                 newconn = newcon[i].strip()
-                        #                 if newconn.find("eps") == -1:
-                        #                         expr += newconn
-                        #                         i = i + 1
-                        #                         expr += '+'
-                        #                 else:
-                        #                         coef = newconn.split('.(')[0]
-                        #                         varr = newconn.split('.(')[1]
-                        #                         var = varr.replace(')', '')
-                        #                         var = Real(var)
-                        #                         s.add(var <= 1 , -1<=var)
-                        #                         expr += coef * var
-                        #                         expr += '+'
-                        #                         i = i + 1
-                        #         except:
-                        #                 s.add(node == expr)
-                        #                 break
-                else:
-                        lb = RealVal( line.split(',')[0] )
-                        ubb =  line.split(',')[1]
-                        ub = RealVal( ubb.strip('\n') )
-                        lbound.append(lb)
-                        ubound.append(ub)
-                        s.add(nodes[ind] <= ub, nodes[ind] >= lb)
-                        ind = ind + 1
-                        
+        change_to_sat_format(s,eta_set, f, 1, 0, epsilon, 0, 0, 0, img,nodes)
+        print(nodes)   
         #for eta_dash we are doing this#
         A=[]
         for i in range(0, 10):

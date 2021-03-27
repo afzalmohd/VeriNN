@@ -153,11 +153,11 @@ if __name__ == "__main__" :
         which solve some relevant constraints
         
         '''
+        eta_set = set()
         
-        modl = z3_format_converter.solve_cons(output_cons, lbl, epsilon, newtest)
-        #print(modl)
-        #exit()
-        #break
+        s = Solver()
+        modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, newtest)
+        
         newimage = generate_new_image(lbl, test, modl)
         print(newimage)
         '''
@@ -171,33 +171,21 @@ if __name__ == "__main__" :
         with open("testn.txt", "rb") as fp:
                 b = pickle.load(fp)
                 image= np.float64(b)
-        if stds!= 0:
+        if stds != 0:
                 normalize(image, means, stds)   
                         
         with tf.Session() as sess:
                 c_pred = sess.run(model,feed_dict={inp:image})
 
-        #all_nodes = [n for n in tf.get_default_graph().as_graph_def().node]
-        #print(all_nodes)
-
-        #print(c_pred)
-        #print(pred)
-                        
-        c_newpred = c_pred.flatten()
-                        
-        c_maximum = np.argmax(c_newpred)
-
+        c_maximum = np.argmax(c_pred.flatten())
         print(c_maximum)
-        
         maxsa = Solver()
         initial(modl, maxsa, 784)
-        #print(maxsa.check())
-        #print(maxsa.model())
-        #exit()
-        #break
-        solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons)
+        solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
+        print(maxsa.check())
         
-        mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons)
+        exit()
+        #mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons)
         print(mod)
         exit()
         read_n()
