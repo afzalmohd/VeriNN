@@ -13,6 +13,7 @@ project(${DREFINE})
 
 # SET (LLVM_DEBUG FALSE CACHE BOOL "Use Locally compiled and debug enabled LLVM")
 SET (Z3_DEBUG FALSE CACHE BOOL "Link debug verion of Z3")
+SET (CMAKE_VERBOSE_MAKEFILE ON)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("debug mode")

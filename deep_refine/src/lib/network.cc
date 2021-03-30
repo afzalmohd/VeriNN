@@ -13,16 +13,13 @@ z3::expr get_expr_from_double(z3::context &c, double item){
     return c.real_val(item_str.c_str());
 }
 
-bool is_number(const std::string& s)
+bool is_number(std::string s)
 {
-    std::string::const_iterator it = s.begin();
-    while (it != s.end()){
-        if(!(std::isdigit(*it) || *it == '.' || *it == '-')){
-            std::cout<<*it<<std::endl;
+    for(size_t i = 0; i<s.size(); i++){
+        if(!(std::isdigit(s[i]) || s[i] == '.' || s[i] == '-')){
             return false;
         }
-        ++it;
-    } 
+    }
     return !s.empty();
 }
 
@@ -327,7 +324,7 @@ void create_prop(z3::context &c, Network_t* net){
     }
     net->prop_expr = prop;
     //printf("\nCheck..\n");
-    std::cout<<net->prop_expr<<std::endl;
+    //std::cout<<net->prop_expr<<std::endl;
 }
 
 void init_input_box(z3::context &c, Network_t* net){

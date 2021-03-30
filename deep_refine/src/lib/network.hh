@@ -85,7 +85,7 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str);
 void create_prop(z3::context &c, Network_t* net);
 void init_input_box(z3::context &c, Network_t* net);
 z3::expr get_expr_from_double(z3::context &c, double item);
-bool is_number(const std::string& s);
+bool is_number(std::string s);
 
 
 #endif
