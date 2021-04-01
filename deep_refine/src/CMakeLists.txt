@@ -115,7 +115,7 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" "${PROJ
 
 # SET(clang_libs clangDaemon clangFrontendTool)
 
-LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
+#LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
 
 # lib/bmc/bmc_loop_pass.cpp
 # main.cpp

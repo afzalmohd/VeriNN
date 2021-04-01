@@ -55,7 +55,7 @@ void init_z3_expr_layer_forward(z3::context &c, Layer_t* layer){
         init_z3_expr_neuron_forward(c,nt);
         t_expr = t_expr && nt->nt_z3_var <= nt->z_uexpr && nt->nt_z3_var >= nt->z_lexpr;
     }
-    layer->layer_expr = t_expr.simplify();
+    layer->c_expr = t_expr.simplify();
 }
 
 void init_z3_expr_layer_first_forward(z3::context& c, Layer_t* layer){
@@ -64,7 +64,7 @@ void init_z3_expr_layer_first_forward(z3::context& c, Layer_t* layer){
         init_z3_expr_neuron_first_forward(c,nt);
         t_expr = t_expr && nt->nt_z3_var <= nt->z_uexpr && nt->nt_z3_var >= nt->z_lexpr;
     }
-    layer->layer_expr = t_expr.simplify();
+    layer->c_expr = t_expr.simplify();
     
 }
 
