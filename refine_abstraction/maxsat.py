@@ -21,17 +21,17 @@ def solve_cons_inner(s,siz1, siz2, ls_obj, internal_cons, eta_set):
 	change_to_sat_format(s,eta_set, f, 2, 0,0, siz1, siz2, ls_obj, 0, nodes)
 	print(sorted(eta_set))
 	print(len(eta_set))
-def solve_cons_out(s,ls_obj,m,l,l_max, lbl, output_cons):
+def solve_cons_out(s,ls_obj,m,l,l_max, lbl, output_cons, eta_set):
 	f = open(output_cons, "r+")
 	nodes = []
 	change_to_sat_format(s,eta_set, f, 3, 2, 0, 0,0, ls_obj, 0, nodes)
 	
-	'''A=[]
-	for i in range(0, 10):
-		if i!= int(lbl):
-			A.append(nodes[i] >= nodes[int(lbl)])
-	s.add(Or(A))
-	'''
+	# A=[]
+	# for i in range(0, 10):
+	# 	if i!= int(lbl):
+	# 		A.append(nodes[i] >= nodes[int(lbl)])
+	# s.add(Or(A))
+	
 	'''for c in A:
     	print(c)
         print(m.eval(c))'''

@@ -13,6 +13,7 @@ import z3_format_converter
 import numpy as np
 import eta_d_dash
 from maxsat import *
+from PIL import Image
 tf.disable_v2_behavior()
 def read_n():
         pass
@@ -64,6 +65,9 @@ def generate_new_image(lbl,test,modl):
 
                 newimage.append(np.float64(newdiff))
         return newimage
+
+def chunks(l):
+    return [l[i:i + 28] for i in range(0, len(l), 28)]
 
 '''
 
@@ -135,12 +139,12 @@ if __name__ == "__main__" :
         nodes values
 
         '''
-        ls_val=[]
+        #ls_val=[]
         for x in ls_obj:
                 with tf.Session() as sess:
                         pred = sess.run(x, feed_dict={inp: newtest})
                         newpred = pred.flatten()
-                ls_val.append(newpred)
+                #ls_val.append(newpred)
                         
                         
         maximum = np.argmax(newpred)
@@ -159,7 +163,14 @@ if __name__ == "__main__" :
         modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, newtest)
         
         newimage = generate_new_image(lbl, test, modl)
-        print(newimage)
+        
+        ls_val=[]
+        for x in ls_obj:
+                with tf.Session() as sess:
+                        pred = sess.run(x, feed_dict={inp: newimage})
+                        newpred = pred.flatten()
+                ls_val.append(newpred)
+                        
         '''
         
         save the image 
@@ -174,18 +185,33 @@ if __name__ == "__main__" :
         if stds != 0:
                 normalize(image, means, stds)   
                         
-        with tf.Session() as sess:
-                c_pred = sess.run(model,feed_dict={inp:image})
+        # with tf.Session() as sess:
+        #         c_pred = sess.run(model,feed_dict={inp:image})
 
-        c_maximum = np.argmax(c_pred.flatten())
-        print(c_maximum)
-        maxsa = Solver()
+        c_maximum = np.argmax(newpred)
+        print("new image classified label:" + str(c_maximum))
+        maxsa = Optimize()
         initial(modl, maxsa, 784)
+        eta_set = set()
+        for x in range(0, 784):
+                eta_set.add(x)
+
         solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
+        
+        mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons, eta_set)
+        print(mod)
         print(maxsa.check())
         
+        max_modl = maxsa.model()
+        for x in eta_set:
+                t = 'eps' + str(x)
+                u = t  + 'dd'
+                t = Real(t)
+                u = Real(u)
+                res = max_modl[t]
+                res2 = max_modl[u]
+                print(str(x) + ':' + str(res)  +  '   ' + str(res2))
+
         exit()
-        #mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons)
-        print(mod)
         exit()
         read_n()

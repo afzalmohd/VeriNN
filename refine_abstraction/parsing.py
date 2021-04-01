@@ -1,14 +1,19 @@
 from z3 import *
+value = 0
+set_sz = 0
 def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, siz1, siz2, ls_obj, img, nodes):
         ls_i = 0 
         lbound = []
         ubound = []
         ind  = 0
+        global value
+        global set_sz
         for line in f:
-                set_sz = len(eta_set)
+                
                 if line.find(':=') != -1:
                         y = line.split(':=')
                         node = (y[0].strip())
+                        set_sz = len(eta_set)
                         if mode == 2:
                                 node = node + '_' + str(layer)
                         node = Real(node)
@@ -38,8 +43,10 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, siz1, siz2, ls_obj,
                                                 s.add(var <= 1 , -1<=var)
                                         elif mode == 2:
                                                 eta_set.add(numb)
+                                                value = var
                                                 var = var + 'dd'        
                                                 var = Real(var)
+
                                         else:
                                                 var = var + 'dd'
                                                 var = Real(var)
@@ -56,15 +63,23 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, siz1, siz2, ls_obj,
                         if mode == 1:
                                 s.add(nodes[ind] <= ub, nodes[ind] >= lb)
                         elif mode == 2:
-                                print(nodes[ind] == ls_obj[layer][ls_i])
+                                # print(nodes[ind] == ls_obj[layer][ls_i])
+                                # print(str(set_sz) + '   ' + str(len(eta_set)))
+                                # print(value)
                                 if set_sz < len(eta_set):
                                         s.add(nodes[ind] == ls_obj[layer][ls_i])
-
+                                        t = str(nodes[ind]) + '_b'
+                                        t = Bool(t)
+                                        newvalue = str(value) + 'dd'
+                                        
+                                        value = Real(value)
+                                        newvalue = Real(newvalue)
+                                        s.add_soft(Implies(t , (value == newvalue)))
                                 ls_i = ls_i + 1
                                 if ls_i == siz1:
                                         ls_i=0
                                         layer+=1
                         else:
-                                s.add(nodes[ind] == ls_obj[layer][ls_i])
+                                #s.add(nodes[ind] == ls_obj[layer][ls_i])
                                 ls_i = ls_i + 1
                         ind = ind + 1
