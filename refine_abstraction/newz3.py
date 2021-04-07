@@ -86,6 +86,7 @@ if __name__ == "__main__" :
         
         
         '''
+
         Below is loop over all images in dataset
         but for now we are using only first image
         deepzono fails to verify this image using 
@@ -235,18 +236,12 @@ if __name__ == "__main__" :
                 value = inter_modl[u]
                 eta_dd[key] = value
 
-        # for x in range(0, 50):
-        #         t = "(" + str(x) + ")"+ "_0_b"
-        #         u = "(" + str(x) + ")" + "_1_b"
-        #         print(t)
-        #         t = Bool(t)
-        #         u = Bool(u)
-        #         print(str(inter_modl[t]) + " " + str(inter_modl[u]))   
         '''
-        after getting eta_dd values i have to solve 3 more constraints
-        1. label should be other
-        2. soft constraints for each node
-        3. implies equal to eta values
+        after getting eta_dd values
+        Solve 3 more constraints
+        1. label should not be correct
+        2. soft constraints for each node : a bool varibale (t)
+        3. t -> (eta == eta_dd)
         
         '''
         newSolver = Optimize()
