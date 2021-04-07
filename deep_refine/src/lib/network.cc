@@ -94,8 +94,7 @@ void init_expr_coeffs(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_up
 
 void init_input_layer(z3::context &c, Network_t* net){
     Layer_t* input_layer = new Layer_t();
-    for(size_t i=0;i<net->input_dim;i++){
-        Neuron_t* nt = new Neuron_t();
+    for(size_t i=0;i<net->input_dim;i++){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Neuron_t* nt = new Neuron_t();
         nt->neuron_index = i;
         std::string nt_str = "i_"+std::to_string(i);
         nt->nt_z3_var = c.real_const(nt_str.c_str());
