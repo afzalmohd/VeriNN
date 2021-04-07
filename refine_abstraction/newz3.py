@@ -14,6 +14,7 @@ import numpy as np
 import eta_d_dash
 from maxsat import *
 from PIL import Image
+import create_actual_image
 tf.disable_v2_behavior()
 def read_n():
         pass
@@ -66,8 +67,6 @@ def generate_new_image(lbl,test,modl):
                 newimage.append(np.float64(newdiff))
         return newimage
 
-def chunks(l):
-    return [l[i:i + 28] for i in range(0, len(l), 28)]
 
 '''
 
@@ -80,31 +79,17 @@ if __name__ == "__main__" :
         netname = argumentList[1]
         filename, file_extension = os.path.splitext(netname)
         epsilon = 0.05
-        '''
-        
-        Below line helps to read network line by line and 
-        returns 
-
-        model
-        inp : tensorflow object where we can feed our image 
-        to get output using above model.
-        ls_obj : list of objects correcsponding to each layers
-        it helps to print all nodes values. 
-
-        '''
-        
-        model, inp, means, stds, ls_obj = read_tensorflow_net(netname, 784, True)#N
-        
         dataset=argumentList[2]
         output_cons = argumentList[3]
         internal_cons = argumentList[4]
         tests = get_data(dataset)
         
+        
         '''
         Below is loop over all images in dataset
-        but fo now we are using only first image
+        but for now we are using only first image
         deepzono fails to verify this image using 
-        on epision 0.03 
+        on epision 0.05 
 
         '''
 
@@ -116,21 +101,68 @@ if __name__ == "__main__" :
         
         # for i, test in enumerate(tests):
         #         if i == 0:
-        print("correct label:" +test[0])
+        print("correct label: " + test[0])
         lbl = test[0]
-                        
-        newtest= np.array(np.float64(test[1:len(test)])/np.float64(255))
+        original_image = np.array(np.float64(test[1:len(test)])/np.float64(255))
+
+        original_image2 = np.array(np.float64(test[1:len(test)]))
+
+        image_size = len(original_image2)
+
+
+        '''
+        
+        Below line helps to read network line by line and
+        it returns
+        model
+        inp : tensorflow object where we can feed our image 
+        to get output using above model.
+        ls_obj : list of objects correcsponding to each layers
+        it helps to print all nodes values. 
+
+        '''
+        
+        model, inp, means, stds, ls_obj = read_tensorflow_net(netname, image_size, True)#N
+        
+        
+        '''
+
+        creating actual image from pixels
+        
+        '''
+        create_actual_image.original(original_image2)
 
         '''
         
         it is just to avoid divide by 0
         
         '''
-        # why?
         if stds != 0:
-                normalize(newtest, means, stds) 
+                normalize(original_image, means, stds) 
         
                         
+        
+        with tf.Session() as sess:
+                pred = sess.run(model, feed_dict={inp: original_image})
+                newpred = pred.flatten()
+                        
+        print("label of original image classified by model:"  + str(np.argmax(newpred)))
+                        
+        '''
+        
+        Here we pass actual label of image to sat solver
+        which solve some relevant constraints
+        
+        '''
+        eta_set = set()
+        s = Solver()
+        modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, original_image)
+        
+        eta_size = len(eta_set) 
+        newimage = generate_new_image(lbl, test, modl)
+        
+        create_actual_image.generated(newimage)
+
         '''
         
         Here ls_val has shape of [50, 50, 10] 
@@ -139,31 +171,6 @@ if __name__ == "__main__" :
         nodes values
 
         '''
-        #ls_val=[]
-        for x in ls_obj:
-                with tf.Session() as sess:
-                        pred = sess.run(x, feed_dict={inp: newtest})
-                        newpred = pred.flatten()
-                #ls_val.append(newpred)
-                        
-                        
-        maximum = np.argmax(newpred)
-                        
-        print("classified label:" + str(maximum))
-        
-        '''
-        
-        Here we pass actual label of image to sat solver
-        which solve some relevant constraints
-        
-        '''
-        eta_set = set()
-        
-        s = Solver()
-        modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, newtest)
-        
-        newimage = generate_new_image(lbl, test, modl)
-        
         ls_val=[]
         for x in ls_obj:
                 with tf.Session() as sess:
@@ -176,6 +183,7 @@ if __name__ == "__main__" :
         save the image 
 
         '''
+        
         with open("testn.txt", "wb") as fp:
                 pickle.dump(newimage, fp)
                         
@@ -185,33 +193,80 @@ if __name__ == "__main__" :
         if stds != 0:
                 normalize(image, means, stds)   
                         
-        # with tf.Session() as sess:
-        #         c_pred = sess.run(model,feed_dict={inp:image})
-
         c_maximum = np.argmax(newpred)
-        print("new image classified label:" + str(c_maximum))
-        maxsa = Optimize()
-        initial(modl, maxsa, 784)
+        
+        print("label of generated image classified by model:" + str(c_maximum))
+        
+        maxsa = Solver()
+        
+        initial(modl, maxsa, image_size)
+        
         eta_set = set()
-        for x in range(0, 784):
+        
+        for x in range(0, image_size):
                 eta_set.add(x)
+        
+        '''
+
+        solve inner layer constraints it will 
+        give eta_dd values 
+        format:
+        solve_cons_inner(solver, len of first layer, len of second layer, 
+        values of each nodes, internal_cons, etas)
+
+        '''
 
         solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
-        
-        mod = solve_cons_out(maxsa, ls_val, modl, len(ls_val[0]),870,lbl, output_cons, eta_set)
-        print(mod)
         print(maxsa.check())
+        inter_modl = maxsa.model()
         
-        max_modl = maxsa.model()
+        '''
+
+        store eta_dd values we get 
+        from inter_model in a dict
+
+        '''
+        eta_dd = {}
         for x in eta_set:
                 t = 'eps' + str(x)
                 u = t  + 'dd'
-                t = Real(t)
+                key = u
                 u = Real(u)
-                res = max_modl[t]
-                res2 = max_modl[u]
-                print(str(x) + ':' + str(res)  +  '   ' + str(res2))
+                value = inter_modl[u]
+                eta_dd[key] = value
 
-        exit()
-        exit()
-        read_n()
+        # for x in range(0, 50):
+        #         t = "(" + str(x) + ")"+ "_0_b"
+        #         u = "(" + str(x) + ")" + "_1_b"
+        #         print(t)
+        #         t = Bool(t)
+        #         u = Bool(u)
+        #         print(str(inter_modl[t]) + " " + str(inter_modl[u]))   
+        '''
+        after getting eta_dd values i have to solve 3 more constraints
+        1. label should be other
+        2. soft constraints for each node
+        3. implies equal to eta values
+        
+        '''
+        newSolver = Optimize()
+        eta_set = set()
+        mod = solve_cons_out(newSolver, len(ls_val[1]),len(ls_val[2]),eta_set, eta_dd, lbl, output_cons,internal_cons)
+
+        for x in range(0, 50):
+                t = "(" + str(x) + ")"+ "_0_b"
+                u = "(" + str(x) + ")" + "_1_b"
+                print(t)
+                t = Bool(t)
+                u = Bool(u)
+                print(str(mod[t]) + " " + str(mod[u]))
+        # for x in eta_set:
+        #         t = 'eps' + str(x)
+        #         u = t  + 'dd'
+        #         t = Real(t)
+        #         u = Real(u)
+        #         res = mod[t]
+        #         res2 = mod[u]
+        #         print(str(x) + ':' + str(res)  +  '   ' + str(res2))
+
+        

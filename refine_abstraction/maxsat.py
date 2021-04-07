@@ -6,49 +6,59 @@ import pickle
 from z3_format_converter import *
 from parsing import *
 #input layer#
-def initial(modl,s, l):
-	for i in range(0, l):
+def initial(modl,_solver, image_size):
+	for i in range(0, image_size):
 		t = 'eps' + str(i)
 		t_new = t + 'dd'
 		t = Real(t)
 		t_new = Real(t_new)
-		#print(modl[t])
-		s.add(t_new == modl[t])
-def solve_cons_inner(s,siz1, siz2, ls_obj, internal_cons, eta_set):
+		_solver.add(t_new == modl[t])
+def solve_cons_inner(_solver,layer1_size, layer2_size, ls_val, internal_cons, eta_set):
 	
 	f = open(internal_cons, "r+")
 	nodes = []
-	change_to_sat_format(s,eta_set, f, 2, 0,0, siz1, siz2, ls_obj, 0, nodes)
-	print(sorted(eta_set))
-	print(len(eta_set))
-def solve_cons_out(s,ls_obj,m,l,l_max, lbl, output_cons, eta_set):
-	f = open(output_cons, "r+")
+	
+	'''
+
+	calling a parsing function which read internal_cons
+	and add some other cons in _solver to give eta_dd
+	values.
+	format:
+	change_to_sat_format(solver, etas, file_descripter, mode,
+	layer_number - 1, no use, layer1 size, layer2 size, values of 
+	internal nodes, no use, list of nodes explored)
+
+	'''
+
+	change_to_sat_format(_solver,eta_set, f, 2, 0, 0, layer1_size, layer2_size, ls_val, 0, nodes)
+	
+	
+def solve_cons_out(s,layer1_size, layer2_size, eta_set, eta_dd ,lbl, output_cons, internal_cons):
+	f = open(internal_cons, "r+")
+	
 	nodes = []
-	change_to_sat_format(s,eta_set, f, 3, 2, 0, 0,0, ls_obj, 0, nodes)
+	nodes_out = []
+	'''
+	inner layers
+
+	'''
+	add_maxsat_cons(s, eta_set, eta_dd, f,2, 0, layer1_size, layer2_size, nodes)
+	f_new = open(output_cons, "r+")
+	add_maxsat_cons(s, eta_set, eta_dd, f_new,3, 2, layer1_size, layer2_size, nodes_out)
+
+	# change_to_sat_format(s,eta_set, f, 4, 2, 0, 0,0, ls_obj, 0, nodes)
 	
-	# A=[]
-	# for i in range(0, 10):
-	# 	if i!= int(lbl):
-	# 		A.append(nodes[i] >= nodes[int(lbl)])
-	# s.add(Or(A))
+	A=[]
+	for i in range(0, 10):
+		if i!= int(lbl):
+			A.append(nodes_out[i] >= nodes_out[int(lbl)])
+	print(A)
+	s.add(Or(A))
+	print(s.check())
+	m_new = s.model()
+	for c in A:
+		print(c)
+		print(m_new.eval(c))
 	
-	'''for c in A:
-    	print(c)
-        print(m.eval(c))'''
-	if s.check() == sat:
-		m_new = s.model()
-		return 1
-	else:
-		return -11
-	'''for i in range(l, l_max):
-		t = 'eps' + str(i)
-		t_new = t + 'dd'
-		t = Real(t)
-		t_new = Real(t_new)
-		s.add_soft(t == m_new[t_new])
-	if s.check() == sat:
-		return s.model
-	else:
-		return -1'''
-#if __name__ == "__main__" :
-	#solve_cons()
+	
+	return m_new
