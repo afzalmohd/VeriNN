@@ -119,11 +119,12 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" "${PROJ
 
 # lib/bmc/bmc_loop_pass.cpp
 # main.cpp
-SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc main.cpp) 
+SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc lib/configuration.cc main.cpp) 
 
 add_executable(${DREFINE} ${SOURCES})
 
 SET(LIBZ3 z3)
 SET(xtensor_libs blas)
+SET(boost_lib boost_program_options)
 
-target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs})
+target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs} ${boost_lib})

@@ -94,11 +94,13 @@ void init_expr_coeffs(Neuron_t* nt, std::vector<std::string> &coeffs, bool is_up
 
 void init_input_layer(z3::context &c, Network_t* net){
     Layer_t* input_layer = new Layer_t();
-    for(size_t i=0;i<net->input_dim;i++){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Neuron_t* nt = new Neuron_t();
-        nt->neuron_index = i;
+    for(size_t i=0;i<net->input_dim;i++){
+        Neuron_t nt;
+        nt.neuron_index = i;
         std::string nt_str = "i_"+std::to_string(i);
-        nt->nt_z3_var = c.real_const(nt_str.c_str());
-        input_layer->neurons.push_back(nt);
+        //std::cout<<nt_str<<std::endl;
+        nt.nt_z3_var = c.real_const(nt_str.c_str());
+        input_layer->neurons.push_back(&nt);
     }
     net->input_layer = input_layer;
 }
@@ -359,6 +361,45 @@ void init_input_box(z3::context &c, Network_t* net){
     //std::cout<<net->input_layer->layer_expr<<std::endl;
 }
 
+
+int find_refine_nodes(int num_params, char* params[]) {
+
+    Configuration::init_options(num_params, params);
+
+    double epsilon = 0.03;
+    Network_t* net = new Network_t();
+    net->epsilon = epsilon;
+    z3::context c;
+    c.set("ELIM_QUANTIFIERS", "true");
+    time_t curr_time = time(NULL);
+    init_network(c,net,Configuration::abs_out_file_path);
+    //init_net_weights(net, net_path);
+    if(net->is_my_test){
+        net->im = {117,211};
+        net->im = net->im/255;
+        std::cout<<net->im<<std::endl;
+    }
+    else{
+        //parse_image_string_to_xarray(net, dataset_path);
+    }
+    
+    //net->forward_propgate_network(0,net->im);
+    //std::cout<<net->layer_vec.back()->res<<std::endl;
+    std::cout<<"Time in parser: "<<time(NULL) - curr_time<<std::endl;
+    //set_predecessor_and_z3_var(c,net);
+    curr_time = time(NULL);
+    //init_input_box(c,net);
+    //init_z3_expr(c,net);
+    std::cout<<"Time in z3expr init: "<<time(NULL) - curr_time<<std::endl;  
+    //create_prop(c,net); 
+    
+    //net->print_network();
+    curr_time = time(NULL);
+    //check_sat_output_layer(c,net);
+    std::cout<<"Time to check satisfiability: "<<time(NULL) - curr_time<<std::endl;
+    printf("\nEnded\n");
+    return 0;
+}
 
 
 

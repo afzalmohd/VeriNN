@@ -7,6 +7,7 @@
 #include <xtensor/xsort.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xadapt.hpp>
+#include "configuration.hh"
 
 class Expr_t{
 	public:
@@ -28,7 +29,16 @@ class Neuron_t{
 		z3::expr nt_z3_var = c.bool_val(true);
 		z3::expr z_lexpr = c.bool_val(true);
 		z3::expr z_uexpr = c.bool_val(true);
-
+		// Neuron_t(z3::context &c){
+		// 	nt_z3_var = c.bool_val(true);
+		// 	z_lexpr = c.bool_val(true);
+		// 	z_uexpr = c.bool_val(true);
+		// }
+		~Neuron_t(){
+			for(size_t i=0; i<pred_neurons.size(); i++){
+				delete pred_neurons[i];
+			}
+		}
 		void print_neuron();
 };
 
