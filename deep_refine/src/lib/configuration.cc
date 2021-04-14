@@ -8,25 +8,35 @@ namespace Configuration{
     std::string default_abs_out_file_path = default_root_path+"/benchmarks/fppolyForward.txt";
     std::string default_net_path = default_root_path+"/benchmarks/mnist_relu_3_50.tf";
     std::string default_dataset_path = default_root_path+"/benchmarks/mnist_test.csv";
+    std::string default_dataset = "MNIST";
     double default_epsilon = 0.03;
+    size_t input_dim;
 
     std::string abs_out_file_path;
     std::string net_path;
     std::string dataset_path;
+    std::string dataset;
     double epsilon;
 
     int init_options(int num_of_params, char* params[]){
         try{
             desc.add_options()
             ("help,h", "produce help message")
-            ("abs-out-file,aof", po::value<std::string>(&abs_out_file_path)->default_value(default_abs_out_file_path), "Output of abstraction to be refine")
+            ("abs-out-file,f", po::value<std::string>(&abs_out_file_path)->default_value(default_abs_out_file_path), "Output of abstraction to be refine")
             ("network", po::value<std::string>(&net_path)->default_value(default_net_path), "Neural network file")
-            ("dataset", po::value<std::string>(&dataset_path)->default_value(default_dataset_path), "Dataset file in CSV form")
+            ("dataset-file", po::value<std::string>(&dataset_path)->default_value(default_dataset_path), "Dataset file in CSV form")
             ("epsilon", po::value<double>(&epsilon)->default_value(default_epsilon), "Value of image perturbation epsilon")
+            ("dataset", po::value<std::string>(&dataset)->default_value(default_dataset), "Types of image dataset")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
             show_options(vm);
+
+            if(dataset == "MNIST"){
+                input_dim = 784;
+            }
+
+
         }
         catch(std::exception& e){
             std::cout<<e.what()<<std::endl;
@@ -51,7 +61,11 @@ namespace Configuration{
         }
 
         if(vm.count("dataset")){
-            std::cout<<"Dataset file: "<<vm["dataset"].as<std::string>() << std::endl;
+            std::cout<<"Dataset type: "<<vm["dataset"].as<std::string>() << std::endl;
+        }
+
+        if(vm.count("dataset-file")){
+            std::cout<<"Dataset file: "<<vm["dataset-file"].as<std::string>() << std::endl;
         }
 
         if(vm.count("epsilon")){

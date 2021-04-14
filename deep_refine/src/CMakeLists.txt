@@ -26,6 +26,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 find_package(xtensor REQUIRED CONFIG)
 find_package(xtl REQUIRED CONFIG)
+#find_package(boost REQUIRED CONFIG)
 # include_directories()
 include_directories(${xtl_INCLUDE_DIRS})
 

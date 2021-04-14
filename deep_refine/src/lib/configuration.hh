@@ -1,6 +1,7 @@
 #ifndef _CONFIGURATION_HH_
 #define _CONFIGURATION_HH_
 #include <boost/program_options.hpp>
+#include <z3++.h>
 namespace po = boost::program_options;
 
 namespace Configuration{
@@ -13,12 +14,15 @@ namespace Configuration{
     extern std::string default_abs_out_file_path;
     extern std::string default_net_path;
     extern std::string default_dataset_path;
+    extern std::string default_dataset;
     extern double default_epsilon;
 
 
     extern std::string abs_out_file_path;
     extern std::string net_path;
     extern std::string dataset_path;
+    extern std::string dataset;
+    extern size_t input_dim;
     extern double epsilon;
 }
 

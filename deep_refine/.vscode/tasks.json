@@ -11,9 +11,14 @@
                 "-o",
                 "${workspaceFolder}/my_drefine",
                 "-L${workspaceFolder}/build/z3/buildr",
-                "-Wl,-rpath,${workspaceFolder}/z3/buildr",
+                "-Wl,-rpath,${workspaceFolder}/build/z3/buildr",
+                "-I${workspaceFolder}/build/buildr",
+                "-I${workspaceFolder}/src",
+                "-I${workspaceFolder}/build/z3/src/api",
+                "-I${workspaceFolder}/build/z3/src/api/c++",
                 "-lz3",
-                "-lblas"
+                "-lblas",
+                "-lboost_program_options"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

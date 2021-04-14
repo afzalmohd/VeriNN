@@ -20,7 +20,7 @@ void set_predecessor_layer_matmul(z3::context& c, Layer_t* layer, Layer_t* prev_
 }
 
 void set_predecessor_and_z3_var(z3::context &c, Network_t* net){
-    Layer_t* prev_layer = new Layer_t();
+    Layer_t* prev_layer;
     for(auto layer:net->layer_vec){
         if(layer->layer_index == 0){
             prev_layer = net->input_layer;
@@ -90,15 +90,20 @@ void init_z3_expr_neuron(z3::context &c, Neuron_t* nt){
 }
 
 void merged_constraints(z3::context& c, Network_t* net){
-    for(size_t i=0; i<net->layer_vec.size(); i++){
+    size_t layer_constraint_from=2;
+    for(size_t i=layer_constraint_from; i<net->layer_vec.size(); i++){
         Layer_t* curr_layer = net->layer_vec[i];
         if(i==0){
             curr_layer->merged_expr = curr_layer->b_expr && curr_layer->c_expr && net->input_layer->b_expr;
+        }
+        else if(i == layer_constraint_from){
+            curr_layer->merged_expr = curr_layer->b_expr && curr_layer->c_expr && net->layer_vec[i-1]->b_expr;
         }
         else{
             curr_layer->merged_expr = curr_layer->b_expr && curr_layer->c_expr && net->layer_vec[i-1]->merged_expr;
         }
     }
+
 }
 
 void check_sat_output_layer(z3::context& c, Network_t* net){

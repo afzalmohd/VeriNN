@@ -15,6 +15,12 @@ class Expr_t{
 		double cst;
 		size_t * dim;
 		size_t size;
+
+		~Expr_t(){
+			delete coeff;
+			delete dim;
+		}
+
 };
 
 class Neuron_t{
@@ -25,15 +31,15 @@ class Neuron_t{
 		std::vector<double> lcoeffs;
 		std::vector<double> ucoeffs;
 		std::vector<Neuron_t*> pred_neurons;
-		z3::context c;
+		z3::context& c;
 		z3::expr nt_z3_var = c.bool_val(true);
 		z3::expr z_lexpr = c.bool_val(true);
 		z3::expr z_uexpr = c.bool_val(true);
-		// Neuron_t(z3::context &c){
-		// 	nt_z3_var = c.bool_val(true);
-		// 	z_lexpr = c.bool_val(true);
-		// 	z_uexpr = c.bool_val(true);
-		// }
+		Neuron_t(z3::context &c):c(c){
+			//  nt_z3_var = c.bool_val(true);
+			//  z_lexpr = c.bool_val(true);
+			//  z_uexpr = c.bool_val(true);
+		}
 		~Neuron_t(){
 			for(size_t i=0; i<pred_neurons.size(); i++){
 				delete pred_neurons[i];
@@ -50,14 +56,22 @@ class Layer_t{
 		bool is_activation;
 		std::string activation;
 		size_t layer_index;
-		z3::context c;
-		z3::expr c_expr = c.bool_val(true);
-		z3::expr b_expr = c.bool_val(true);
-		z3::expr merged_expr = c.bool_val(true);
 		std::tuple<size_t,size_t,size_t> w_shape;
 		xt::xarray<double> w;
         xt::xarray<double> b;
 		xt::xarray<double> res;
+		z3::context& c;
+		z3::expr c_expr = c.bool_val(true);
+		z3::expr b_expr = c.bool_val(true);
+		z3::expr merged_expr = c.bool_val(true);
+		Layer_t(z3::context& c): c(c){}
+
+		~Layer_t(){
+			for(size_t i=0; i< neurons.size(); i++){
+				delete neurons[i];
+			}
+		}
+
 
 		void print_layer();
 };
@@ -69,15 +83,26 @@ class Network_t{
 		std::vector<std::tuple<size_t,size_t,size_t>> wt_shapes;
 		size_t numlayers = 0;//Other than input layer
 		Layer_t* input_layer;
-		size_t input_dim=2;//has to be change as per the input
+		size_t input_dim = Configuration::input_dim;
 		size_t output_dim=0;
-		double epsilon;
+		double epsilon = Configuration::epsilon;
 		bool is_my_test = false;
-		z3::context c;
-		z3::expr prop_expr = c.bool_val(true);
 		xt::xarray<double> im;
 		xt::xarray<double> candidate_ce;
-		Network_t();
+
+		z3::context& c;
+		z3::expr prop_expr = c.bool_val(true);
+		Network_t(z3::context& c): c(c){
+			std::cout<<"Network Constructor called"<<std::endl;
+		}
+
+		~Network_t(){
+			delete input_layer;
+			for(size_t i=0; i<layer_vec.size(); i++){
+				delete layer_vec[i];
+			}
+		}
+
 		void print_network();
 		void forward_propgate_one_layer(size_t layer_index, xt::xarray<double> &inp);
 		void forward_propgate_network(size_t layer_index, xt::xarray<double> &inp);
