@@ -1,8 +1,9 @@
-#include "network.hh" // network.hh is included in parser.hh
+#include "network.hh"
 #include<stdio.h>
 #include<fstream>
 #include<vector>
 #include "z3expr.hh"
+#include "backprop.hh"
 
 z3::expr get_expr_from_double(z3::context &c, double item){
     std::string item_str = std::to_string(item);
@@ -66,11 +67,15 @@ void parse_string_to_xarray(Network_t* net, std::string weights, bool is_bias, s
     if(is_bias){
         std::vector<size_t> shape = {std::get<2>(t)};
         net->layer_vec[layer_index]->b = xt::adapt(weight_vec, shape);
+        auto aisehi = net->layer_vec[layer_index]->b.shape();
+        
+        std::cout<<"Bias matrix shape: " <<xt::adapt(net->layer_vec[layer_index]->b.shape())<<std::endl;
     }
     else{
         std::vector<size_t> shape = {std::get<2>(t), std::get<1>(t)};
         xt::xarray<double> temp = xt::adapt(weight_vec, shape);
         net->layer_vec[layer_index]->w = xt::transpose(temp);
+        std::cout<<"Weight matrix shape: "<<xt::adapt(net->layer_vec[layer_index]->w.shape())<<std::endl;
     }
 }
 
@@ -100,9 +105,6 @@ void init_input_layer(z3::context &c, Network_t* net){
     }
 
     net->input_layer = input_layer;
-    // for(size_t i=0; i<net->input_layer->neurons.size()-2; i++){
-    //     std::cout<<"Check..  "<<(net->input_layer->neurons[i]->nt_z3_var + net->input_layer->neurons[i+1]->nt_z3_var)<<std::endl;
-    // }
 }
 
 void init_network(z3::context &c, Network_t* net, std::string file_path){
@@ -209,9 +211,9 @@ void init_net_weights(Network_t* net, std::string &filepath){
             if(tp != ""){
                 if(tp == relu_str){
                     getline(newfile, tp);
-                    parse_string_to_xarray(net, tp, false, layer_index);
+                    parse_string_to_xarray(net, tp, false, layer_index); //weight matrix
                     getline(newfile, tp);
-                    parse_string_to_xarray(net, tp, true, layer_index);
+                    parse_string_to_xarray(net, tp, true, layer_index); //bias matrix
                     layer_index = layer_index + 2;
                 }
             }
@@ -237,7 +239,6 @@ void Layer_t::print_layer(){
 void Network_t::print_network(){
     this->input_layer->print_layer();
     for(auto layer : this->layer_vec){
-        //if(layer->layer_index == 5)
             layer->print_layer();
     }
 }
@@ -392,6 +393,7 @@ int find_refine_nodes(int num_params, char* params[]) {
     
     //net->print_network();
     curr_time = time(NULL);
+    prop_back_propogate(c,net);
     check_sat_output_layer(c,net);
     std::cout<<"Time to check satisfiability: "<<time(NULL) - curr_time<<std::endl;
     printf("\nEnded\n");

@@ -35,10 +35,8 @@ class Neuron_t{
 		z3::expr nt_z3_var = c.bool_val(true);
 		z3::expr z_lexpr = c.bool_val(true);
 		z3::expr z_uexpr = c.bool_val(true);
+		z3::expr affine_expr = c.bool_val(true);
 		Neuron_t(z3::context &c):c(c){
-			//  nt_z3_var = c.bool_val(true);
-			//  z_lexpr = c.bool_val(true);
-			//  z_uexpr = c.bool_val(true);
 		}
 		~Neuron_t(){
 			for(size_t i=0; i<pred_neurons.size(); i++){
@@ -64,6 +62,7 @@ class Layer_t{
 		z3::expr c_expr = c.bool_val(true);
 		z3::expr b_expr = c.bool_val(true);
 		z3::expr merged_expr = c.bool_val(true);
+		z3::expr layer_prop = c.bool_val(true);
 		Layer_t(z3::context& c): c(c){}
 
 		~Layer_t(){
@@ -92,6 +91,7 @@ class Network_t{
 
 		z3::context& c;
 		z3::expr prop_expr = c.bool_val(true);
+		z3::expr back_subs_prop = c.bool_val(true);
 		Network_t(z3::context& c): c(c){
 			std::cout<<"Network Constructor called"<<std::endl;
 		}

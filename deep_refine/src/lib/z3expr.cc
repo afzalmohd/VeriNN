@@ -41,9 +41,6 @@ void init_z3_expr(z3::context& c, Network_t* net){
     for(auto layer : net->layer_vec){
         init_z3_expr_layer(c, layer);
     }
-    // for(size_t i=net->layer_vec.size(); i>=0 ; i--){
-
-    // }
     merged_constraints(c,net);
 }
 
@@ -109,16 +106,21 @@ void merged_constraints(z3::context& c, Network_t* net){
 void check_sat_output_layer(z3::context& c, Network_t* net){
     z3::solver s(c);
     z3::set_param("pp.decimal-precision", 5);
-    //s.add(net->input_layer->b_expr);
-    s.add(!net->prop_expr);
-    s.add(net->layer_vec.back()->merged_expr);
-    //std::cout << s;
+    s.add(net->back_subs_prop);
     auto sat_out = s.check();
     std::cout<<sat_out<<std::endl;
-    if(sat_out == z3::sat){
-        z3::model m = s.get_model();
-        model_to_image(m, net);
-    }
+    // //s.add(net->input_layer->b_expr);
+    // s.add(!net->prop_expr);
+    // s.add(net->layer_vec.back()->merged_expr);
+    // // printf("\nDump start here...\n");
+    // // std::cout << s;
+    // // printf("\nDumpe end here\n");
+    // auto sat_out = s.check();
+    // std::cout<<sat_out<<std::endl;
+    // if(sat_out == z3::sat){
+    //     z3::model m = s.get_model();
+    //     model_to_image(m, net);
+    // }
 }
 
 void model_to_image(z3::model &modl, Network_t* net){
