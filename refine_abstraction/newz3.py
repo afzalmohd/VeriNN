@@ -274,13 +274,13 @@ if __name__ == "__main__" :
         eta_set = set()
         mod = solve_cons_out(newSolver, len(ls_val[1]),len(ls_val[2]),eta_set, eta_dd, lbl, output_cons,internal_cons)
         print(ls_val)
-        for x in range(0, 50):
-                t = "(" + str(x) + ")"+ "_0_b"
-                u = "(" + str(x) + ")" + "_1_b"
-                print(t)
-                t = Bool(t)
-                u = Bool(u)
-                print(str(mod[t]) + " " + str(mod[u]))
+        # for x in range(0, 50):
+        #         t = "(" + str(x) + ")"+ "_0_b"
+        #         u = "(" + str(x) + ")" + "_1_b"
+        #         print(t)
+        #         t = Bool(t)
+        #         u = Bool(u)
+        #         print(str(mod[t]) + " " + str(mod[u]))
         # for x in eta_set:
         #         t = 'eps' + str(x)
         #         u = t  + 'dd'
