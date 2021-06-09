@@ -220,3 +220,5 @@ some important imports
 #from read_zonotope_file import read_zonotope
 
 ------------------------------------------------------
+
+s.add(epsilon*var + img[numb] >= 0,epsilon*var + img[numb] <= 1)

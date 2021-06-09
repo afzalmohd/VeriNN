@@ -63,7 +63,10 @@ def generate_new_image(lbl,test,modl):
                 x = float(res.numerator_as_long())/float(res.denominator_as_long())
                 diff = np.float64(specUB[j]) - np.float64(specLB[j])
                 newdiff = np.float64(image[j]) + epsilon*x
+                '''
+                pixel values are appended
 
+                '''
                 newimage.append(np.float64(newdiff))
         return newimage
 
@@ -88,8 +91,8 @@ if __name__ == "__main__" :
         '''
 
         Below is loop over all images in dataset
-        but for now we are using only first image
-        deepzono fails to verify this image using 
+        but for now we are using only first image.
+        deepzono fails to verify this image 
         on epision 0.05 
 
         '''
@@ -104,8 +107,18 @@ if __name__ == "__main__" :
         #         if i == 0:
         print("correct label: " + test[0])
         lbl = test[0]
+        '''
+
+        image after normalizing
+
+        '''
         original_image = np.array(np.float64(test[1:len(test)])/np.float64(255))
 
+        '''
+        
+        image without normalizing
+
+        '''
         original_image2 = np.array(np.float64(test[1:len(test)]))
 
         image_size = len(original_image2)
@@ -135,14 +148,13 @@ if __name__ == "__main__" :
 
         '''
         
-        it is just to avoid divide by 0
+        below is just to avoid divide by 0
         
         '''
         if stds != 0:
                 normalize(original_image, means, stds) 
         
                         
-        
         with tf.Session() as sess:
                 pred = sess.run(model, feed_dict={inp: original_image})
                 newpred = pred.flatten()
@@ -160,18 +172,18 @@ if __name__ == "__main__" :
         modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, original_image)
         
         eta_size = len(eta_set) 
+
         newimage = generate_new_image(lbl, test, modl)
         
         create_actual_image.generated(newimage)
 
         '''
-        
         Here ls_val has shape of [50, 50, 10] 
         corresponding to all layers in neural network
         It stores all intermediate as well as output layer
         nodes values
-
         '''
+
         ls_val=[]
         for x in ls_obj:
                 with tf.Session() as sess:
@@ -180,8 +192,7 @@ if __name__ == "__main__" :
                 ls_val.append(newpred)
                         
         '''
-        
-        save the image 
+        save the image
 
         '''
         
@@ -201,7 +212,11 @@ if __name__ == "__main__" :
         maxsa = Solver()
         
         initial(modl, maxsa, image_size)
-        
+        # if maxsa.check() == sat:
+        #         m = maxsa.model()
+        #         print(m)
+        # else:
+        #         print("unsat")
         eta_set = set()
         
         for x in range(0, image_size):
@@ -228,13 +243,24 @@ if __name__ == "__main__" :
 
         '''
         eta_dd = {}
+        print("values outside range...")
         for x in eta_set:
                 t = 'eps' + str(x)
                 u = t  + 'dd'
                 key = u
                 u = Real(u)
-                value = inter_modl[u]
+                res = inter_modl[u]
+                value = float(res.numerator_as_long())/float(res.denominator_as_long())
+                
+                if value > 1 or value < -1:
+                        print(value)
+                
                 eta_dd[key] = value
+        print("------------------------")
+        
+
+        
+
 
         '''
         after getting eta_dd values
@@ -247,7 +273,7 @@ if __name__ == "__main__" :
         newSolver = Optimize()
         eta_set = set()
         mod = solve_cons_out(newSolver, len(ls_val[1]),len(ls_val[2]),eta_set, eta_dd, lbl, output_cons,internal_cons)
-
+        print(ls_val)
         for x in range(0, 50):
                 t = "(" + str(x) + ")"+ "_0_b"
                 u = "(" + str(x) + ")" + "_1_b"

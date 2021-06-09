@@ -39,16 +39,54 @@ def solve_cons_out(s,layer1_size, layer2_size, eta_set, eta_dd ,lbl, output_cons
 	nodes = []
 	nodes_out = []
 	'''
-	inner layers
-
+        debugging values of each node by
+        putting eta_dd values into eqn...
+        so we created a new solver
+    '''
+	debug_solver = Solver()
 	'''
-	add_maxsat_cons(s, eta_set, eta_dd, f,2, 0, layer1_size, layer2_size, nodes)
+	inner layers
+	
+	'''
+	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f,2, 0, layer1_size, layer2_size, nodes)
 	f_new = open(output_cons, "r+")
-	add_maxsat_cons(s, eta_set, eta_dd, f_new,3, 2, layer1_size, layer2_size, nodes_out)
+	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f_new,3, 2, layer1_size, layer2_size, nodes_out)
 
 	# change_to_sat_format(s,eta_set, f, 4, 2, 0, 0,0, ls_obj, 0, nodes)
-	
+	print(eta_dd)
+	for key in eta_dd:
+		# print (key[:-2], 'corresponds to', eta_dd[key])
+		var = key[:-2]
+		
+		var = Real(var)
+		debug_solver.add(var == eta_dd[key])
+	'''
+	debugging for checking
+	values at each imternal
+	layers
+
+	'''
+	layer_1 = []
+	layer_2 = []
+	if debug_solver.check() == sat:
+		m = debug_solver.model()
+	for x in range(0, 50):
+		t = "(" + str(x) + ")"+ "_0"
+		u = "(" + str(x) + ")"+ "_1"
+		t = Real(t)
+		u = Real(u)
+		print(t)
+		res = m[t]
+		res2 = m[u]
+		value = float(res.numerator_as_long())/float(res.denominator_as_long())
+		value2 = float(res2.numerator_as_long())/float(res2.denominator_as_long())
+		layer_1.append(value)
+		layer_2.append(value2)
+	print(layer_1)
+	print(layer_2)
+
 	A=[]
+
 	for i in range(0, 10):
 		if i!= int(lbl):
 			A.append(nodes_out[i] >= nodes_out[int(lbl)])

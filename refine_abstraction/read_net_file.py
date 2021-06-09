@@ -2,7 +2,7 @@
 import tensorflow.compat.v1 as tf
 import numpy as np
 import re
-import onnx
+# import onnx
 import sys
 def product(it):
     product = 1

@@ -15,14 +15,14 @@ def solve_cons(s, eta_set, output_cons, lbl, epsilon, img):
                 if i!= int(lbl):
                         A.append(nodes[i] >= nodes[int(lbl)])
         s.add(Or(A))
-        print(s.check())
         #set_option(max_args=10000000, max_lines=1000000, max_depth=10000000, max_visited=1000000)
-        m = s.model()
+        if s.check() == sat:
+                m = s.model()
 
         for c in A:
                 print(c)
                 print(m.eval(c))
-        # print(m)
+        
         #exit()
         #newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
         return m

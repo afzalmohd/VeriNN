@@ -33,7 +33,7 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, siz1, siz2, ls_obj,
                                         var = varr.replace(')', '')
                                         numb = var[3:]
                                         numb = int(numb)
-                                        '''first time for output'''
+                                        '''first time for outputs'''
                                         if mode == 1:
                                                 
                                                 eta_set.add(numb)
@@ -82,7 +82,7 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, siz1, siz2, ls_obj,
                                 ls_i = ls_i + 1
                         ind = ind + 1
 
-def add_maxsat_cons(s, eta_set, eta_dd,f, mode, layer, siz1,siz2,nodes ):
+def add_maxsat_cons(dbg_solv, s, eta_set, eta_dd,f, mode, layer, siz1,siz2,nodes ):
         ls_i = 0 
         lbound = []
         ubound = []
@@ -129,6 +129,9 @@ def add_maxsat_cons(s, eta_set, eta_dd,f, mode, layer, siz1,siz2,nodes ):
                                 i = i + 1
                         
                         s.add(node == expr) 
+                        if mode == 2:
+                                dbg_solv.add(node == expr)
+
                 else:
                         lb = RealVal( line.split(',')[0] )
                         ubb =  line.split(',')[1]
