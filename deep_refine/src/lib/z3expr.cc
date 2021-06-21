@@ -1,5 +1,12 @@
 #include "z3expr.hh" //network.hh included in z3expr.hh
 #include <ctime>
+
+void set_z3_parameters(z3::context& c){
+    c.set("ELIM_QUANTIFIERS", "true");
+    z3::set_param("pp.decimal-precision", 5);
+    z3::set_param("pp.decimal", true);
+}
+
 void set_predecessor_layer_activation(z3::context& c, Layer_t* layer, Layer_t* prev_layer){
     for(size_t i=0;i<layer->neurons.size();i++){
         Neuron_t* nt = layer->neurons[i];
@@ -104,9 +111,7 @@ void merged_constraints(z3::context& c, Network_t* net){
 
 void check_sat_output_layer(z3::context& c, Network_t* net){
     z3::solver s(c);
-    z3::set_param("pp.decimal-precision", 5);
-    z3::set_param("pp.decimal", true);
-
+    set_z3_parameters(c);
     s.add(!net->prop_expr && net->layer_vec.back()->b_expr);
     z3::check_result sat_out = s.check();
     z3::model modl = s.get_model();
@@ -156,19 +161,6 @@ void check_sat_output_layer(z3::context& c, Network_t* net){
 
         }
     }
-
-    // //s.add(net->input_layer->b_expr);
-    // s.add(!net->prop_expr);
-    // s.add(net->layer_vec.back()->merged_expr);
-    // // printf("\nDump start here...\n");
-    // // std::cout << s;
-    // // printf("\nDumpe end here\n");
-    // auto sat_out = s.check();
-    // std::cout<<sat_out<<std::endl;
-    // if(sat_out == z3::sat){
-    //     z3::model m = s.get_model();
-    //     model_to_image(m, net);
-    // }
 }
 
 void back_prop_relu(z3::context& c, Network_t* net, Layer_t* layer){

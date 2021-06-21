@@ -24,6 +24,8 @@ namespace Configuration{
     extern std::string dataset;
     extern size_t input_dim;
     extern double epsilon;
+    extern bool is_small_ex;
+
 }
 
 #endif

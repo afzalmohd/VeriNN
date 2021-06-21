@@ -121,12 +121,6 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                 std::vector<std::string> tokens =  parse_string(tp);
                 if(tokens[0] == "inputdim"){
                     net->input_dim = stoi(tokens[1]);
-                    if(Configuration::dataset == "MNIST"){
-                        net->input_dim = 784;
-                    }
-                    if(net->is_my_test){
-                        net->input_dim = 2;
-                    }
                 }
                 else if(tokens[0] == "layer"){
                     curr_layer = new Layer_t(c);
@@ -384,16 +378,19 @@ void init_input_box(z3::context &c, Network_t* net){
 int find_refine_nodes(int num_params, char* params[]) {
 
     Configuration::init_options(num_params, params);
+    if(Configuration::vm.count("help")){
+        return 0;
+    }
+
     z3::context c;
-    c.set("ELIM_QUANTIFIERS", "true");
     Network_t* net = new Network_t(c);
     time_t curr_time = time(NULL);
     init_network(c,net,Configuration::abs_out_file_path);
     init_net_weights(net, Configuration::net_path);
-    if(net->is_my_test){
+    if(Configuration::is_small_ex){
         net->im = {117,211};
         net->im = net->im/255;
-        std::cout<<net->im<<std::endl;
+        std::cout<<"Image: "<<net->im<<std::endl;
     }
     else{
         parse_image_string_to_xarray(net, Configuration::dataset_path);

@@ -2,6 +2,7 @@
 #define _Z3EXPR_H_
 #include "network.hh"
 
+void set_z3_parameters(z3::context& c);
 void set_predecessor_layer_activation(z3::context& c, Layer_t* layer, Layer_t* prev_layer);
 void set_predecessor_layer_matmul(z3::context& c, Layer_t* layer, Layer_t* prev_layer);
 void set_predecessor_and_z3_var(z3::context &c, Network_t* net);
