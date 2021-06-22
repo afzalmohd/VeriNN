@@ -13,7 +13,7 @@ def initial(modl,_solver, image_size):
 		t = Real(t)
 		t_new = Real(t_new)
 		_solver.add(t_new == modl[t])
-def solve_cons_inner(_solver,layer1_size, layer2_size, ls_val, internal_cons, eta_set):
+def solve_cons_inner(_solver,layerwise_size, ls_val, internal_cons, eta_set):
 	
 	f = open(internal_cons, "r+")
 	nodes = []
@@ -25,15 +25,15 @@ def solve_cons_inner(_solver,layer1_size, layer2_size, ls_val, internal_cons, et
 	values.
 	format:
 	change_to_sat_format(solver, etas, file_descripter, mode,
-	layer_number - 1, no use, layer1 size, layer2 size, values of 
+	layer_number - 1, no use, layer sizes, values of 
 	internal nodes, no use, list of nodes explored)
 
 	'''
 
-	change_to_sat_format(_solver,eta_set, f, 2, 0, 0, layer1_size, layer2_size, ls_val, 0, nodes)
+	change_to_sat_format(_solver,eta_set, f, 2, 0, 0,layerwise_size, ls_val, 0, nodes)
 	
 	
-def solve_cons_out(s,layer1_size, layer2_size, eta_set, eta_dd ,lbl, output_cons, internal_cons):
+def solve_cons_out(s,layerwise_size, eta_set, eta_dd ,lbl, output_cons, internal_cons):
 	f = open(internal_cons, "r+")
 	
 	nodes = []
@@ -48,21 +48,22 @@ def solve_cons_out(s,layer1_size, layer2_size, eta_set, eta_dd ,lbl, output_cons
 	inner layers
 	
 	'''
-	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f,2, 0, layer1_size, layer2_size, nodes)
+	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f, 2, 0, layerwise_size, nodes)
 	f_new = open(output_cons, "r+")
-	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f_new,3, 2, layer1_size, layer2_size, nodes_out)
+	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f_new, 3, 2, layerwise_size, nodes_out)
 
 	# change_to_sat_format(s,eta_set, f, 4, 2, 0, 0,0, ls_obj, 0, nodes)
 	print(eta_dd)
 	for key in eta_dd:
 		# print (key[:-2], 'corresponds to', eta_dd[key])
 		var = key[:-2]
-		
 		var = Real(var)
 		debug_solver.add(var == eta_dd[key])
+	#---------------debugging----------------------
+	
 	'''
 	debugging for checking
-	values at each imternal
+	values at each internal
 	layers
 
 	'''
@@ -84,7 +85,18 @@ def solve_cons_out(s,layer1_size, layer2_size, eta_set, eta_dd ,lbl, output_cons
 		layer_2.append(value2)
 	print(layer_1)
 	print(layer_2)
+	output_layer = []
+	for x in range(50, 60):
+		t = "(" + str(x) + ")"
+		t = Real(t)
+		print(t)
+		res = m[t]
+		value = float(res.numerator_as_long())/float(res.denominator_as_long())
+		output_layer.append(value)
+	print(output_layer)
 
+	#------------debugging ends-----------------------
+	
 	A=[]
 
 	for i in range(0, 10):

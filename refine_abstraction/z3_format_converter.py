@@ -7,7 +7,7 @@ from parsing import *
 def solve_cons(s, eta_set, output_cons, lbl, epsilon, img):
         f = open(output_cons, "r+")
         nodes = []
-        change_to_sat_format(s,eta_set, f, 1, 0, epsilon, 0, 0, 0, img,nodes)
+        change_to_sat_format(s,eta_set, f, 1, 0, epsilon, 0, 0, img,nodes)
         print(nodes)   
         #for eta_dash we are doing this#
         A=[]

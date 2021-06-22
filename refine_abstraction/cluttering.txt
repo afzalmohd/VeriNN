@@ -222,3 +222,40 @@ some important imports
 ------------------------------------------------------
 
 s.add(epsilon*var + img[numb] >= 0,epsilon*var + img[numb] <= 1)
+
+
+----------------------------------------------------------
+
+ solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
+ --------
+ new code
+
+ # for x in range(0, 50):
+        #         t = "(" + str(x) + ")"+ "_0_b"
+        #         u = "(" + str(x) + ")" + "_1_b"
+        #         print(t)
+        #         t = Bool(t)
+        #         u = Bool(u)
+        #         print(str(mod[t]) + " " + str(mod[u]))
+        # for x in eta_set:
+        #         t = 'eps' + str(x)
+        #         u = t  + 'dd'
+        #         t = Real(t)
+        #         u = Real(u)
+        #         res = mod[t]
+        #         res2 = mod[u]
+        #         print(str(x) + ':' + str(res)  +  '   ' + str(res2))
+-------------
+
+
+# for i, test in enumerate(tests):
+        #         if i == 0:
+        ----------------
+
+
+# if maxsa.check() == sat:
+        #         m = maxsa.model()
+        #         print(m)
+        # else:
+        #         print("unsat")
+------------------------

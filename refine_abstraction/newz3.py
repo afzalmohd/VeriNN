@@ -86,7 +86,7 @@ if __name__ == "__main__" :
         output_cons = argumentList[3]
         internal_cons = argumentList[4]
         tests = get_data(dataset)
-        
+        number_of_layers = 2
         
         '''
 
@@ -97,16 +97,16 @@ if __name__ == "__main__" :
 
         '''
 
-        # choose the image
+        # choose the first image
+        
         test = ''
         for i, t in enumerate(tests):
                 if i == 0:
                         test = t
         
-        # for i, test in enumerate(tests):
-        #         if i == 0:
         print("correct label: " + test[0])
         lbl = test[0]
+        
         '''
 
         image after normalizing
@@ -172,9 +172,7 @@ if __name__ == "__main__" :
         modl = z3_format_converter.solve_cons(s, eta_set, output_cons, lbl, epsilon, original_image)
         
         eta_size = len(eta_set) 
-
         newimage = generate_new_image(lbl, test, modl)
-        
         create_actual_image.generated(newimage)
 
         '''
@@ -182,6 +180,7 @@ if __name__ == "__main__" :
         corresponding to all layers in neural network
         It stores all intermediate as well as output layer
         nodes values
+        
         '''
 
         ls_val=[]
@@ -195,13 +194,12 @@ if __name__ == "__main__" :
         save the image
 
         '''
-        
         with open("testn.txt", "wb") as fp:
                 pickle.dump(newimage, fp)
                         
         with open("testn.txt", "rb") as fp:
                 b = pickle.load(fp)
-                image= np.float64(b)
+                image = np.float64(b)
         if stds != 0:
                 normalize(image, means, stds)   
                         
@@ -212,34 +210,46 @@ if __name__ == "__main__" :
         maxsa = Solver()
         
         initial(modl, maxsa, image_size)
-        # if maxsa.check() == sat:
-        #         m = maxsa.model()
-        #         print(m)
-        # else:
-        #         print("unsat")
+        
         eta_set = set()
         
         for x in range(0, image_size):
                 eta_set.add(x)
         
         '''
+        keep track of all layer sizes 
+        in an array (exclude input layer and
+        output layer)
+        '''
+        layerwise_size = []
+        for i in range(0, number_of_layers):
+                x = len(ls_val[i])
+                layerwise_size.append(int(x))
+
+         
+        '''
 
         solve inner layer constraints it will 
         give eta_dd values 
         format:
-        solve_cons_inner(solver, len of first layer, len of second layer, 
+        solve_cons_inner(solver, array of layer sizes, 
         values of each nodes, internal_cons, etas)
 
-        '''
-
-        solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
-        print(maxsa.check())
-        inter_modl = maxsa.model()
+        '''        
+        solve_cons_inner(maxsa, layerwise_size, ls_val, internal_cons, eta_set)
+        
+        if maxsa.check() == sat: 
+                inter_modl = maxsa.model()
+        else:
+                print("unsat and can't proceed now")
+                exit()
         
         '''
 
         store eta_dd values we get 
         from inter_model in a dict
+        and print which are out of 
+        range(just for debugging)
 
         '''
         eta_dd = {}
@@ -253,15 +263,11 @@ if __name__ == "__main__" :
                 value = float(res.numerator_as_long())/float(res.denominator_as_long())
                 
                 if value > 1 or value < -1:
-                        print(value)
+                        print(str(value) + ' ' + str(key))
                 
                 eta_dd[key] = value
         print("------------------------")
         
-
-        
-
-
         '''
         after getting eta_dd values
         Solve 3 more constraints
@@ -272,22 +278,7 @@ if __name__ == "__main__" :
         '''
         newSolver = Optimize()
         eta_set = set()
-        mod = solve_cons_out(newSolver, len(ls_val[1]),len(ls_val[2]),eta_set, eta_dd, lbl, output_cons,internal_cons)
+        mod = solve_cons_out(newSolver, layerwise_size,eta_set, eta_dd, lbl, output_cons,internal_cons)
         print(ls_val)
-        # for x in range(0, 50):
-        #         t = "(" + str(x) + ")"+ "_0_b"
-        #         u = "(" + str(x) + ")" + "_1_b"
-        #         print(t)
-        #         t = Bool(t)
-        #         u = Bool(u)
-        #         print(str(mod[t]) + " " + str(mod[u]))
-        # for x in eta_set:
-        #         t = 'eps' + str(x)
-        #         u = t  + 'dd'
-        #         t = Real(t)
-        #         u = Real(u)
-        #         res = mod[t]
-        #         res2 = mod[u]
-        #         print(str(x) + ':' + str(res)  +  '   ' + str(res2))
-
+        
         
