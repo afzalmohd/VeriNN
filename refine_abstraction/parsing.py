@@ -9,7 +9,9 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, layrewise_size, ls_
         global value
         global set_sz
         if mode == 2:
-                print("nodes where new etas are created")
+                print("layer and corresponding nodes where new etas are created")
+        """read file line by line and convert given constraints 
+        to sat understandable format"""
         for line in f:
                 if line.find(':=') != -1:
                         y = line.split(':=')
@@ -48,8 +50,6 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, layrewise_size, ls_
                                                 value = var
                                                 var = var + 'dd'        
                                                 var = Real(var)
-                                                if numb == 787 or numb == 868:
-                                                        s.add(1 < var, -1 > var)
 
                                         else:
                                                 
@@ -69,10 +69,6 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, layrewise_size, ls_
                         if mode == 1:
                                 s.add(nodes[ind] <= ub, nodes[ind] >= lb)
                         elif mode == 2:
-                                # print(nodes[ind] == ls_obj[layer][ls_i])
-                                # print(str(set_sz) + '   ' + str(len(eta_set)))
-                                # print(value)
-
                                 if set_sz < len(eta_set):
                                         s.add(nodes[ind] == ls_obj[layer][ls_i])
                                         print(str(value) + " in layer " + str(layer + 1) + " at node " + str(ls_i))  
@@ -82,7 +78,6 @@ def change_to_sat_format(s,eta_set, f, mode, layer, epsilon, layrewise_size, ls_
                                         ls_i=0
                                         layer+=1
                         else:
-                                #s.add(nodes[ind] == ls_obj[layer][ls_i])
                                 s.add(nodes[ind] <= ub, nodes[ind] >= lb)
                                 ls_i = ls_i + 1
                         ind = ind + 1
@@ -121,20 +116,18 @@ def add_maxsat_cons(dbg_solv, s, eta_set, eta_dd,f, mode, layer,layrewise_size,n
                                         numb = var[3:]
                                         numb = int(numb)
                                         if mode == 2:
-                                                
+                                                xche = "ff"
                                                 eta_set.add(numb)
                                                 value = var   
                                                 var = Real(var)
 
+
                                         else:
                                                 var = Real(var)
-
-                                        
                                         expr = expr + (RealVal(coef) * var)
                                 i = i + 1
-                        
-                        s.add(node == expr) 
-                        
+                        if mode != 2:
+                                s.add(node == expr) 
                         dbg_solv.add(node == expr)
 
                 else:
@@ -144,7 +137,6 @@ def add_maxsat_cons(dbg_solv, s, eta_set, eta_dd,f, mode, layer,layrewise_size,n
                         lbound.append(lb)
                         ubound.append(ub)
                         if mode == 2:
-                                
                                 if set_sz < len(eta_set):
                                         
                                         t = str(nodes[ind]) + '_b'

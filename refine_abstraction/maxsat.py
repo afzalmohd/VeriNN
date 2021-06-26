@@ -5,50 +5,44 @@ import csv
 import pickle
 from z3_format_converter import *
 from parsing import *
-#input layer#
+
+
+#eta values at input layer input layer
 def initial(modl,_solver, image_size):
 	for i in range(0, image_size):
 		t = 'eps' + str(i)
 		t_new = t + 'dd'
 		t = Real(t)
 		t_new = Real(t_new)
-		_solver.add(t_new == modl[t])
+		res  = modl[t]
+		value = float(res.numerator_as_long())/float(res.denominator_as_long())
+		_solver.add(t_new == value)
+
+#inner layer cons
 def solve_cons_inner(_solver,layerwise_size, ls_val, internal_cons, eta_set):
-	
 	f = open(internal_cons, "r+")
 	nodes = []
-	
-	'''
 
-	calling a parsing function which read internal_cons
-	and add some other cons in _solver to give eta_dd
-	values.
+	"""calling a parsing function which read internal_cons and add some other 
+	cons in _solver to give eta_dd values.
 	format:
-	change_to_sat_format(solver, etas, file_descripter, mode,
-	layer_number - 1, no use, layer sizes, values of 
-	internal nodes, no use, list of nodes explored)
-
-	'''
-
+	change_to_sat_format(solver, etas, file_descripter, mode, layer_number - 1, 
+	no use, layer sizes, values of internal nodes, no use, list of nodes explored)"""
 	change_to_sat_format(_solver,eta_set, f, 2, 0, 0,layerwise_size, ls_val, 0, nodes)
 	
-	
+#output layer cons	
 def solve_cons_out(s,layerwise_size, eta_set, eta_dd ,lbl, output_cons, internal_cons):
 	f = open(internal_cons, "r+")
-	
 	nodes = []
 	nodes_out = []
-	'''
-        debugging values of each node by
-        putting eta_dd values into eqn...
-        so we created a new solver
-    '''
-	debug_solver = Solver()
-	'''
-	inner layers
 	
-	'''
+	"""debugging values of each node by putting eta_dd values into eqn
+    so we created a new solver"""
+	debug_solver = Solver()
+	
+	#for inner layers
 	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f, 2, 0, layerwise_size, nodes)
+	#for output layer
 	f_new = open(output_cons, "r+")
 	add_maxsat_cons(debug_solver, s, eta_set, eta_dd, f_new, 3, 2, layerwise_size, nodes_out)
 
@@ -59,14 +53,10 @@ def solve_cons_out(s,layerwise_size, eta_set, eta_dd ,lbl, output_cons, internal
 		var = key[:-2]
 		var = Real(var)
 		debug_solver.add(var == eta_dd[key])
+	
 	#---------------debugging----------------------
 	
-	'''
-	debugging for checking
-	values at each internal
-	layers
-
-	'''
+	# debugging for checking values at each internal layers
 	layer_1 = []
 	layer_2 = []
 	if debug_solver.check() == sat:
@@ -98,7 +88,6 @@ def solve_cons_out(s,layerwise_size, eta_set, eta_dd ,lbl, output_cons, internal
 	#------------debugging ends-----------------------
 	
 	A=[]
-
 	for i in range(0, 10):
 		if i!= int(lbl):
 			A.append(nodes_out[i] >= nodes_out[int(lbl)])
@@ -109,6 +98,4 @@ def solve_cons_out(s,layerwise_size, eta_set, eta_dd ,lbl, output_cons, internal
 	for c in A:
 		print(c)
 		print(m_new.eval(c))
-	
-	
 	return m_new
