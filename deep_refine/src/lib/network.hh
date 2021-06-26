@@ -31,8 +31,10 @@ class Neuron_t{
 		std::vector<double> lcoeffs;
 		std::vector<double> ucoeffs;
 		std::vector<Neuron_t*> pred_neurons;
+		double back_prop_val;
 		z3::context& c;
 		z3::expr nt_z3_var = c.bool_val(true);
+		z3::expr back_prop_val_expr = c.bool_val(true);
 		z3::expr z_lexpr = c.bool_val(true);
 		z3::expr z_uexpr = c.bool_val(true);
 		z3::expr affine_expr = c.bool_val(true);
@@ -63,6 +65,7 @@ class Layer_t{
 		z3::expr b_expr = c.bool_val(true);
 		z3::expr merged_expr = c.bool_val(true);
 		z3::expr layer_prop = c.bool_val(true);
+		z3::expr back_prop_eq = c.bool_val(true);
 		Layer_t(z3::context& c): c(c){}
 
 		~Layer_t(){
@@ -121,6 +124,7 @@ void create_prop(z3::context &c, Network_t* net);
 void init_input_box(z3::context &c, Network_t* net);
 z3::expr get_expr_from_double(z3::context &c, double item);
 bool is_number(std::string s);
+void construct_and_execute_image(size_t layer_index, Network_t* net);
 
 
 #endif

@@ -56,29 +56,6 @@ void back_substitute(z3::context& c, Network_t* net){
     }
 }
 
-void affine_expr_init_neuron(z3::context& c, Layer_t* layer, Neuron_t* nt){
-    z3::expr sum = get_expr_from_double(c, layer->b(nt->neuron_index));
-    for(auto pred_nt:nt->pred_neurons){
-        sum = sum + get_expr_from_double(c,layer->w(pred_nt->neuron_index,nt->neuron_index))*pred_nt->nt_z3_var;
-    }
-    nt->affine_expr = sum.simplify();
-}
-
-void affine_expr_init_layer(z3::context& c, Layer_t* layer){
-    if(!layer->is_activation){
-        //std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
-        for(auto nt:layer->neurons){   
-            affine_expr_init_neuron(c, layer, nt);
-        }
-    }
-}
-
-void affine_expr_init(z3::context& c, Network_t* net){
-    for(auto layer:net->layer_vec){
-        affine_expr_init_layer(c,layer);
-    }
-}
-
 void prop_back_propogate_layer(z3::context& c,z3::expr& neg_prop, Layer_t* layer){
     if(!layer->is_activation){
         z3::expr temp_expr = neg_prop;
@@ -105,7 +82,7 @@ void prop_back_propogate_layer(z3::context& c,z3::expr& neg_prop, Layer_t* layer
 
 void prop_back_propogate(z3::context& c, Network_t* net){
     printf("\nCheck.\n");
-    affine_expr_init(c,net);
+    //affine_expr_init(c,net); Already called from main function
     z3::expr neg_prop = !net->prop_expr;
     //std::cout<<"Negation of prop: "<<neg_prop<<std::endl;
     for(int i = net->layer_vec.size()-1; i>=0; i--){

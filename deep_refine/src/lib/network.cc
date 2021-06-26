@@ -121,10 +121,6 @@ void init_network(z3::context &c, Network_t* net, std::string file_path){
                 std::vector<std::string> tokens =  parse_string(tp);
                 if(tokens[0] == "inputdim"){
                     net->input_dim = stoi(tokens[1]);
-                    net->input_dim = 784;
-                    if(net->is_my_test){
-                        net->input_dim = 2;
-                    }
                 }
                 else if(tokens[0] == "layer"){
                     curr_layer = new Layer_t(c);
@@ -270,6 +266,19 @@ void Network_t::forward_propgate_network(size_t layer_index,
     }
 }
 
+void construct_and_execute_image(size_t layer_index, Network_t* net){
+    Layer_t* layer = net->layer_vec[layer_index];
+    std::vector<double> sat_assign;
+    for(auto nt:layer->neurons){
+        sat_assign.push_back(nt->back_prop_val);
+    }
+    std::vector<std::size_t> shape = {layer->dims};
+    xt::xarray<double> gen_image = xt::adapt(sat_assign, shape);
+    //std::cout<<"Layer index is: "<<layer_index<<", shape: "<<layer->dims<<std::endl;
+    net->forward_propgate_network(layer_index+1, gen_image);
+    std::cout<<"Layer index: "<<layer_index<<", output is: "<<net->layer_vec.back()->res<<std::endl;
+}
+
 void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
     char delimeter = ',';
     std::vector<double> vec;
@@ -307,6 +316,9 @@ void parse_image_string_to_xarray(Network_t* net, std::string &image_path){
                 if(image_counter < 1){
                     parse_image_string_to_xarray_one(net,tp);
                     image_counter++;
+                }
+                else{
+                    break;
                 }
             }
         }
@@ -366,23 +378,26 @@ void init_input_box(z3::context &c, Network_t* net){
 int find_refine_nodes(int num_params, char* params[]) {
 
     Configuration::init_options(num_params, params);
+    if(Configuration::vm.count("help")){
+        return 0;
+    }
+
     z3::context c;
-    c.set("ELIM_QUANTIFIERS", "true");
     Network_t* net = new Network_t(c);
     time_t curr_time = time(NULL);
     init_network(c,net,Configuration::abs_out_file_path);
     init_net_weights(net, Configuration::net_path);
-    if(net->is_my_test){
+    if(Configuration::is_small_ex){
         net->im = {117,211};
         net->im = net->im/255;
-        std::cout<<net->im<<std::endl;
+        std::cout<<"Image: "<<net->im<<std::endl;
     }
     else{
         parse_image_string_to_xarray(net, Configuration::dataset_path);
     }
     
-    //net->forward_propgate_network(0,net->im);
-    //std::cout<<net->layer_vec.back()->res<<std::endl;
+    net->forward_propgate_network(0,net->im);
+    std::cout<<net->layer_vec.back()->res<<std::endl;
     std::cout<<"Time in parser: "<<time(NULL) - curr_time<<std::endl;
     set_predecessor_and_z3_var(c,net);
     curr_time = time(NULL);
@@ -390,10 +405,11 @@ int find_refine_nodes(int num_params, char* params[]) {
     init_z3_expr(c,net);
     std::cout<<"Time in z3expr init: "<<time(NULL) - curr_time<<std::endl;  
     create_prop(c,net); 
+    affine_expr_init(c,net);
     
     //net->print_network();
     curr_time = time(NULL);
-    prop_back_propogate(c,net);
+    //prop_back_propogate(c,net);
     check_sat_output_layer(c,net);
     std::cout<<"Time to check satisfiability: "<<time(NULL) - curr_time<<std::endl;
     printf("\nEnded\n");
