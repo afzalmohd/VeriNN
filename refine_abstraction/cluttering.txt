@@ -222,3 +222,53 @@ some important imports
 ------------------------------------------------------
 
 s.add(epsilon*var + img[numb] >= 0,epsilon*var + img[numb] <= 1)
+
+
+----------------------------------------------------------
+
+ solve_cons_inner(maxsa,len(ls_val[1]), len(ls_val[2]), ls_val, internal_cons, eta_set)
+ --------
+ new code
+
+ # for x in range(0, 50):
+        #         t = "(" + str(x) + ")"+ "_0_b"
+        #         u = "(" + str(x) + ")" + "_1_b"
+        #         print(t)
+        #         t = Bool(t)
+        #         u = Bool(u)
+        #         print(str(mod[t]) + " " + str(mod[u]))
+        # for x in eta_set:
+        #         t = 'eps' + str(x)
+        #         u = t  + 'dd'
+        #         t = Real(t)
+        #         u = Real(u)
+        #         res = mod[t]
+        #         res2 = mod[u]
+        #         print(str(x) + ':' + str(res)  +  '   ' + str(res2))
+--------------------------------------------------------------------------------
+
+
+# for i, test in enumerate(tests):
+        #         if i == 0:
+--------------------------------------------------------------------------------
+
+
+# if maxsa.check() == sat:
+        #         m = maxsa.model()
+        #         print(m)
+        # else:
+        #         print("unsat")
+---------------------------------------------------------------------------------
+
+
+# set_option(max_args=10000000, max_lines=1000000, max_depth=10000000, max_visited=1000000)
+---------------------------------------------------------------------------------
+
+ # exit()
+ # newm = sorted ([(d, m[d]) for d in m], key = lambda x: (len(str(x[0])), str(x[0])))
+
+ ---------------------------------------------------------------------------------
+parsing code
+ # print(nodes[ind] == ls_obj[layer][ls_i])
+                                # print(str(set_sz) + '   ' + str(len(eta_set)))
+                                # print(value)
