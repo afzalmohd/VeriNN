@@ -16,6 +16,7 @@ namespace Configuration{
     extern std::string default_dataset_path;
     extern std::string default_dataset;
     extern double default_epsilon;
+    extern std::string default_marked_neuron_path;
 
 
     extern std::string abs_out_file_path;
@@ -25,6 +26,7 @@ namespace Configuration{
     extern size_t input_dim;
     extern double epsilon;
     extern bool is_small_ex;
+    extern std::string marked_neuron_path;
 
 }
 

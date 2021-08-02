@@ -1,5 +1,7 @@
 #include "z3expr.hh" //network.hh included in z3expr.hh
 #include <ctime>
+#include <fstream>
+#include <iostream>
 
 void set_z3_parameters(z3::context& c){
     c.set("ELIM_QUANTIFIERS", "true");
@@ -129,7 +131,7 @@ void check_sat_output_layer(z3::context& c, Network_t* net){
             s.reset();
             Layer_t* prev_layer;
             for(auto nt : layer->neurons){
-                std::string nt_str = "C"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+                std::string nt_str = std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
                 s.add(nt->affine_expr == nt->nt_z3_var, nt_str.c_str());
                 //t_expr = t_expr && (nt->affine_expr == nt->nt_z3_var);
             }
@@ -139,22 +141,27 @@ void check_sat_output_layer(z3::context& c, Network_t* net){
             else{
                 prev_layer = net->input_layer;
             }
-            s.add(prev_layer->b_expr, "prev_b");
-            s.add(layer->back_prop_eq, "back_eq");
+            s.add(prev_layer->b_expr);
+            s.add(layer->back_prop_eq);
             //s.add(t_expr && prev_layer->b_expr && layer->back_prop_eq);
             sat_out = s.check();
             if(sat_out == z3::sat){
                 modl = s.get_model();
                 sat_var_value(c, modl, prev_layer);
-                construct_and_execute_image(i,net);
+                //construct_and_execute_image(i,net);
                 std::cout<<"Layer: "<<i<<" is SAT"<<std::endl;
             }
             else{
                 std::cout<<"Layer: "<<i<<" is UNSAT"<<std::endl;
                 z3::expr_vector core = s.unsat_core();
                 std::cout<<"Unsat core: "<<core.size()<<std::endl;
+                std::ofstream marked_neuron_file;
+                marked_neuron_file.open(Configuration::marked_neuron_path.c_str(), std::ios::out | std::ios::app);
                 for(size_t t=0;t<core.size();t++){
-                    std::cout<<"core: "<<core[t]<<std::endl;
+                    std::string str = core[t].to_string();
+                    std::cout<<"core: "<<str.substr(1,str.size()-2)<<std::endl; 
+                    
+                    marked_neuron_file << str.substr(1,str.size()-2) <<std::endl;
                 }
                 break;
             }

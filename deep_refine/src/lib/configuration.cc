@@ -5,11 +5,12 @@ namespace Configuration{
     po::options_description desc("Options");
     po::variables_map vm;
     std::string default_root_path = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine";
-    std::string default_abs_out_file_path = default_root_path+"/benchmarks/fppolyForward.txt";
-    std::string default_net_path = default_root_path+"/benchmarks/mnist_relu_3_50.tf";
+    std::string default_abs_out_file_path = default_root_path+"/outfiles/fppolyForward.txt";
+    std::string default_net_path = default_root_path+"/benchmarks/networks/mnist_relu_3_50.tf";
     //std::string default_abs_out_file_path = default_root_path+"/benchmarks/fppolyForward_small_ex.txt";
     //std::string default_net_path = default_root_path+"/benchmarks/mnist_small_test.tf";
-    std::string default_dataset_path = default_root_path+"/benchmarks/mnist_test.csv";
+    std::string default_dataset_path = default_root_path+"/benchmarks/dataset/mnist/mnist_test.csv";
+    std::string default_marked_neuron_path = default_root_path+"/outfiles/marked.txt";
     std::string default_dataset = "MNIST";
     double default_epsilon = 0.03;
     size_t input_dim;
@@ -18,6 +19,7 @@ namespace Configuration{
     std::string net_path;
     std::string dataset_path;
     std::string dataset;
+    std::string marked_neuron_path;
     double epsilon;
     bool is_small_ex;
 
@@ -31,6 +33,7 @@ namespace Configuration{
             ("epsilon", po::value<double>(&epsilon)->default_value(default_epsilon), "Value of image perturbation epsilon")
             ("dataset", po::value<std::string>(&dataset)->default_value(default_dataset), "Types of image dataset")
             ("is-small-example,ise", po::value<bool>(&is_small_ex)->default_value(false), "Small example for testing")
+            ("marked_nt_path, m", po::value<std::string>(&marked_neuron_path)->default_value(default_marked_neuron_path), "Marked neuron path")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);

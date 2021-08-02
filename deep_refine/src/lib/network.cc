@@ -412,6 +412,9 @@ int find_refine_nodes(int num_params, char* params[]) {
     //prop_back_propogate(c,net);
     check_sat_output_layer(c,net);
     std::cout<<"Time to check satisfiability: "<<time(NULL) - curr_time<<std::endl;
+    // for(auto layer:net->layer_vec){
+    //     std::cout<<"Layer index is: "<<layer->layer_index<<", neurons: "<<layer->dims<<std::endl;
+    // }
     printf("\nEnded\n");
     return 0;
 }
