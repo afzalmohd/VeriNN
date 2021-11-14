@@ -1,5 +1,7 @@
 #include"interval.hh"
 
+
+
 void double_interval_mul(double *a_inf, double *a_sup, double b_inf, double b_sup, double c_inf, double c_sup){
 	if(c_inf<=0){
 		/* interval c is positive */
