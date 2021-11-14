@@ -1,0 +1,13 @@
+#ifndef _DEEPPOLY_PARSER_H_
+#define _DEEPPOLY_PARSER_H_
+#include "network.hh"
+
+void init_network(Network_t* net, std::string &filepath);
+void parse_string_to_xarray(Layer_t* layer, std::string weights, bool is_bias);
+Layer_t* create_layer(bool is_activation, std::string activation, std::string layer_type);
+void create_neurons_update_layer(Layer_t* layer);
+Layer_t* create_input_layer(size_t dim);
+void parse_input_image(Network_t* net, std::string &image_path, size_t image_index);
+void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str);
+
+#endif
