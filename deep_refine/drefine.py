@@ -14,6 +14,7 @@ DREFINEROOT = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine"
 OUTPATH = DREFINEROOT+"/outfiles"
 DEEPPOLYOUT = OUTPATH+"/deeppoly_out.txt"
 OUTPUTBU = OUTPATH+"/marked_bounds_updated.txt"
+OUTASSIGN = OUTPATH+"/assign.txt"
 DREFINEOUT = OUTPATH+"/marked_neurons.txt"
 NETPATH = DREFINEROOT+"/benchmarks/networks/mnist_relu_3_50.tf"
 DATASETFILE = DREFINEROOT+"/benchmarks/dataset/mnist/mnist_test.csv"
@@ -21,7 +22,7 @@ DATASETFILE = DREFINEROOT+"/benchmarks/dataset/mnist/mnist_test.csv"
 epsilon = 0.04
 dataset = "mnist"
 domain = "deeppoly"
-k = 3
+k = 4
 
 
 if not os.path.isdir(OUTPATH):
@@ -36,18 +37,20 @@ else:
 os.environ['OUTPUTBU'] = OUTPUTBU
 os.environ['DREFINEOUT'] = DREFINEOUT
 os.environ['DEEPPOLYOUT'] = DEEPPOLYOUT
-os.environ['ISDREFINE'] = "N"
+os.environ['OUTASSIGN'] = OUTASSIGN
+os.environ['ISDREFINE'] = "Y"
 os.chdir(ERANMAIN)
 print("In directory: "+os.getcwd())
 
-print("-----------------------DEEPPOLY STARTED-----------------------------")
+print("-----------------------KPOLY STARTED-----------------------------")
 
-os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset)
+#os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset)
 
+domain = "refinepoly"
+os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset+" --k "+str(k))                   
 
 counter = 0
-counter_limit  = 1
-os.environ['ISDREFINE'] = "Y"
+counter_limit  = 10
 
 while counter < counter_limit:
     counter += 1
@@ -60,9 +63,13 @@ while counter < counter_limit:
     print("-----------------------KPOLY STARTED---------------------------------")
     os.chdir(ERANMAIN)  
     domain = "refinepoly"
-    os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset+" --k "+str(k))                          
+    os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset+" --k "+str(k))     
+
+    if os.environ.get('ISTERMINATE') == "Y":
+        print("Terminated after {} iterations".format(counter))    
+        break;                 
     
-    print("-----------------------DEEPPOLY STARTED-----------------------------")
+    #print("-----------------------DEEPPOLY STARTED-----------------------------")
     #domain = "deeppoly"
     #os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset)
 

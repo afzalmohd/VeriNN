@@ -10,8 +10,7 @@ z3::expr get_expr_from_double(z3::context &c, double item){
     return c.real_val(item_str.c_str());
 }
 
-bool is_number(std::string s)
-{
+bool is_number(std::string s){
     for(size_t i = 0; i<s.size(); i++){
         if(!(std::isdigit(s[i]) || s[i] == '.' || s[i] == '-')){
             return false;

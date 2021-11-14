@@ -114,12 +114,47 @@ void merged_constraints(z3::context& c, Network_t* net){
 void check_sat_output_layer(z3::context& c, Network_t* net){
     z3::solver s(c);
     set_z3_parameters(c);
-    s.add(!net->prop_expr && net->layer_vec.back()->b_expr);
-    z3::check_result sat_out = s.check();
-    z3::model modl = s.get_model();
-    if(sat_out == z3::sat){
-        sat_var_value(c, modl, net->layer_vec.back());
+    // s.add(!net->prop_expr && net->layer_vec.back()->b_expr);
+    // z3::check_result sat_out = s.check();
+    // z3::model modl = s.get_model();
+    // if(sat_out == z3::sat){
+    //     sat_var_value(c, modl, net->layer_vec.back());
+    // }
+
+    const char* error_path = std::getenv("OUTASSIGN");
+    std::fstream error_file;
+    error_file.open(error_path,std::ios::in);
+    assert(error_file.is_open());
+    Layer_t* layer = net->layer_vec.back();
+    std::string tp;
+    int i=0;
+    z3::expr t_expr = c.bool_val(true);
+    while(getline(error_file,tp)){
+        assert(is_number(tp));
+        double val = std::stod(tp);
+        //std::cout<<"Dim: "<<i<<", value: "<<val<<std::endl;
+        Neuron_t* nt = layer->neurons[i];
+        nt->back_prop_val = val;
+        z3::expr expr1 =  get_expr_from_double(c,val);
+        nt->back_prop_val_expr = expr1;
+        t_expr = t_expr && (nt->nt_z3_var == expr1);
+        i++;
     }
+    layer->back_prop_eq = t_expr;
+
+    // z3::expr t_expr = c.bool_val(true);
+    // for(auto nt : layer->neurons){
+    //     z3::expr val = modl.eval(nt->nt_z3_var);
+    //     nt->back_prop_val_expr = val;
+    //     t_expr = t_expr && (nt->nt_z3_var == val);
+    //     //std::cout<<val<<std::endl;
+    //     nt->back_prop_val = std::stod(val.to_string());
+    //     //std::cout<<nt->nt_z3_var<<" : "<<nt->back_prop_val<<std::endl;
+    // }
+    // layer->back_prop_eq = t_expr;
+
+
+    
 
     for(int i=net->layer_vec.size()-1; i>=0; i--){
         Layer_t* layer = net->layer_vec[i];
@@ -144,9 +179,9 @@ void check_sat_output_layer(z3::context& c, Network_t* net){
             s.add(prev_layer->b_expr);
             s.add(layer->back_prop_eq);
             //s.add(t_expr && prev_layer->b_expr && layer->back_prop_eq);
-            sat_out = s.check();
+            z3::check_result sat_out = s.check();
             if(sat_out == z3::sat){
-                modl = s.get_model();
+                z3::model modl = s.get_model();
                 sat_var_value(c, modl, prev_layer);
                 //construct_and_execute_image(i,net);
                 std::cout<<"Layer: "<<i<<" is SAT"<<std::endl;
