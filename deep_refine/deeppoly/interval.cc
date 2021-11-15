@@ -205,3 +205,18 @@ void double_interval_mul(double *a_inf, double *a_sup, double b_inf, double b_su
 		*a_sup = fmax(tmp_sup1, tmp_sup2);
 	}
 }
+
+void double_interval_mul_expr_coeff(double fac, double * res_inf, double *res_sup, double inf, double sup, double inf_expr, double sup_expr){
+	double_interval_mul(res_inf,res_sup,inf,sup,inf_expr,sup_expr);
+	double maxA = fmax(fabs(inf_expr),fabs(sup_expr));
+	double tmp1, tmp2;
+	double_interval_mul(&tmp1,&tmp2, inf, sup, maxA*fac, maxA*fac);
+	*res_inf += tmp1;
+	*res_sup += tmp2;
+}
+
+void double_interval_mul_cst_coeff(double fac, double min_denormal, double * res_inf, double *res_sup, double inf, double sup, double inf_expr, double sup_expr){
+	double_interval_mul_expr_coeff(fac, res_inf, res_sup, inf, sup, inf_expr, sup_expr);
+	*res_inf += min_denormal;
+	*res_sup += min_denormal;	
+}

@@ -13,28 +13,102 @@ void create_input_layer_expr(Network_t* net){
         if(nt->lb < 0.0){
             nt->lb = 0.0;
         }
+        nt->lb = -nt->lb;
+        /*
         nt->uexpr = new Expr_t();
         nt->uexpr->cst_inf = nt->ub;
         nt->uexpr->cst_sup = nt->ub;
-        nt->uexpr->size = 1;
+        nt->uexpr->size = 0;
         
         nt->lexpr = new Expr_t();
         nt->lexpr->cst_inf = -nt->lb;
         nt->lexpr->cst_sup = -nt->lb;
-        nt->lexpr->size = 1;
+        nt->lexpr->size = 0;
+        */
     }
 }
 
-void forward_layer_FC(Network_t* net, int layer_index){
-    Layer_t* curr_layer = net->layer_vec[layer_index];
-    Layer_t* prev_layer;
-    if(layer_index == 0){
-        prev_layer = net->input_layer;
+void forward_layer_FC(Network_t* net, Layer_t* curr_layer){
+    assert(curr_layer->layer_type == "FC" && "Not FC layer"); 
+    Layer_t* pred_layer = get_pred_layer(net, curr_layer);
+    for(size_t i=0; i<curr_layer->dims; i++){
+        Neuron_t* nt = curr_layer->neurons[i];
+        update_neuron_FC(net, curr_layer, nt);
+    }
+}
+
+void forward_layer_ReLU(Network_t* net, Layer_t* curr_layer){
+    assert(curr_layer->is_activation && "Not a ReLU layer");
+    Layer_t* pred_layer = get_pred_layer(net, curr_layer);
+    for(size_t i=0; i<curr_layer->dims; i++){
+        Neuron_t* nt = curr_layer->neurons[i];
+        update_neuron_relu(net, pred_layer, nt);
+    }
+}
+
+void update_neuron_relu(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
+    Neuron_t* pred_nt = pred_layer->neurons[nt->neuron_index];
+    nt->lb = -fmax(0.0, -pred_nt->lb);
+    nt->ub = fmax(0.0, pred_nt->ub);
+    update_relu_expr(nt, pred_nt, true, true);
+    update_relu_expr(nt, pred_nt, true, false);
+
+}
+
+void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heuristic, bool is_lower){
+    Expr_t* res_expr = new Expr_t();
+    double lb = pred_nt->lb;
+	double ub = pred_nt->ub;
+	double width = ub + lb;
+	double slope_inf = -ub/width;
+	double slope_sup = ub/width;
+    if(ub<=0){
+		res_expr->coeff_inf[0] = 0.0;
+		res_expr->coeff_sup[0] = 0.0;
+	}
+	else if(lb<0){
+		res_expr->coeff_inf[0] = -1.0;
+		res_expr->coeff_sup[0] = 1.0;
+	}
+    else if(is_lower){
+        double area1 = 0.5*ub*width;
+		double area2 = 0.5*lb*width;
+		if(is_default_heuristic){
+			if(area1 < area2){
+				res_expr->coeff_inf[0] = 0.0;
+				res_expr->coeff_sup[0] = 0.0;
+			}
+			else{
+				res_expr->coeff_inf[0] = -1.0;
+				res_expr->coeff_sup[0] = 1.0;
+			}
+		}
+		else{
+				res_expr->coeff_inf[0] = 0.0;
+				res_expr->coeff_sup[0] = 0.0;
+		}
     }
     else{
-        prev_layer = net->layer_vec[layer_index-1];
+        double offset_inf = slope_inf*lb;
+		double offset_sup = slope_sup*lb;
+		res_expr->coeff_inf[0] = slope_inf;
+		res_expr->coeff_sup[0] = slope_sup;
+		res_expr->cst_inf = offset_inf;
+		res_expr->cst_sup = offset_sup;
     }
 
+    if(is_lower){
+        curr_nt->lexpr = res_expr;
+    }
+    else{
+        curr_nt->uexpr = res_expr;
+    }
+	
+}
+
+void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
+    create_neuron_expr_FC(nt, layer);
+    update_neuron_bound_back_substitution(net, layer->layer_index, nt);
 }
 
 void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
@@ -45,7 +119,7 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->uexpr->size = shape[0];
     nt->uexpr_b->size = shape[0];
     nt->lexpr_b->size = shape[0];
-    //nt->lexpr->size = shape[0];
+    nt->lexpr->size = shape[0];
     for(int i=0; i < shape[0]; i++){
         double coff = layer->w[i,nt->neuron_index];
         nt->uexpr->coeff_inf.push_back(-coff);
@@ -66,28 +140,153 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
 }
 
 void update_neuron_bound_back_substitution(Network_t* net, int layer_index, Neuron_t* nt){
-    Layer_t* pred_layer;
-    if(layer_index == 0){
-        pred_layer = net->input_layer;
-        nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
-        nt->ub = fmin(nt->ub, compute_ub_from_expr(pred_layer, nt->uexpr_b));
-    }
-    else{
-        pred_layer = net->layer_vec[layer_index-1];
-        nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
-        nt->ub = fmin(nt->ub, compute_ub_from_expr(pred_layer, nt->uexpr_b));
-
-
+    Layer_t* pred_layer = get_pred_layer(net, net->layer_vec[layer_index]);
+    nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
+    nt->ub = fmin(nt->ub, compute_ub_from_expr(pred_layer, nt->uexpr_b));
+    if(layer_index > 0){
+        if(pred_layer->is_activation){
+            Expr_t* tmp_expr_l = update_expr_relu_backsubstitution(net,pred_layer,nt->lexpr_b, true);
+            delete nt->lexpr_b;
+            nt->lexpr_b = tmp_expr_l;
+            Expr_t* tmp_expr_u = update_expr_relu_backsubstitution(net, pred_layer, nt->uexpr_b, false);
+            delete nt->uexpr_b;
+            nt->uexpr_b = tmp_expr_u;
+            update_neuron_bound_back_substitution(net, layer_index-1, nt);
+        }
+        else{
+            Expr_t* tmp_expr_l = update_expr_affine_backsubstitution(net, pred_layer,nt->lexpr_b,nt,true);
+            delete nt->lexpr_b;
+            nt->lexpr_b = tmp_expr_l;
+            Expr_t* tmp_expr_u = update_expr_affine_backsubstitution(net, pred_layer, nt->uexpr_b, nt, false);
+            delete nt->uexpr_b;
+            nt->uexpr_b = tmp_expr_u;
+            update_neuron_bound_back_substitution(net, layer_index-1, nt);
+        }
     }
 }
 
 void update_neuron_lexpr_b(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
     if(pred_layer->is_activation){
-
+        Expr_t* tmp_expr = update_expr_relu_backsubstitution(net,pred_layer, nt->lexpr_b, true);
+        delete nt->lexpr_b; //delete old expression after gwtting updated
+        nt->lexpr_b = tmp_expr;
     }
     else if(pred_layer->layer_type == "FC"){
 
     }
+}
+
+Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,Expr_t* curr_expr, Neuron_t* curr_nt, bool is_lower){
+    assert(pred_layer->layer_type == "FC" && "Not FC layer");
+    Expr_t* res_expr = new Expr_t();
+    Layer_t* pred_pred_layer = get_pred_layer(net,pred_layer);
+    res_expr->size = pred_pred_layer->dims;
+    res_expr->cst_inf = 0;
+    res_expr->cst_sup = 0;
+    for(size_t i=0; i<res_expr->size; i++){
+        res_expr->coeff_inf[i] = 0.0;
+        res_expr->coeff_sup[i] = 0.0;
+    }
+    Neuron_t* pred_nt = NULL;
+    Expr_t* mul_expr = NULL;
+    Expr_t* temp_expr = NULL;
+    for(size_t i=1; i<pred_layer->dims; i++){
+        if(curr_expr->coeff_inf[i] == 0 && curr_expr->coeff_sup[i] == 0){
+            continue;
+        }
+
+        pred_nt = pred_layer->neurons[i];
+        if(curr_expr->coeff_inf[i] < 0 || curr_expr->coeff_sup[i] < 0){
+            mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i], is_lower);
+            temp_expr = multiply_expr_with_coeff(net, mul_expr, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
+            add_expr(net, res_expr, temp_expr);
+            delete temp_expr;
+        }
+        else{
+            double temp1, temp2;
+			double_interval_mul_cst_coeff(net->ulp, net->min_denormal,&temp1,&temp2,pred_nt->lb,pred_nt->ub,curr_expr->coeff_inf[i],curr_expr->coeff_sup[i]);
+			if(is_lower){
+				res_expr->cst_inf = res_expr->cst_inf + temp1;
+				res_expr->cst_sup = res_expr->cst_sup - temp1;
+			}
+			else{
+				res_expr->cst_inf = res_expr->cst_inf - temp2;
+				res_expr->cst_sup = res_expr->cst_sup + temp2;
+			}
+        }
+    }
+
+    res_expr->cst_inf = res_expr->cst_inf + curr_expr->cst_inf;
+    res_expr->cst_sup = res_expr->cst_sup + curr_expr->cst_sup;
+
+    return res_expr;
+}
+
+Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, Expr_t* curr_expr, bool is_lower){
+    assert(pred_layer->is_activation && "Not activation layer");
+    Expr_t* res_expr = new Expr_t();
+    res_expr->size = pred_layer->dims;
+    res_expr->cst_inf = curr_expr->cst_inf;
+    res_expr->cst_sup = curr_expr->cst_sup;
+    for(size_t i=0; i<pred_layer->dims; i++){
+        Neuron_t* pred_nt = pred_layer->neurons[i];
+        if((curr_expr->coeff_inf[i] == 0.0) && (curr_expr->coeff_sup[i] == 0.0)){
+            res_expr->coeff_inf[i] = 0.0;
+            res_expr->coeff_sup[i] = 0.0;
+            continue;
+        }
+        Expr_t* mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], 
+                                            curr_expr->coeff_sup[i], is_lower);       
+        if(curr_expr->coeff_sup[i] < 0 || curr_expr->coeff_inf[i] < 0){
+            double_interval_mul_expr_coeff(net->ulp,&res_expr->coeff_inf[i], &res_expr->coeff_sup[i],
+                                            mul_expr->coeff_inf[0], mul_expr->coeff_sup[0],
+                                            curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
+            double tmp1, tmp2;
+            double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &tmp1, &tmp2,
+                                            mul_expr->cst_inf, mul_expr->cst_sup,
+                                            curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
+            res_expr->cst_inf = res_expr->cst_inf + tmp1 + net->min_denormal;
+            res_expr->cst_sup = res_expr->cst_sup + tmp2 + net->min_denormal;
+        }
+        else{
+            res_expr->coeff_inf[i] = 0.0;
+            res_expr->coeff_sup[i] = 0.0;
+            double tmp1, tmp2;
+            double_interval_mul_expr_coeff(net->ulp, &tmp1,&tmp2, pred_nt->lb, pred_nt->ub, 
+                                            curr_expr->coeff_inf[i],curr_expr->coeff_sup[i]);    
+            
+            if(is_lower){
+				res_expr->cst_inf = res_expr->cst_inf + tmp1;
+                res_expr->cst_sup = res_expr->cst_sup - tmp1;
+			}
+			else{
+                res_expr->cst_inf = res_expr->cst_inf - tmp2;
+                res_expr->cst_sup = res_expr->cst_sup + tmp2;
+			}
+        }
+    }
+    return res_expr;
+}
+
+Expr_t* get_mul_expr(Neuron_t* pred_nt, double inf_coff, double supp_coff, bool is_lower){
+    Expr_t* mul_expr = NULL;
+    if(is_lower){
+        if(supp_coff < 0){
+            mul_expr =  pred_nt->uexpr;
+        }
+        else if(inf_coff < 0){
+            mul_expr = pred_nt->lexpr;
+        }
+    }
+    else{
+        if(supp_coff < 0){
+            mul_expr = pred_nt->lexpr;
+        }
+        else if(inf_coff < 0){
+            mul_expr = pred_nt->uexpr;
+        }
+    }
+    return mul_expr;
 }
 
 
@@ -111,5 +310,45 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
         res += temp2;
     }
     return res;
+}
+
+Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
+    if(curr_layer->layer_index == 0){
+        return net->input_layer;
+    }
+    else if(curr_layer->layer_index > 0){
+        return net->layer_vec[curr_layer->layer_index - 1];
+    }
+    else{
+        assert(0 && "Pred layer not exist\n");
+    }
+}
+
+Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf, double coeff_sup){
+    Expr_t* mul_expr = new Expr_t();
+    mul_expr->size = expr->size;
+    for(size_t i=0; i<expr->size; i++){
+        double_interval_mul_expr_coeff(net->ulp, &mul_expr->coeff_inf[i], &mul_expr->coeff_sup[i],
+                                        coeff_inf, coeff_sup, 
+                                        expr->coeff_inf[i], expr->coeff_sup[i]);
+    }
+    double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &mul_expr->cst_inf, &mul_expr->cst_sup,
+                                    coeff_inf, coeff_sup, expr->cst_inf, expr->cst_sup);
+    return mul_expr;
+
+}
+
+void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
+    assert(expr1->size == expr2->size && "Expression size mismatch while adding");
+    double max1 = fmax(fabs(expr1->cst_inf),fabs(expr1->cst_sup));
+	double max2 = fmax(fabs(expr2->cst_inf),fabs(expr2->cst_sup));
+    expr1->cst_inf += expr2->cst_inf  + (max1 + max2)*net->ulp + net->min_denormal;
+	expr1->cst_sup += expr2->cst_sup  + (max1 + max2)*net->ulp + net->min_denormal;
+    for(size_t i=0; i<expr1->size; i++){
+        max1 = fmax(fabs(expr1->coeff_inf[i]),fabs(expr1->coeff_sup[i]));
+		max2 = fmax(fabs(expr2->coeff_inf[i]),fabs(expr2->coeff_sup[i]));
+		expr1->coeff_inf[i] = expr1->coeff_inf[i] + expr2->coeff_inf[i] + (max1 + max1)*net->ulp;
+		expr1->coeff_sup[i] = expr1->coeff_sup[i] + expr2->coeff_sup[i] + (max1 + max2)*net->ulp;
+    }
 }
 
