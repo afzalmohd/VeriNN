@@ -14,6 +14,7 @@ int main(int argc, char* argv[]){
     net->epsilon = Configuration::epsilon;
     execute_neural_network(net, Configuration::dataset_path);
     create_input_layer_expr(net);
+    forward_analysis(net);
     net->print_network();
     return 0;
 }
@@ -63,23 +64,19 @@ void Network_t::forward_propgate_network(size_t layer_index,
 }
 
 void Neuron_t::print_neuron(){
-    //std::cout<<this->lb<<" <= "<<this->nt_z3_var<<" <= "<<this->ub<<"\n";
-    //std::cout<<this->nt_z3_var<<", upper: "<<this->z_uexpr<<", lower: "<<this->z_lexpr<<"\n";
-    std::cout<<this->neuron_index<<", "<<this->lb<<", "<<this->ub<<std::endl;
+    std::cout<<"neuron,"<<this->neuron_index<<","<<-this->lb<<","<<this->ub<<std::endl;
 }
 
 void Layer_t::print_layer(){
-    std::cout<<"Layer index: "<<this->layer_index<<"\n";
-    //std::cout<<"Number of neuron: "<<this->vars.size()<<std::endl;
-    // std::cout<<"weight: "<<this->w<<"\n";
-    // std::cout<<"biases: "<<this->b<<"\n";
+    std::cout<<"layer,"<<this->layer_index<<","<<this->is_activation<<","<<this->dims<<std::endl;
      for(auto nt : this->neurons){
          nt->print_neuron();
      }
 }
 
 void Network_t::print_network(){
-    this->input_layer->print_layer();
+    //this->input_layer->print_layer();
+    std::cout<<"inputdim,"<<this->input_dim<<std::endl;
     for(auto layer : this->layer_vec){
             layer->print_layer();
     }

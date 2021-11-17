@@ -1,3 +1,4 @@
+
 #ifndef _DEEPPOLY_NETWORK_H_
 #define _DEEPPOLY_NETWORK_H_
 #include<z3++.h>
@@ -29,17 +30,17 @@ class Expr_t{
 class Neuron_t{
 	public:
 		size_t neuron_index;
-		double lb=-INFINITY;
+		double lb=INFINITY;
 		double ub=INFINITY;
         Expr_t* uexpr;
         Expr_t* lexpr;
 		Expr_t* uexpr_b;
 		Expr_t* lexpr_b;
-		std::vector<Neuron_t*> pred_neurons;
+		//std::vector<Neuron_t*> pred_neurons;
 		~Neuron_t(){
-			for(size_t i=0; i<pred_neurons.size(); i++){
-				delete pred_neurons[i];
-			}
+			//for(size_t i=0; i<pred_neurons.size(); i++){
+			//	delete pred_neurons[i];
+			//}
             delete uexpr;
             delete lexpr;
 			delete uexpr_b;

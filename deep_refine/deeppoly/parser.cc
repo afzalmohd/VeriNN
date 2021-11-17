@@ -133,6 +133,7 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
                     //std::cout<<acc<<std::endl;
                     net->actual_label = std::stoi(acc);
                     is_first = false;
+                    acc = "";
                 }
                 else{
                     double val = std::stod(acc);

@@ -1,36 +1,19 @@
 #include "analysis.hh"
 #include "interval.hh"
 
-void create_input_layer_expr(Network_t* net){
-    Layer_t* layer = net->input_layer;
-    for(size_t i=0; i < layer->dims; i++){
-        Neuron_t* nt = layer->neurons[i];
-        nt->ub = layer->res[i] + net->epsilon;
-        nt->lb = layer->res[i] - net->epsilon;
-        if(nt->ub > 1.0){
-            nt->ub = 1.0;
+void forward_analysis(Network_t* net){
+    for(auto layer:net->layer_vec){
+        if(layer->is_activation){
+            forward_layer_ReLU(net, layer);
         }
-        if(nt->lb < 0.0){
-            nt->lb = 0.0;
+        else{
+            forward_layer_FC(net, layer);
         }
-        nt->lb = -nt->lb;
-        /*
-        nt->uexpr = new Expr_t();
-        nt->uexpr->cst_inf = nt->ub;
-        nt->uexpr->cst_sup = nt->ub;
-        nt->uexpr->size = 0;
-        
-        nt->lexpr = new Expr_t();
-        nt->lexpr->cst_inf = -nt->lb;
-        nt->lexpr->cst_sup = -nt->lb;
-        nt->lexpr->size = 0;
-        */
     }
 }
 
 void forward_layer_FC(Network_t* net, Layer_t* curr_layer){
     assert(curr_layer->layer_type == "FC" && "Not FC layer"); 
-    Layer_t* pred_layer = get_pred_layer(net, curr_layer);
     for(size_t i=0; i<curr_layer->dims; i++){
         Neuron_t* nt = curr_layer->neurons[i];
         update_neuron_FC(net, curr_layer, nt);
@@ -57,42 +40,43 @@ void update_neuron_relu(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
 
 void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heuristic, bool is_lower){
     Expr_t* res_expr = new Expr_t();
+    res_expr->size = 1;
     double lb = pred_nt->lb;
 	double ub = pred_nt->ub;
 	double width = ub + lb;
 	double slope_inf = -ub/width;
 	double slope_sup = ub/width;
     if(ub<=0){
-		res_expr->coeff_inf[0] = 0.0;
-		res_expr->coeff_sup[0] = 0.0;
+		res_expr->coeff_inf.push_back(0.0);
+		res_expr->coeff_sup.push_back(0.0);
 	}
 	else if(lb<0){
-		res_expr->coeff_inf[0] = -1.0;
-		res_expr->coeff_sup[0] = 1.0;
+		res_expr->coeff_inf.push_back(-1.0);
+		res_expr->coeff_sup.push_back(1.0);
 	}
     else if(is_lower){
         double area1 = 0.5*ub*width;
 		double area2 = 0.5*lb*width;
 		if(is_default_heuristic){
 			if(area1 < area2){
-				res_expr->coeff_inf[0] = 0.0;
-				res_expr->coeff_sup[0] = 0.0;
+				res_expr->coeff_inf.push_back(0.0);
+				res_expr->coeff_sup.push_back(0.0);
 			}
 			else{
-				res_expr->coeff_inf[0] = -1.0;
-				res_expr->coeff_sup[0] = 1.0;
+				res_expr->coeff_inf.push_back(-1.0);
+				res_expr->coeff_sup.push_back(1.0);
 			}
 		}
 		else{
-				res_expr->coeff_inf[0] = 0.0;
-				res_expr->coeff_sup[0] = 0.0;
+				res_expr->coeff_inf.push_back(0.0);
+				res_expr->coeff_sup.push_back(0.0);
 		}
     }
     else{
         double offset_inf = slope_inf*lb;
 		double offset_sup = slope_sup*lb;
-		res_expr->coeff_inf[0] = slope_inf;
-		res_expr->coeff_sup[0] = slope_sup;
+		res_expr->coeff_inf.push_back(slope_inf);
+		res_expr->coeff_sup.push_back(slope_sup);
 		res_expr->cst_inf = offset_inf;
 		res_expr->cst_sup = offset_sup;
     }
@@ -107,8 +91,10 @@ void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heur
 }
 
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
+    assert(layer->layer_index >= 0 && "Layer indexing is wrong");
     create_neuron_expr_FC(nt, layer);
-    update_neuron_bound_back_substitution(net, layer->layer_index, nt);
+    Layer_t* pred_layer = get_pred_layer(net, layer);
+    update_neuron_bound_back_substitution(net, pred_layer, nt);
 }
 
 void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
@@ -119,15 +105,21 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->uexpr->size = shape[0];
     nt->uexpr_b->size = shape[0];
     nt->lexpr_b->size = shape[0];
-    nt->lexpr->size = shape[0];
+    nt->uexpr->coeff_inf.resize(nt->uexpr->size);
+    nt->uexpr->coeff_sup.resize(nt->uexpr->size);
+    nt->uexpr_b->coeff_inf.resize(nt->uexpr_b->size);
+    nt->uexpr_b->coeff_sup.resize(nt->uexpr_b->size);
+    nt->lexpr_b->coeff_inf.resize(nt->lexpr_b->size);
+    nt->lexpr_b->coeff_sup.resize(nt->lexpr_b->size);
+    auto coll = xt::col(layer->w,nt->neuron_index);
     for(int i=0; i < shape[0]; i++){
-        double coff = layer->w[i,nt->neuron_index];
-        nt->uexpr->coeff_inf.push_back(-coff);
-        nt->uexpr->coeff_sup.push_back(coff);
-        nt->uexpr_b->coeff_inf.push_back(-coff);
-        nt->uexpr_b->coeff_sup.push_back(coff);
-        nt->lexpr_b->coeff_inf.push_back(-coff);
-        nt->lexpr_b->coeff_sup.push_back(coff);
+        double coff = coll[i];//layer->w[i,nt->neuron_index];
+        nt->uexpr->coeff_inf[i] = -coff;
+        nt->uexpr->coeff_sup[i] = coff;
+        nt->uexpr_b->coeff_inf[i] = -coff;
+        nt->uexpr_b->coeff_sup[i] = coff;
+        nt->lexpr_b->coeff_inf[i] = -coff;
+        nt->lexpr_b->coeff_sup[i] = coff;
     }
     double cst = layer->b[nt->neuron_index];
     nt->uexpr->cst_inf = -cst;
@@ -139,42 +131,57 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->lexpr = nt->uexpr;
 }
 
-void update_neuron_bound_back_substitution(Network_t* net, int layer_index, Neuron_t* nt){
-    Layer_t* pred_layer = get_pred_layer(net, net->layer_vec[layer_index]);
+void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
     nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
-    nt->ub = fmin(nt->ub, compute_ub_from_expr(pred_layer, nt->uexpr_b));
-    if(layer_index > 0){
+    if(pred_layer->layer_index >= 0){
+        Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         if(pred_layer->is_activation){
             Expr_t* tmp_expr_l = update_expr_relu_backsubstitution(net,pred_layer,nt->lexpr_b, true);
             delete nt->lexpr_b;
             nt->lexpr_b = tmp_expr_l;
-            Expr_t* tmp_expr_u = update_expr_relu_backsubstitution(net, pred_layer, nt->uexpr_b, false);
-            delete nt->uexpr_b;
-            nt->uexpr_b = tmp_expr_u;
-            update_neuron_bound_back_substitution(net, layer_index-1, nt);
         }
         else{
             Expr_t* tmp_expr_l = update_expr_affine_backsubstitution(net, pred_layer,nt->lexpr_b,nt,true);
             delete nt->lexpr_b;
             nt->lexpr_b = tmp_expr_l;
+        }
+        update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
+    }
+}
+
+void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
+    nt->ub = fmin(nt->ub, compute_ub_from_expr(pred_layer, nt->uexpr_b));
+    if(pred_layer->layer_index >= 0){
+        Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
+        if(pred_layer->is_activation){
+            Expr_t* tmp_expr_u = update_expr_relu_backsubstitution(net, pred_layer, nt->uexpr_b, false);
+            delete nt->uexpr_b;
+            nt->uexpr_b = tmp_expr_u;
+        }
+        else{
             Expr_t* tmp_expr_u = update_expr_affine_backsubstitution(net, pred_layer, nt->uexpr_b, nt, false);
             delete nt->uexpr_b;
             nt->uexpr_b = tmp_expr_u;
-            update_neuron_bound_back_substitution(net, layer_index-1, nt);
         }
+        update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
 }
 
-void update_neuron_lexpr_b(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
-    if(pred_layer->is_activation){
-        Expr_t* tmp_expr = update_expr_relu_backsubstitution(net,pred_layer, nt->lexpr_b, true);
-        delete nt->lexpr_b; //delete old expression after gwtting updated
-        nt->lexpr_b = tmp_expr;
-    }
-    else if(pred_layer->layer_type == "FC"){
-
-    }
+void update_neuron_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
+    update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
+    update_neuron_uexpr_bound_back_substitution(net, pred_layer, nt);
 }
+
+// void update_neuron_lexpr_b(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
+//     if(pred_layer->is_activation){
+//         Expr_t* tmp_expr = update_expr_relu_backsubstitution(net,pred_layer, nt->lexpr_b, true);
+//         delete nt->lexpr_b; //delete old expression after gwtting updated
+//         nt->lexpr_b = tmp_expr;
+//     }
+//     else if(pred_layer->layer_type == "FC"){
+
+//     }
+// }
 
 Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,Expr_t* curr_expr, Neuron_t* curr_nt, bool is_lower){
     assert(pred_layer->layer_type == "FC" && "Not FC layer");
@@ -183,10 +190,8 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     res_expr->size = pred_pred_layer->dims;
     res_expr->cst_inf = 0;
     res_expr->cst_sup = 0;
-    for(size_t i=0; i<res_expr->size; i++){
-        res_expr->coeff_inf[i] = 0.0;
-        res_expr->coeff_sup[i] = 0.0;
-    }
+    res_expr->coeff_inf.resize(res_expr->size, 0.0);
+    res_expr->coeff_sup.resize(res_expr->size, 0.0);
     Neuron_t* pred_nt = NULL;
     Expr_t* mul_expr = NULL;
     Expr_t* temp_expr = NULL;
@@ -228,6 +233,8 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
     res_expr->size = pred_layer->dims;
     res_expr->cst_inf = curr_expr->cst_inf;
     res_expr->cst_sup = curr_expr->cst_sup;
+    res_expr->coeff_inf.resize(res_expr->size);
+    res_expr->coeff_sup.resize(res_expr->size);
     for(size_t i=0; i<pred_layer->dims; i++){
         Neuron_t* pred_nt = pred_layer->neurons[i];
         if((curr_expr->coeff_inf[i] == 0.0) && (curr_expr->coeff_sup[i] == 0.0)){
@@ -266,6 +273,33 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
         }
     }
     return res_expr;
+}
+
+void create_input_layer_expr(Network_t* net){
+    Layer_t* layer = net->input_layer;
+    for(size_t i=0; i < layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        nt->ub = layer->res[i] + net->epsilon;
+        nt->lb = layer->res[i] - net->epsilon;
+        if(nt->ub > 1.0){
+            nt->ub = 1.0;
+        }
+        if(nt->lb < 0.0){
+            nt->lb = 0.0;
+        }
+        nt->lb = -nt->lb;
+        /*
+        nt->uexpr = new Expr_t();
+        nt->uexpr->cst_inf = nt->ub;
+        nt->uexpr->cst_sup = nt->ub;
+        nt->uexpr->size = 0;
+        
+        nt->lexpr = new Expr_t();
+        nt->lexpr->cst_inf = -nt->lb;
+        nt->lexpr->cst_sup = -nt->lb;
+        nt->lexpr->size = 0;
+        */
+    }
 }
 
 Expr_t* get_mul_expr(Neuron_t* pred_nt, double inf_coff, double supp_coff, bool is_lower){
@@ -327,6 +361,8 @@ Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
 Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf, double coeff_sup){
     Expr_t* mul_expr = new Expr_t();
     mul_expr->size = expr->size;
+    mul_expr->coeff_inf.resize(mul_expr->size);
+    mul_expr->coeff_sup.resize(mul_expr->size);
     for(size_t i=0; i<expr->size; i++){
         double_interval_mul_expr_coeff(net->ulp, &mul_expr->coeff_inf[i], &mul_expr->coeff_sup[i],
                                         coeff_inf, coeff_sup, 
@@ -350,5 +386,38 @@ void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
 		expr1->coeff_inf[i] = expr1->coeff_inf[i] + expr2->coeff_inf[i] + (max1 + max1)*net->ulp;
 		expr1->coeff_sup[i] = expr1->coeff_sup[i] + expr2->coeff_sup[i] + (max1 + max2)*net->ulp;
     }
+}
+
+bool is_greater(Network_t* net, size_t index1, size_t index2){
+    //return true, if value at index1 is higher than value at index2
+    assert(index1 >= 0 && index1 < net->output_dim && "index1 out of bound");
+    assert(index2 >= 0 && index2 < net->output_dim && "index2 out of bound");
+    Layer_t* out_layer = net->layer_vec.back();
+    Neuron_t* nt1 = out_layer->neurons[index1];
+    Neuron_t* nt2 = out_layer->neurons[index2];
+    Layer_t* pred_layer = new Layer_t();
+    pred_layer->neurons = {nt1, nt2};
+    pred_layer->dims = 2;
+    pred_layer->layer_index = out_layer->layer_index;
+    pred_layer->is_activation = out_layer->is_activation;
+    if(-nt1->lb > nt2->ub){
+        return true;
+    }
+    else{
+        Neuron_t* nt = new Neuron_t();
+        nt->lb = INFINITY;
+        nt->lexpr_b = new Expr_t();
+        nt->lexpr_b->cst_inf = 0.0;
+        nt->lexpr_b->cst_sup = 0.0;
+        nt->lexpr_b->size=2;
+        nt->lexpr_b->coeff_inf = {1.0,-1.0};
+        nt->lexpr_b->coeff_sup = {1.0, -1.0};
+        update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
+        if(nt->lb < 0){ //lower bound is completely positive
+            return true;
+        }
+    }
+
+    return false;
 }
 
