@@ -49,6 +49,7 @@ class Layer_t{
 	public:
 		size_t dims;
 		std::vector<Neuron_t*> neurons;
+		Layer_t* pred_layer;
 		bool is_activation;
 		std::string activation;
         std::string layer_type;

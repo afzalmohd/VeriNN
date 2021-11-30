@@ -364,6 +364,8 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
 }
 
 Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
+    return curr_layer->pred_layer;
+    /*
     if(curr_layer->layer_index == 0){
         return net->input_layer;
     }
@@ -373,6 +375,7 @@ Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
     else{
         assert(0 && "Pred layer not exist\n");
     }
+    */
 }
 
 Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf, double coeff_sup){
@@ -438,15 +441,51 @@ bool is_greater(Network_t* net, int index1, int index2){
         nt->lexpr_b->cst_inf = 0.0;
         nt->lexpr_b->cst_sup = 0.0;
         nt->lexpr_b->size=2;
-        nt->lexpr_b->coeff_inf = {1.0,-1.0};
+        nt->lexpr_b->coeff_inf = {-1.0,1.0};
         nt->lexpr_b->coeff_sup = {1.0, -1.0};
         update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
+        std::cout<<index1<<", "<<index2<<", lb: "<<-nt->lb<<std::endl;
         if(nt->lb < 0){ //lower bound is completely positive
             return true;
         }
     }
 
     return false;
+}
+
+void update_pred_layer_link(Network_t* net, Layer_t* pred_layer){
+    if(pred_layer->is_activation){
+        Layer_t* pred_pred_layer = new Layer_t();
+        Layer_t* curr_pred_pred_layer = NULL;
+        if(pred_layer->layer_index > 0){
+            curr_pred_pred_layer = net->layer_vec[pred_layer->layer_index-1];
+        }
+        else{
+            curr_pred_pred_layer = net->input_layer;
+        }
+        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
+        pred_pred_layer->dims = pred_layer->dims;
+        pred_pred_layer->activation = curr_pred_pred_layer->activation;
+        pred_pred_layer->is_activation = curr_pred_pred_layer->is_activation;
+        pred_pred_layer->layer_type = curr_pred_pred_layer->layer_type;
+        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
+        pred_pred_layer->pred_layer = curr_pred_pred_layer->pred_layer;
+        pred_pred_layer->neurons.resize(pred_layer->dims);
+        for(size_t i=0; i<pred_layer->dims; i++){
+            size_t index = pred_layer->neurons[i]->neuron_index;
+            pred_pred_layer->neurons[i] = curr_pred_pred_layer->neurons[index];
+        }
+        
+        pred_layer = pred_pred_layer;
+    }
+    else{
+        if(pred_layer->layer_index > 0){
+            pred_layer->pred_layer = net->layer_vec[pred_layer->layer_index -1];
+        }
+        else{
+            pred_layer->pred_layer = net->input_layer;
+        }
+    }
 }
 
 

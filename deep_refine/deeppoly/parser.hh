@@ -3,6 +3,7 @@
 #include "network.hh"
 
 void init_network(Network_t* net, std::string &filepath);
+void pred_layer_linking(Network_t* net);
 void parse_string_to_xarray(Layer_t* layer, std::string weights, bool is_bias);
 Layer_t* create_layer(bool is_activation, std::string activation, std::string layer_type);
 void create_neurons_update_layer(Layer_t* layer);

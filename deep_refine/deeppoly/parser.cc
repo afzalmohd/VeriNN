@@ -37,6 +37,19 @@ void init_network(Network_t* net, std::string &filepath){
         net->numlayers = net->layer_vec.size();
         net->input_dim = net->input_layer->dims;
         net->output_dim = net->layer_vec.back()->dims;
+        pred_layer_linking(net);
+    }
+}
+
+void pred_layer_linking(Network_t* net){
+    for(size_t i=0; i < net->layer_vec.size(); i++){
+        Layer_t* layer = net->layer_vec[i];
+        if(i == 0){
+            layer->pred_layer = net->input_layer;
+        }
+        else{
+            layer->pred_layer = net->layer_vec[i-1];
+        }
     }
 }
 
