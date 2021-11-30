@@ -1,5 +1,11 @@
 #include"interval.hh"
 
+/*
+The functions "double_interval_mul", "double_interval_mul_expr_coeff", "double_interval_mul_cst_coeff"
+are copied from elina_box_meetjoin.c which is a file of ELINA library.
+The source file is available here https://github.com/eth-sri/ELINA/blob/master/elina_zonotope/elina_box_meetjoin.c
+
+*/
 
 
 void double_interval_mul(double *a_inf, double *a_sup, double b_inf, double b_sup, double c_inf, double c_sup){
