@@ -100,13 +100,17 @@ void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
 void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     std::vector<size_t> shape =  layer->w_shape;
     nt->uexpr = new Expr_t();
+    nt->lexpr = new Expr_t();
     nt->uexpr_b = new Expr_t();
     nt->lexpr_b = new Expr_t();
     nt->uexpr->size = shape[0];
+    nt->lexpr->size = shape[0];
     nt->uexpr_b->size = shape[0];
     nt->lexpr_b->size = shape[0];
     nt->uexpr->coeff_inf.resize(nt->uexpr->size);
     nt->uexpr->coeff_sup.resize(nt->uexpr->size);
+    nt->lexpr->coeff_inf.resize(nt->lexpr->size);
+    nt->lexpr->coeff_sup.resize(nt->lexpr->size);
     nt->uexpr_b->coeff_inf.resize(nt->uexpr_b->size);
     nt->uexpr_b->coeff_sup.resize(nt->uexpr_b->size);
     nt->lexpr_b->coeff_inf.resize(nt->lexpr_b->size);
@@ -116,6 +120,8 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
         double coff = coll[i];//layer->w[i,nt->neuron_index];
         nt->uexpr->coeff_inf[i] = -coff;
         nt->uexpr->coeff_sup[i] = coff;
+        nt->lexpr->coeff_inf[i] = -coff;
+        nt->lexpr->coeff_sup[i] = coff;
         nt->uexpr_b->coeff_inf[i] = -coff;
         nt->uexpr_b->coeff_sup[i] = coff;
         nt->lexpr_b->coeff_inf[i] = -coff;
@@ -124,11 +130,12 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     double cst = layer->b[nt->neuron_index];
     nt->uexpr->cst_inf = -cst;
     nt->uexpr->cst_sup = cst;
+    nt->uexpr->cst_inf = -cst;
+    nt->uexpr->cst_sup = cst;
     nt->uexpr_b->cst_inf = -cst;
     nt->uexpr_b->cst_sup = cst;
     nt->lexpr_b->cst_inf = -cst;
     nt->lexpr_b->cst_sup = cst;
-    nt->lexpr = nt->uexpr;
 }
 
 void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
@@ -245,10 +252,20 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
         Expr_t* mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], 
                                             curr_expr->coeff_sup[i], is_lower);       
         if(curr_expr->coeff_sup[i] < 0 || curr_expr->coeff_inf[i] < 0){
+            /*
+            double_interval_mul(&res_expr->coeff_inf[i], &res_expr->coeff_sup[i],
+                                            mul_expr->coeff_inf[0], mul_expr->coeff_sup[0],
+                                            curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
+            */
             double_interval_mul_expr_coeff(net->ulp,&res_expr->coeff_inf[i], &res_expr->coeff_sup[i],
                                             mul_expr->coeff_inf[0], mul_expr->coeff_sup[0],
                                             curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
             double tmp1, tmp2;
+            /*
+            double_interval_mul(&tmp1, &tmp2,
+                                            mul_expr->cst_inf, mul_expr->cst_sup,
+                                            curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
+            */
             double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &tmp1, &tmp2,
                                             mul_expr->cst_inf, mul_expr->cst_sup,
                                             curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
@@ -388,7 +405,18 @@ void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
     }
 }
 
-bool is_greater(Network_t* net, size_t index1, size_t index2){
+bool is_image_verified(Network_t* net){
+    for(int i=0; i<net->output_dim; i++){
+        if(i != net->actual_label){
+            if(!is_greater(net, net->actual_label, i)){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool is_greater(Network_t* net, int index1, int index2){
     //return true, if value at index1 is higher than value at index2
     assert(index1 >= 0 && index1 < net->output_dim && "index1 out of bound");
     assert(index2 >= 0 && index2 < net->output_dim && "index2 out of bound");
@@ -420,4 +448,5 @@ bool is_greater(Network_t* net, size_t index1, size_t index2){
 
     return false;
 }
+
 

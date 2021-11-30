@@ -12,19 +12,58 @@ int main(int argc, char* argv[]){
     Network_t* net = new Network_t();
     init_network(net, Configuration::net_path);
     net->epsilon = Configuration::epsilon;
-    execute_neural_network(net, Configuration::dataset_path);
-    create_input_layer_expr(net);
-    forward_analysis(net);
+    analyse(net, Configuration::dataset_path);
+    //execute_neural_network(net, Configuration::dataset_path);
+    //create_input_layer_expr(net);
+    //forward_analysis(net);
     net->print_network();
     return 0;
 }
+
+void analyse(Network_t* net, std::string &image_path){
+    size_t num_test = 100;
+    size_t verified_counter = 0;
+    size_t image_counter = 0;
+    for(int i=1; i <= num_test; i++){
+        if( i != 5){
+            continue;
+        }
+        //printf("%d\n",i);
+        parse_input_image(net, image_path, i);
+        net->forward_propgate_network(0, net->input_layer->res);
+        auto pred_label = xt::argmax(net->layer_vec.back()->res);
+        net->pred_label = pred_label[0];
+        if(net->actual_label != net->pred_label){
+            std::cout<<"Predicted, actual label: ("<<net->pred_label<<","<<net->actual_label<<")"<<", network predicted wrong output"<<std::endl;
+        }
+        else{
+            reset_network(net);
+            create_input_layer_expr(net);
+            forward_analysis(net);
+            bool is_varified = is_image_verified(net);
+            if(is_varified){
+                verified_counter++;
+                std::cout<<i-1<<" Image: "<<net->pred_label<<" verified!\n";
+            }
+            else{
+                std::cout<<i-1<<" Image: "<<net->pred_label<<" not verified!\n";
+            }
+            image_counter++;
+        }
+    }
+
+    std::cout<<"Images: "<<verified_counter<<"/"<<image_counter<<" verified"<<std::endl;
+}
+
 
 void execute_neural_network(Network_t* net, std::string &image_path){
     size_t num_test = 1;
     for(int i=1; i <= num_test; i++){
         parse_input_image(net, image_path, i);
         net->forward_propgate_network(0, net->input_layer->res);
-        std::cout<<"Predicted, actual label: ("<<xt::argmax(net->layer_vec.back()->res)<<","<<net->actual_label<<")"<<std::endl;
+        auto pred_label = xt::argmax(net->layer_vec.back()->res);
+        net->pred_label = pred_label[0];
+        std::cout<<"Predicted, actual label: ("<<net->pred_label<<","<<net->actual_label<<")"<<std::endl;
     }
 }
 
@@ -79,6 +118,23 @@ void Network_t::print_network(){
     std::cout<<"inputdim,"<<this->input_dim<<std::endl;
     for(auto layer : this->layer_vec){
             layer->print_layer();
+    }
+}
+
+void reset_network(Network_t* net){
+    for(auto layer: net->layer_vec){
+        reset_layer(layer);
+    }
+}
+void reset_layer(Layer_t* layer){
+    for(size_t i=0; i < layer->neurons.size(); i++){
+        Neuron_t* nt = layer->neurons[i];
+        nt->~Neuron_t();
+        // nt = new Neuron_t();
+         nt->lb = INFINITY;
+         nt->ub = INFINITY;
+        // nt->neuron_index = i;
+        // layer->neurons[i] = nt;
     }
 }
 

@@ -36,11 +36,7 @@ class Neuron_t{
         Expr_t* lexpr;
 		Expr_t* uexpr_b;
 		Expr_t* lexpr_b;
-		//std::vector<Neuron_t*> pred_neurons;
 		~Neuron_t(){
-			//for(size_t i=0; i<pred_neurons.size(); i++){
-			//	delete pred_neurons[i];
-			//}
             delete uexpr;
             delete lexpr;
 			delete uexpr_b;
@@ -80,6 +76,7 @@ class Network_t{
 		size_t output_dim=0;
 		double epsilon = 0;
         int actual_label;
+		int pred_label;
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);
 
@@ -95,6 +92,9 @@ class Network_t{
 		void forward_propgate_network(size_t layer_index, xt::xarray<double> &inp);
 };
 
+void analyse(Network_t* net, std::string &image_path);
 void execute_neural_network(Network_t* net, std::string &image_path);
+void reset_network(Network_t* net);
+void reset_layer(Layer_t* layer);
 
 #endif
