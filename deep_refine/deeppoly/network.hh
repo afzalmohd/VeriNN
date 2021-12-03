@@ -25,6 +25,7 @@ class Expr_t{
         double cst_sup;
 		size_t size=0;
 		void deep_copy(Expr_t* expr);
+		void print_expr();
 };
 
 class Neuron_t{

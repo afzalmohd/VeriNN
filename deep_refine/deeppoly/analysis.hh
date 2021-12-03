@@ -23,5 +23,6 @@ Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf,
 void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2);
 bool is_image_verified(Network_t* net);
 bool is_greater(Network_t* net, int index1, int index2);
+void update_pred_layer_link(Network_t* net, Layer_t* pred_layer);
 
 #endif

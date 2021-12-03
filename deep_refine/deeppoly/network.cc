@@ -102,8 +102,21 @@ void Network_t::forward_propgate_network(size_t layer_index,
     }
 }
 
+void Expr_t::print_expr(){
+    for(size_t i=0; i<this->coeff_sup.size(); i++){
+        std::cout<<this->coeff_sup[i]<<",";
+    }
+    std::cout<<this->cst_sup<<std::endl;
+}
+
+
 void Neuron_t::print_neuron(){
+    //printf("neuron,%ld,%g,%g\n",this->neuron_index,-this->lb,this->ub);
     std::cout<<"neuron,"<<this->neuron_index<<","<<-this->lb<<","<<this->ub<<std::endl;
+    //std::cout<<"upper,";
+    //this->uexpr->print_expr();
+    //std::cout<<"lower,";
+    //this->lexpr->print_expr();
 }
 
 void Layer_t::print_layer(){

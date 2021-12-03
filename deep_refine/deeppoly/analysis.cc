@@ -116,6 +116,7 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->lexpr_b->coeff_inf.resize(nt->lexpr_b->size);
     nt->lexpr_b->coeff_sup.resize(nt->lexpr_b->size);
     auto coll = xt::col(layer->w,nt->neuron_index);
+    //std::cout<<"Column of layer, neuron index: ("<<layer->layer_index<<","<<nt->neuron_index<<") is, "<<coll<<std::endl;
     for(int i=0; i < shape[0]; i++){
         double coff = coll[i];//layer->w[i,nt->neuron_index];
         nt->uexpr->coeff_inf[i] = -coff;
@@ -130,8 +131,8 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     double cst = layer->b[nt->neuron_index];
     nt->uexpr->cst_inf = -cst;
     nt->uexpr->cst_sup = cst;
-    nt->uexpr->cst_inf = -cst;
-    nt->uexpr->cst_sup = cst;
+    nt->lexpr->cst_inf = -cst;
+    nt->lexpr->cst_sup = cst;
     nt->uexpr_b->cst_inf = -cst;
     nt->uexpr_b->cst_sup = cst;
     nt->lexpr_b->cst_inf = -cst;
@@ -141,7 +142,6 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
 void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
     nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
     if(pred_layer->layer_index >= 0){
-        Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         if(pred_layer->is_activation){
             Expr_t* tmp_expr_l = update_expr_relu_backsubstitution(net,pred_layer,nt->lexpr_b, true);
             delete nt->lexpr_b;
@@ -152,6 +152,7 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
             delete nt->lexpr_b;
             nt->lexpr_b = tmp_expr_l;
         }
+        Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
 }
@@ -202,7 +203,7 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     Neuron_t* pred_nt = NULL;
     Expr_t* mul_expr = NULL;
     Expr_t* temp_expr = NULL;
-    for(size_t i=1; i<pred_layer->dims; i++){
+    for(size_t i=0; i<curr_expr->size; i++){
         if(curr_expr->coeff_inf[i] == 0 && curr_expr->coeff_sup[i] == 0){
             continue;
         }
@@ -242,7 +243,7 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
     res_expr->cst_sup = curr_expr->cst_sup;
     res_expr->coeff_inf.resize(res_expr->size);
     res_expr->coeff_sup.resize(res_expr->size);
-    for(size_t i=0; i<pred_layer->dims; i++){
+    for(size_t i=0; i<curr_expr->size; i++){
         Neuron_t* pred_nt = pred_layer->neurons[i];
         if((curr_expr->coeff_inf[i] == 0.0) && (curr_expr->coeff_sup[i] == 0.0)){
             res_expr->coeff_inf[i] = 0.0;
@@ -343,7 +344,7 @@ Expr_t* get_mul_expr(Neuron_t* pred_nt, double inf_coff, double supp_coff, bool 
 
 double compute_lb_from_expr(Layer_t* pred_layer, Expr_t* expr){
     double res = expr->cst_inf;
-    for(size_t i=0; i < expr->size-1; i++){
+    for(size_t i=0; i < expr->size; i++){
         double temp1, temp2;
         double_interval_mul(&temp1, &temp2, expr->coeff_inf[i], expr->coeff_sup[i], 
                                 pred_layer->neurons[i]->lb, pred_layer->neurons[i]->ub);
@@ -354,7 +355,7 @@ double compute_lb_from_expr(Layer_t* pred_layer, Expr_t* expr){
 
 double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
     double res = expr->cst_sup;
-    for(size_t i=0; i < expr->size-1; i++){
+    for(size_t i=0; i < expr->size; i++){
         double temp1, temp2;
         double_interval_mul(&temp1, &temp2, expr->coeff_inf[i], expr->coeff_sup[i], 
                                 pred_layer->neurons[i]->lb, pred_layer->neurons[i]->ub);
@@ -443,8 +444,9 @@ bool is_greater(Network_t* net, int index1, int index2){
         nt->lexpr_b->size=2;
         nt->lexpr_b->coeff_inf = {-1.0,1.0};
         nt->lexpr_b->coeff_sup = {1.0, -1.0};
+        update_pred_layer_link(net,pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
-        std::cout<<index1<<", "<<index2<<", lb: "<<-nt->lb<<std::endl;
+        //std::cout<<index1<<", "<<index2<<", lb: "<<-nt->lb<<std::endl;
         if(nt->lb < 0){ //lower bound is completely positive
             return true;
         }
@@ -476,7 +478,7 @@ void update_pred_layer_link(Network_t* net, Layer_t* pred_layer){
             pred_pred_layer->neurons[i] = curr_pred_pred_layer->neurons[index];
         }
         
-        pred_layer = pred_pred_layer;
+        pred_layer->pred_layer = pred_pred_layer;
     }
     else{
         if(pred_layer->layer_index > 0){
