@@ -26,6 +26,8 @@ namespace Configuration{
     extern size_t input_dim;
     extern double epsilon;
     extern bool is_small_ex;
+    extern bool is_parallel;
+    extern unsigned int num_thread;
 
 }
 

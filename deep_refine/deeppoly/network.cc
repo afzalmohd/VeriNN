@@ -127,7 +127,6 @@ void Layer_t::print_layer(){
 }
 
 void Network_t::print_network(){
-    //this->input_layer->print_layer();
     std::cout<<"inputdim,"<<this->input_dim<<std::endl;
     for(auto layer : this->layer_vec){
             layer->print_layer();
@@ -143,11 +142,8 @@ void reset_layer(Layer_t* layer){
     for(size_t i=0; i < layer->neurons.size(); i++){
         Neuron_t* nt = layer->neurons[i];
         nt->~Neuron_t();
-        // nt = new Neuron_t();
          nt->lb = INFINITY;
          nt->ub = INFINITY;
-        // nt->neuron_index = i;
-        // layer->neurons[i] = nt;
     }
 }
 

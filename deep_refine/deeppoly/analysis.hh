@@ -2,8 +2,10 @@
 #define _DEEPPOLY_ANALYSIS_H_
 #include "network.hh"
 void forward_analysis(Network_t* net);
-void forward_layer_FC(Network_t* nt, Layer_t* curr_layer);
-void forward_layer_ReLU(Network_t* net, Layer_t* curr_layer);
+void forward_layer_FC_parallel(Network_t* net, Layer_t* curr_layer);
+void forward_layer_FC(Network_t* net, Layer_t* curr_layer, size_t start_index, size_t end_index);
+void forward_layer_ReLU_parallel(Network_t* net, Layer_t* curr_layer);
+void forward_layer_ReLU(Network_t* net, Layer_t* curr_layer, size_t start_index, size_t end_index);
 void update_neuron_relu(Network_t* net, Layer_t* pred_layer, Neuron_t* nt);
 void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heuristic, bool is_lower);
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt);
@@ -24,5 +26,6 @@ void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2);
 bool is_image_verified(Network_t* net);
 bool is_greater(Network_t* net, int index1, int index2);
 void update_pred_layer_link(Network_t* net, Layer_t* pred_layer);
+unsigned int get_num_thread();
 
 #endif

@@ -1,26 +1,100 @@
 #include "analysis.hh"
 #include "interval.hh"
+#include<thread>
 
 void forward_analysis(Network_t* net){
     for(auto layer:net->layer_vec){
         if(layer->is_activation){
-            forward_layer_ReLU(net, layer);
+            if(Configuration::is_parallel){
+                forward_layer_ReLU_parallel(net, layer);
+            }
+            else{
+                forward_layer_ReLU(net, layer, 0, layer->dims);
+            }
         }
         else{
-            forward_layer_FC(net, layer);
+            if(Configuration::is_parallel){
+                forward_layer_FC_parallel(net, layer);
+            }
+            else{
+                forward_layer_FC(net, layer, 0, layer->dims);
+            }
         }
     }
 }
 
-void forward_layer_FC(Network_t* net, Layer_t* curr_layer){
+void forward_layer_FC_parallel(Network_t* net, Layer_t* curr_layer){
+    unsigned int num_thread = get_num_thread();
+    std::vector<std::thread> threads;
+    size_t num_neurons = curr_layer->dims;
+    size_t pool_size = num_neurons/num_thread;
+    if(num_neurons < num_thread){
+        pool_size = 1;
+    }
+    size_t start_index = 0;
+    size_t end_index = start_index + pool_size;
+
+    for(size_t i=0; i<num_thread; i++){
+        threads.push_back(std::thread(forward_layer_FC, net, curr_layer, start_index, end_index));
+        if(end_index >= num_neurons){
+            break;
+        }
+        start_index = end_index;
+        end_index = start_index + pool_size;
+        if(end_index > num_neurons){
+            end_index = num_neurons;
+        }
+        if(i == num_thread-2){
+            end_index = num_neurons;
+        }
+    }
+
+    for(auto &th : threads){
+        th.join();
+    }
+
+}
+
+void forward_layer_FC(Network_t* net, Layer_t* curr_layer, size_t start_index, size_t end_index){
     assert(curr_layer->layer_type == "FC" && "Not FC layer"); 
-    for(size_t i=0; i<curr_layer->dims; i++){
+    for(size_t i=start_index; i<end_index; i++){
         Neuron_t* nt = curr_layer->neurons[i];
         update_neuron_FC(net, curr_layer, nt);
     }
 }
 
-void forward_layer_ReLU(Network_t* net, Layer_t* curr_layer){
+void forward_layer_ReLU_parallel(Network_t* net, Layer_t* curr_layer){
+    unsigned int num_thread = get_num_thread();
+    std::vector<std::thread> threads;
+    size_t num_neurons = curr_layer->dims;
+    size_t pool_size = num_neurons/num_thread;
+    if(num_neurons < num_thread){
+        pool_size = 1;
+    }
+    size_t start_index = 0;
+    size_t end_index = start_index + pool_size;
+
+    for(size_t i=0; i<num_thread; i++){
+        threads.push_back(std::thread(forward_layer_ReLU, net, curr_layer, start_index, end_index));
+        if(end_index >= num_neurons){
+            break;
+        }
+        start_index = end_index;
+        end_index = start_index + pool_size;
+        if(end_index > num_neurons){
+            end_index = num_neurons;
+        }
+        if(i == num_thread-2){
+            end_index = num_neurons;
+        }
+    }
+
+    for(auto &th : threads){
+        th.join();
+    }
+}
+
+void forward_layer_ReLU(Network_t* net, Layer_t* curr_layer, size_t start_index, size_t end_index){
     assert(curr_layer->is_activation && "Not a ReLU layer");
     Layer_t* pred_layer = get_pred_layer(net, curr_layer);
     for(size_t i=0; i<curr_layer->dims; i++){
@@ -180,16 +254,6 @@ void update_neuron_bound_back_substitution(Network_t* net, Layer_t* pred_layer, 
     update_neuron_uexpr_bound_back_substitution(net, pred_layer, nt);
 }
 
-// void update_neuron_lexpr_b(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
-//     if(pred_layer->is_activation){
-//         Expr_t* tmp_expr = update_expr_relu_backsubstitution(net,pred_layer, nt->lexpr_b, true);
-//         delete nt->lexpr_b; //delete old expression after gwtting updated
-//         nt->lexpr_b = tmp_expr;
-//     }
-//     else if(pred_layer->layer_type == "FC"){
-
-//     }
-// }
 
 Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,Expr_t* curr_expr, Neuron_t* curr_nt, bool is_lower){
     assert(pred_layer->layer_type == "FC" && "Not FC layer");
@@ -488,6 +552,14 @@ void update_pred_layer_link(Network_t* net, Layer_t* pred_layer){
             pred_layer->pred_layer = net->input_layer;
         }
     }
+}
+
+unsigned int get_num_thread(){
+    unsigned int num_system_cores = std::thread::hardware_concurrency();
+    if(num_system_cores < Configuration::num_thread){
+        return num_system_cores;
+    }
+    return Configuration::num_thread;
 }
 
 
