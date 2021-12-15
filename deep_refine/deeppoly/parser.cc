@@ -131,7 +131,7 @@ void parse_input_image(Network_t* net, std::string &image_path, size_t image_ind
     newfile.open(image_path, std::ios::in);
     if(newfile.is_open()){
         std::string tp;
-        int image_counter = 0;
+        size_t image_counter = 0;
         while (getline(newfile, tp)){
             if(tp != ""){
                 if(image_counter == image_index){

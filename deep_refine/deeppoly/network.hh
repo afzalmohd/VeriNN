@@ -77,8 +77,8 @@ class Network_t{
 		size_t input_dim = 0;
 		size_t output_dim=0;
 		double epsilon = 0;
-        int actual_label;
-		int pred_label;
+        size_t actual_label;
+		size_t pred_label;
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);
 

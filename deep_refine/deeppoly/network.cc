@@ -24,7 +24,7 @@ void analyse(Network_t* net, std::string &image_path){
     size_t num_test = 30;
     size_t verified_counter = 0;
     size_t image_counter = 0;
-    for(int i=1; i <= num_test; i++){
+    for(size_t i=1; i <= num_test; i++){
         if( i != 3){
             //continue;
         }
@@ -58,7 +58,7 @@ void analyse(Network_t* net, std::string &image_path){
 
 void execute_neural_network(Network_t* net, std::string &image_path){
     size_t num_test = 1;
-    for(int i=1; i <= num_test; i++){
+    for(size_t i=1; i <= num_test; i++){
         parse_input_image(net, image_path, i);
         net->forward_propgate_network(0, net->input_layer->res);
         auto pred_label = xt::argmax(net->layer_vec.back()->res);

@@ -191,7 +191,7 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->lexpr_b->coeff_sup.resize(nt->lexpr_b->size);
     auto coll = xt::col(layer->w,nt->neuron_index);
     //std::cout<<"Column of layer, neuron index: ("<<layer->layer_index<<","<<nt->neuron_index<<") is, "<<coll<<std::endl;
-    for(int i=0; i < shape[0]; i++){
+    for(size_t i=0; i < shape[0]; i++){
         double coff = coll[i];//layer->w[i,nt->neuron_index];
         nt->uexpr->coeff_inf[i] = -coff;
         nt->uexpr->coeff_sup[i] = coff;
@@ -474,7 +474,7 @@ void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
 }
 
 bool is_image_verified(Network_t* net){
-    for(int i=0; i<net->output_dim; i++){
+    for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             if(!is_greater(net, net->actual_label, i)){
                 return false;
@@ -484,7 +484,7 @@ bool is_image_verified(Network_t* net){
     return true;
 }
 
-bool is_greater(Network_t* net, int index1, int index2){
+bool is_greater(Network_t* net, size_t index1, size_t index2){
     //return true, if value at index1 is higher than value at index2
     assert(index1 >= 0 && index1 < net->output_dim && "index1 out of bound");
     assert(index2 >= 0 && index2 < net->output_dim && "index2 out of bound");
