@@ -4,6 +4,8 @@ DREFINE=drefine
 HOME_INSTALLED=~/installed
 BUILDDIR = $(PWD)/build
 SRCDIR = $(PWD)/src
+DEEPPOLYDIR = $(PWD)/deeppoly
+DEEPPOLY=deeppoly
 XTENSOR_VERSION=0.3.0  # dummy now
 XTL_VERSION=0.4.0 # dummy now
 LD=ld.gold
@@ -34,6 +36,9 @@ clean :
 	rm -rf $(BUILDDIR)/buildr
 	rm -rf $(BUILDDIR)/buildd
 	rm -f $(DREFINE) 
+	rm -rf $(BUILDDIR)/deeppoly/buildr
+	rm -rf $(BUILDDIR)/deeppoly/buildd
+	rm -f $(DEEPPOLYDIR)/$(DEEPPOLY)
 	find -name "*~"| xargs rm -rf
 
 # removes all the downloaded libs and all the installs
@@ -62,5 +67,20 @@ $(BUILDDIR)/z3/buildd/libz3.so : $(BUILDDIR)/z3/README.md
 	+make -C $(BUILDDIR)/z3/buildd
 
 
+deeppolydebug: $(BUILDDIR)/deeppoly/buildd/Makefile 
+	+make -C $(BUILDDIR)/deeppoly/buildd
+	cp -f $(BUILDDIR)/deeppoly/buildd/$(DEEPPOLY) $(DEEPPOLYDIR)/$(DEEPPOLY)
+
+$(BUILDDIR)/deeppoly/buildd/Makefile:
+	mkdir -p $(BUILDDIR)/deeppoly/buildd
+	cd $(BUILDDIR)/deeppoly/buildd; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DDEEPPOLY=$(DEEPPOLY) $(DEEPPOLYDIR)
+
+deeppoly: $(BUILDDIR)/deeppoly/buildr/Makefile 
+	+make -C $(BUILDDIR)/deeppoly/buildr
+	cp -f $(BUILDDIR)/deeppoly/buildr/$(DEEPPOLY) $(DEEPPOLYDIR)/$(DEEPPOLY)
+
+$(BUILDDIR)/deeppoly/buildr/Makefile:
+	mkdir -p $(BUILDDIR)/deeppoly/buildr
+	cd $(BUILDDIR)/deeppoly/buildr; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DDEEPPOLY=$(DEEPPOLY) $(DEEPPOLYDIR)
 
 test: release runtest
