@@ -496,6 +496,7 @@ bool is_greater(Network_t* net, int index1, int index2){
     pred_layer->dims = 2;
     pred_layer->layer_index = out_layer->layer_index;
     pred_layer->is_activation = out_layer->is_activation;
+    pred_layer->layer_type = out_layer->layer_type;
     if(-nt1->lb > nt2->ub){
         return true;
     }

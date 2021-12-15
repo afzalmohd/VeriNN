@@ -16,17 +16,17 @@ int main(int argc, char* argv[]){
     //execute_neural_network(net, Configuration::dataset_path);
     //create_input_layer_expr(net);
     //forward_analysis(net);
-    net->print_network();
+    //net->print_network();
     return 0;
 }
 
 void analyse(Network_t* net, std::string &image_path){
-    size_t num_test = 100;
+    size_t num_test = 30;
     size_t verified_counter = 0;
     size_t image_counter = 0;
     for(int i=1; i <= num_test; i++){
-        if( i != 5){
-            continue;
+        if( i != 3){
+            //continue;
         }
         //printf("%d\n",i);
         parse_input_image(net, image_path, i);

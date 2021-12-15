@@ -9,6 +9,7 @@ void init_network(Network_t* net, std::string &filepath){
     if(newfile.is_open()){
         std::string tp;
         std::string relu_str = "ReLU";
+        std::string matmul_str = "Gemm";
         size_t layer_index = 0;
         while (getline(newfile, tp)){
             if(tp != ""){
@@ -29,6 +30,18 @@ void init_network(Network_t* net, std::string &filepath){
                     relu_layer->layer_index = layer_index;
                     create_neurons_update_layer(relu_layer);
                     net->layer_vec.push_back(relu_layer);
+                    layer_index++;
+                }
+                else if(tp == matmul_str){
+                    getline(newfile, tp);
+                    Layer_t* layer = create_layer(false, "", "FC");
+                    parse_string_to_xarray(layer, tp, false); //weight matrix
+                    getline(newfile, tp);
+                    parse_string_to_xarray(layer, tp, true); //bias matrix
+                    
+                    layer->layer_index = layer_index;
+                    create_neurons_update_layer(layer);
+                    net->layer_vec.push_back(layer);
                     layer_index++;
                 }
             }
