@@ -12,7 +12,7 @@ LD=ld.gold
 
 all : release
 
-.PHONY : release debug run clean test deepclean
+.PHONY : release debug run clean test deepclean deeppoly deeppolydebug
 
 release : $(BUILDDIR)/buildr/Makefile
 	+make -C $(BUILDDIR)/buildr
