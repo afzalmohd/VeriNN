@@ -3,6 +3,14 @@
 #include <boost/program_options.hpp>
 //#define RELU "ReLU"
 //#define FC "FC"
+#define VERBOSE true
+#if VERBOSE
+    #define IFVERBOSE(x) x
+#else
+    #define IFVERBOSE(x) (void*) 0
+#endif
+
+
 
 namespace po = boost::program_options;
 

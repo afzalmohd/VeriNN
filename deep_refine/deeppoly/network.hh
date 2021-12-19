@@ -17,20 +17,45 @@ class Float_number{
         double sup;
 };
 
+class Expr_t;
+
+class Constr_t{
+	public:
+		Expr_t* expr;
+		bool is_positive;
+		//size_t layer_index;
+		//size_t neuron_index;  //Layer and neuron index by which this constraint generated
+		// ~Constr_t(){
+		// 	delete expr;
+		// }
+		void deep_copy(Constr_t* constr);
+		void print_constr();
+		//bool is_same_generator(Constr_t* constr);
+};
+
 class Expr_t{
 	public:
 		std::vector<double> coeff_inf;
         std::vector<double> coeff_sup;
+		std::vector<Constr_t*> constr_vec; // Constraints added by other layers neurons in backsubstitutions
 		double cst_inf;
         double cst_sup;
 		size_t size=0;
 		void deep_copy(Expr_t* expr);
 		void print_expr();
+		~Expr_t(){
+			for(size_t i=0; i<constr_vec.size(); i++){
+				delete constr_vec[i]->expr;
+			}
+		}
 };
 
 class Neuron_t{
 	public:
 		size_t neuron_index;
+		bool is_marked = false;//false means deeppoly's natural encoding
+		bool is_active; // false means relu is deactivated, true means relu is activated
+		std::vector<Constr_t*> constr_vec;
 		double lb=INFINITY;
 		double ub=INFINITY;
         Expr_t* uexpr;
@@ -42,6 +67,9 @@ class Neuron_t{
             delete lexpr;
 			delete uexpr_b;
 			delete lexpr_b;
+			for(auto constr : constr_vec){
+				delete constr->expr;
+			}
 		}
 		void print_neuron();
 };
@@ -55,6 +83,8 @@ class Layer_t{
 		std::string activation;
         std::string layer_type;
 		int layer_index; //input layer consider as -1 indexed
+		bool is_marked = false;
+		std::vector<Constr_t*> constr_vec;
 		std::vector<size_t> w_shape;
 		xt::xarray<double> w;
         xt::xarray<double> b;

@@ -120,7 +120,7 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" )
 
 # lib/bmc/bmc_loop_pass.cpp
 # main.cpp
-SET(SOURCES analysis.cc configuration.cc interval.cc network.cc parser.cc) 
+SET(SOURCES analysis.cc configuration.cc interval.cc network.cc parser.cc helper.cc) 
 
 add_executable(${DEEPPOLY} ${SOURCES})
 

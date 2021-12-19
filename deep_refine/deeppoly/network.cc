@@ -67,14 +67,6 @@ void execute_neural_network(Network_t* net, std::string &image_path){
     }
 }
 
-void Expr_t::deep_copy(Expr_t* expr){
-    this->coeff_inf.assign(expr->coeff_inf.begin(), expr->coeff_inf.end());
-    this->coeff_sup.assign(expr->coeff_sup.begin(), expr->coeff_sup.end());
-    this->cst_inf = expr->cst_inf;
-    this->cst_sup = expr->cst_sup;
-    this->size = expr->size;
-}
-
 void Network_t::forward_propgate_one_layer(size_t layer_index, 
                                            xt::xarray<double> &inp){
     Layer_t* layer = this->layer_vec[layer_index];
@@ -102,11 +94,39 @@ void Network_t::forward_propgate_network(size_t layer_index,
     }
 }
 
+void Expr_t::deep_copy(Expr_t* expr){
+    this->coeff_inf.assign(expr->coeff_inf.begin(), expr->coeff_inf.end());
+    this->coeff_sup.assign(expr->coeff_sup.begin(), expr->coeff_sup.end());
+    this->cst_inf = expr->cst_inf;
+    this->cst_sup = expr->cst_sup;
+    this->size = expr->size;
+    for(auto constr : expr->constr_vec){
+        Constr_t* con = new Constr_t();
+        con->deep_copy(constr);
+        this->constr_vec.push_back(con);
+    }
+}
+
+void Constr_t::deep_copy(Constr_t* constr){
+    this->expr->deep_copy(constr->expr);
+    this->is_positive = constr->is_positive;
+}
+
+void Constr_t::print_constr(){
+    this->expr->print_expr();
+    if(this->is_positive){
+        std::cout<<" > 0";
+    }
+    else{
+        std::cout<<" <= 0";
+    }
+}
+
 void Expr_t::print_expr(){
     for(size_t i=0; i<this->coeff_sup.size(); i++){
         std::cout<<this->coeff_sup[i]<<",";
     }
-    std::cout<<this->cst_sup<<std::endl;
+    std::cout<<this->cst_sup;
 }
 
 

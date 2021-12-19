@@ -1,0 +1,350 @@
+#include "helper.hh"
+#include "interval.hh"
+#include<thread>
+
+unsigned int get_num_thread(){
+    unsigned int num_system_cores = std::thread::hardware_concurrency();
+    if(num_system_cores < Configuration::num_thread){
+        return num_system_cores;
+    }
+    return Configuration::num_thread;
+}
+
+void copy_layer_constraints(Layer_t* layer, Neuron_t* nt){
+    if(layer->is_marked && nt->is_marked){
+        for(auto constr : layer->constr_vec){
+            Constr_t* con = new Constr_t();
+            con->deep_copy(constr);
+            nt->constr_vec.push_back(con);
+        }
+    }
+    else{
+        IFVERBOSE(std::cout<<"Either layer or neuron is not marked"<<std::endl);
+    }
+}
+
+void update_pred_layer_link(Network_t* net, Layer_t* pred_layer){
+    if(pred_layer->is_activation){
+        Layer_t* pred_pred_layer = new Layer_t();
+        Layer_t* curr_pred_pred_layer = NULL;
+        if(pred_layer->layer_index > 0){
+            curr_pred_pred_layer = net->layer_vec[pred_layer->layer_index-1];
+        }
+        else{
+            curr_pred_pred_layer = net->input_layer;
+        }
+        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
+        pred_pred_layer->dims = pred_layer->dims;
+        pred_pred_layer->activation = curr_pred_pred_layer->activation;
+        pred_pred_layer->is_activation = curr_pred_pred_layer->is_activation;
+        pred_pred_layer->layer_type = curr_pred_pred_layer->layer_type;
+        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
+        pred_pred_layer->pred_layer = curr_pred_pred_layer->pred_layer;
+        pred_pred_layer->neurons.resize(pred_layer->dims);
+        for(size_t i=0; i<pred_layer->dims; i++){
+            size_t index = pred_layer->neurons[i]->neuron_index;
+            pred_pred_layer->neurons[i] = curr_pred_pred_layer->neurons[index];
+        }
+        
+        pred_layer->pred_layer = pred_pred_layer;
+    }
+    else{
+        if(pred_layer->layer_index > 0){
+            pred_layer->pred_layer = net->layer_vec[pred_layer->layer_index -1];
+        }
+        else{
+            pred_layer->pred_layer = net->input_layer;
+        }
+    }
+}
+
+void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
+    assert(expr1->size == expr2->size && "Expression size mismatch while adding");
+    double max1 = fmax(fabs(expr1->cst_inf),fabs(expr1->cst_sup));
+	double max2 = fmax(fabs(expr2->cst_inf),fabs(expr2->cst_sup));
+    expr1->cst_inf += expr2->cst_inf  + (max1 + max2)*net->ulp + net->min_denormal;
+	expr1->cst_sup += expr2->cst_sup  + (max1 + max2)*net->ulp + net->min_denormal;
+    for(size_t i=0; i<expr1->size; i++){
+        max1 = fmax(fabs(expr1->coeff_inf[i]),fabs(expr1->coeff_sup[i]));
+		max2 = fmax(fabs(expr2->coeff_inf[i]),fabs(expr2->coeff_sup[i]));
+		expr1->coeff_inf[i] = expr1->coeff_inf[i] + expr2->coeff_inf[i] + (max1 + max1)*net->ulp;
+		expr1->coeff_sup[i] = expr1->coeff_sup[i] + expr2->coeff_sup[i] + (max1 + max2)*net->ulp;
+    }
+}
+
+Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf, double coeff_sup){
+    Expr_t* mul_expr = new Expr_t();
+    mul_expr->size = expr->size;
+    mul_expr->coeff_inf.resize(mul_expr->size);
+    mul_expr->coeff_sup.resize(mul_expr->size);
+    for(size_t i=0; i<expr->size; i++){
+        double_interval_mul_expr_coeff(net->ulp, &mul_expr->coeff_inf[i], &mul_expr->coeff_sup[i],
+                                        coeff_inf, coeff_sup, 
+                                        expr->coeff_inf[i], expr->coeff_sup[i]);
+    }
+    double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &mul_expr->cst_inf, &mul_expr->cst_sup,
+                                    coeff_inf, coeff_sup, expr->cst_inf, expr->cst_sup);
+    return mul_expr;
+
+}
+
+Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
+    return curr_layer->pred_layer;
+    /*
+    if(curr_layer->layer_index == 0){
+        return net->input_layer;
+    }
+    else if(curr_layer->layer_index > 0){
+        return net->layer_vec[curr_layer->layer_index - 1];
+    }
+    else{
+        assert(0 && "Pred layer not exist\n");
+    }
+    */
+}
+
+Expr_t* get_mul_expr(Neuron_t* pred_nt, double inf_coff, double supp_coff, bool is_lower){
+    Expr_t* mul_expr = NULL;
+    if(is_lower){
+        if(supp_coff < 0){
+            mul_expr =  pred_nt->uexpr;
+        }
+        else if(inf_coff < 0){
+            mul_expr = pred_nt->lexpr;
+        }
+    }
+    else{
+        if(supp_coff < 0){
+            mul_expr = pred_nt->lexpr;
+        }
+        else if(inf_coff < 0){
+            mul_expr = pred_nt->uexpr;
+        }
+    }
+    return mul_expr;
+}
+
+void create_marked_layer_splitting_constraints(Layer_t* layer){
+    if(layer->is_marked){
+        assert(layer->layer_type == "FC" && "Layer is not marked but creating expression as per marked layer\n");
+        std::vector<size_t> shape =  layer->w_shape;
+        for(auto nt : layer->neurons){
+            if(nt->is_marked){
+                Expr_t* expr = new Expr_t();
+                expr->size = shape[0];
+                expr->coeff_inf.resize(expr->size);
+                expr->coeff_sup.resize(expr->size);
+                auto coll = xt::col(layer->w,nt->neuron_index);
+                for(size_t i=0; i < shape[0]; i++){
+                    double coff = coll[i];
+                    expr->coeff_inf[i] = -coff;
+                    expr->coeff_sup[i] = coff;
+                }
+                double cst = layer->b[nt->neuron_index];
+                expr->cst_inf = -cst;
+                expr->cst_sup = cst;
+                
+                Constr_t* constr = new Constr_t();
+                constr->expr = expr;
+                constr->is_positive = nt->is_active;
+                layer->constr_vec.push_back(constr);
+            }
+        }
+    }    
+}
+
+void create_constr_vec_by_size(std::vector<Constr_t*>& constr_vec, std::vector<Constr_t*>& old_vec, size_t constr_size){
+    constr_vec.resize(old_vec.size());
+    for(size_t i=0; i<old_vec.size(); i++){
+        Constr_t* con = new Constr_t();
+        Constr_t* old_con = old_vec[i];
+        con->expr->size = constr_size;
+        con->expr->cst_inf = old_con->expr->cst_inf;
+        con->expr->cst_sup = old_con->expr->cst_sup;
+        con->expr->coeff_inf.resize(constr_size);
+        con->expr->coeff_sup.resize(constr_size);
+        con->is_positive = old_con->is_positive;
+        constr_vec.push_back(con);
+    }
+}
+
+void create_constr_vec_with_init_expr(std::vector<Constr_t*>& constr_vec, std::vector<Constr_t*>& old_vec, size_t constr_size){
+    constr_vec.resize(old_vec.size());
+    for(size_t i=0; i<old_vec.size(); i++){
+        Constr_t* con = new Constr_t();
+        Constr_t* old_con = old_vec[i];
+        con->expr->size = constr_size;
+        con->expr->cst_inf = 0;
+        con->expr->cst_sup = 0;
+        con->expr->coeff_inf.resize(con->expr->size, 0.0);
+        con->expr->coeff_sup.resize(con->expr->size, 0.0);
+        con->is_positive = old_con->is_positive;
+        constr_vec.push_back(con);
+    }
+}
+
+void update_independent_constr_relu(Network_t* net, std::vector<Constr_t*>& new_constr_vec, std::vector<Constr_t*>& old_constr_vec,Neuron_t* pred_nt){
+    size_t index = pred_nt->neuron_index;
+    for(size_t i=0; i<old_constr_vec.size(); i++){
+        Constr_t* old_con = old_constr_vec[i];
+        Expr_t* old_con_expr = old_con->expr;
+        Constr_t* new_con = new_constr_vec[i];
+        Expr_t* new_con_expr = new_con->expr;
+        if(old_con_expr->coeff_inf[index] == 0.0 && old_con_expr->coeff_sup[index] == 0.0){
+            new_con_expr->coeff_inf[index] = 0.0;
+            new_con_expr->coeff_sup[index] = 0.0;
+            continue;
+        }
+
+        Expr_t* mul_expr = get_mul_expr(pred_nt, old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index], !old_con->is_positive);
+        if(mul_expr != NULL && (old_con_expr->coeff_inf[index] < 0.0 || old_con_expr->coeff_sup[index] < 0.0)){
+            double_interval_mul_expr_coeff(net->ulp,&new_con_expr->coeff_inf[index], &new_con_expr->coeff_sup[index],
+                                            mul_expr->coeff_inf[0], mul_expr->coeff_sup[0],
+                                            old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            double tmp1, tmp2;
+            double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &tmp1, &tmp2,
+                                            mul_expr->cst_inf, mul_expr->cst_sup,
+                                            old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            new_con_expr->cst_inf = new_con_expr->cst_inf + tmp1 + net->min_denormal;
+            new_con_expr->cst_sup = new_con_expr->cst_sup + tmp2 + net->min_denormal;
+        }
+        else{
+            new_con_expr->coeff_inf[index] = 0.0;
+            new_con_expr->coeff_sup[index] = 0.0;
+            double tmp1, tmp2;
+            double_interval_mul_expr_coeff(net->ulp, &tmp1,&tmp2, pred_nt->lb, pred_nt->ub, 
+                                            old_con_expr->coeff_inf[index],old_con_expr->coeff_sup[index]);    
+            
+            if(!new_con->is_positive){
+				new_con_expr->cst_inf = new_con_expr->cst_inf + tmp1;
+                new_con_expr->cst_sup = new_con_expr->cst_sup - tmp1;
+			}
+			else{
+                new_con_expr->cst_inf = new_con_expr->cst_inf - tmp2;
+                new_con_expr->cst_sup = new_con_expr->cst_sup + tmp2;
+			}
+        }
+    }
+}
+
+void update_dependent_constr_relu(Network_t* net, std::vector<Constr_t*>& new_constr_vec, std::vector<Constr_t*>& old_constr_vec, Expr_t* mul_expr, Neuron_t* pred_nt){
+    size_t index = pred_nt->neuron_index;
+    for(size_t i=0; i<old_constr_vec.size(); i++){
+        Constr_t* old_con = old_constr_vec[i];
+        Expr_t* old_con_expr = old_con->expr;
+        Constr_t* new_con = new_constr_vec[i];
+        Expr_t* new_con_expr = new_con->expr;
+        if(old_con_expr->coeff_inf[index] == 0.0 && old_con_expr->coeff_sup[index] == 0.0){
+            new_con_expr->coeff_inf[index] = 0.0;
+            new_con_expr->coeff_sup[index] = 0.0;
+            continue;
+        }
+        if(mul_expr != NULL && (old_con_expr->coeff_inf[index] < 0.0 || old_con_expr->coeff_sup[index] < 0.0)){
+            double_interval_mul_expr_coeff(net->ulp,&new_con_expr->coeff_inf[index], &new_con_expr->coeff_sup[index],
+                                            mul_expr->coeff_inf[0], mul_expr->coeff_sup[0],
+                                            old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            double tmp1, tmp2;
+            double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &tmp1, &tmp2,
+                                            mul_expr->cst_inf, mul_expr->cst_sup,
+                                            old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            new_con_expr->cst_inf = new_con_expr->cst_inf + tmp1 + net->min_denormal;
+            new_con_expr->cst_sup = new_con_expr->cst_sup + tmp2 + net->min_denormal;
+        }
+        else{
+            new_con_expr->coeff_inf[index] = 0.0;
+            new_con_expr->coeff_sup[index] = 0.0;
+            double tmp1, tmp2;
+            double_interval_mul_expr_coeff(net->ulp, &tmp1,&tmp2, pred_nt->lb, pred_nt->ub, 
+                                            old_con_expr->coeff_inf[index],old_con_expr->coeff_sup[index]);    
+            
+            if(!old_con->is_positive){
+				new_con_expr->cst_inf = new_con_expr->cst_inf + tmp1;
+                new_con_expr->cst_sup = new_con_expr->cst_sup - tmp1;
+			}
+			else{
+                new_con_expr->cst_inf = new_con_expr->cst_inf - tmp2;
+                new_con_expr->cst_sup = new_con_expr->cst_sup + tmp2;
+			}
+        }
+    }
+}
+
+
+void update_independent_constr_FC(Network_t* net, std::vector<Constr_t*>& new_constr_vec, std::vector<Constr_t*>& old_constr_vec,Neuron_t* pred_nt){
+    size_t index = pred_nt->neuron_index;
+    for(size_t i =0; i<old_constr_vec.size(); i++){
+        Constr_t* old_con = old_constr_vec[i];
+        Expr_t* old_con_expr = old_con->expr;
+        Constr_t* new_con = new_constr_vec[i];
+        Expr_t* new_con_expr = new_con->expr;
+        if(old_con_expr->coeff_inf[index] == 0.0 && old_con_expr->coeff_sup[index] == 0.0){
+            continue; //new_con_expr already initialized with 0.0
+        }
+
+        Expr_t* mul_expr = get_mul_expr(pred_nt, old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index], !old_con->is_positive);
+        if(mul_expr != NULL && (old_con_expr->coeff_inf[index] < 0 || old_con_expr->coeff_sup[index] < 0)){
+            Expr_t* temp_expr = multiply_expr_with_coeff(net, mul_expr, old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            add_expr(net, new_con_expr, temp_expr);
+            delete temp_expr;    
+        }
+        else{
+            double temp1, temp2;
+			double_interval_mul_cst_coeff(net->ulp, net->min_denormal,&temp1,&temp2,pred_nt->lb,pred_nt->ub,old_con_expr->coeff_inf[index],old_con_expr->coeff_sup[index]);
+			if(!old_con->is_positive){
+				new_con_expr->cst_inf = new_con_expr->cst_inf + temp1;
+				new_con_expr->cst_sup = new_con_expr->cst_sup - temp1;
+			}
+			else{
+				new_con_expr->cst_inf = new_con_expr->cst_inf - temp2;
+				new_con_expr->cst_sup = new_con_expr->cst_sup + temp2;
+			}
+        }
+    }
+}
+
+void update_dependent_constr_FC(Network_t* net, std::vector<Constr_t*>& new_constr_vec, std::vector<Constr_t*>& old_constr_vec, Expr_t* mul_expr, Neuron_t* pred_nt){
+    size_t index = pred_nt->neuron_index;
+    for(size_t i=0; i<old_constr_vec.size(); i++){
+        Constr_t* old_con = old_constr_vec[i];
+        Expr_t* old_con_expr = old_con->expr;
+        Constr_t* new_con = new_constr_vec[i];
+        Expr_t* new_con_expr = new_con->expr;
+        if(old_con_expr->coeff_inf[index] == 0.0 && old_con_expr->coeff_sup[index] == 0.0){
+            continue;
+        }
+        if(mul_expr != NULL && (old_con_expr->coeff_inf[index] < 0.0 || old_con_expr->coeff_sup[index] < 0.0)){
+            Expr_t* temp_expr = multiply_expr_with_coeff(net, mul_expr, old_con_expr->coeff_inf[index], old_con_expr->coeff_sup[index]);
+            add_expr(net, new_con_expr, temp_expr);
+            delete temp_expr; 
+        }
+        else{
+            double temp1, temp2;
+			double_interval_mul_cst_coeff(net->ulp, net->min_denormal,&temp1,&temp2,pred_nt->lb,pred_nt->ub,old_con_expr->coeff_inf[index],old_con_expr->coeff_sup[index]);
+			if(!old_con->is_positive){
+				new_con_expr->cst_inf = new_con_expr->cst_inf + temp1;
+				new_con_expr->cst_sup = new_con_expr->cst_sup - temp1;
+			}
+			else{
+				new_con_expr->cst_inf = new_con_expr->cst_inf - temp2;
+				new_con_expr->cst_sup = new_con_expr->cst_sup + temp2;
+			}
+        }
+    }
+}
+
+void update_constr_vec_cst(std::vector<Constr_t*> new_constr_vec, std::vector<Constr_t*>& old_constr_vec){
+    for(size_t i=0; i<old_constr_vec.size(); i++){
+        Expr_t* old_con_expr = old_constr_vec[i]->expr;
+        Expr_t* new_con_expr = new_constr_vec[i]->expr;
+        new_con_expr->cst_inf = new_con_expr->cst_inf + old_con_expr->cst_inf;
+        new_con_expr->cst_sup = new_con_expr->cst_sup + old_con_expr->cst_sup;
+    }
+}
+
+void free_constr_vector_memory(std::vector<Constr_t*>& constr_vec){
+    for(auto con : constr_vec){
+        delete con->expr;
+        delete con;
+    }
+}
+

@@ -1,5 +1,6 @@
 #include "analysis.hh"
 #include "interval.hh"
+#include "helper.hh"
 #include<thread>
 
 void forward_analysis(Network_t* net){
@@ -13,6 +14,7 @@ void forward_analysis(Network_t* net){
             }
         }
         else{
+            create_marked_layer_splitting_constraints(layer);
             if(Configuration::is_parallel){
                 forward_layer_FC_parallel(net, layer);
             }
@@ -167,6 +169,9 @@ void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heur
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
     assert(layer->layer_index >= 0 && "Layer indexing is wrong");
     create_neuron_expr_FC(nt, layer);
+    if(layer->is_marked && nt->is_marked){
+        copy_layer_constraints(layer, nt);
+    }
     Layer_t* pred_layer = get_pred_layer(net, layer);
     update_neuron_bound_back_substitution(net, pred_layer, nt);
 }
@@ -213,11 +218,13 @@ void create_neuron_expr_FC(Neuron_t* nt, Layer_t* layer){
     nt->lexpr_b->cst_sup = cst;
 }
 
+
+
 void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
     nt->lb = fmin(nt->lb, compute_lb_from_expr(pred_layer, nt->lexpr_b));
     if(pred_layer->layer_index >= 0){
         if(pred_layer->is_activation){
-            Expr_t* tmp_expr_l = update_expr_relu_backsubstitution(net,pred_layer,nt->lexpr_b, true);
+            Expr_t* tmp_expr_l = update_expr_relu_backsubstitution(net,pred_layer,nt->lexpr_b, nt, true);
             delete nt->lexpr_b;
             nt->lexpr_b = tmp_expr_l;
         }
@@ -229,6 +236,9 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
+    else{
+        //Call gurobi
+    }
 }
 
 void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
@@ -236,7 +246,7 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
     if(pred_layer->layer_index >= 0){
         Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         if(pred_layer->is_activation){
-            Expr_t* tmp_expr_u = update_expr_relu_backsubstitution(net, pred_layer, nt->uexpr_b, false);
+            Expr_t* tmp_expr_u = update_expr_relu_backsubstitution(net, pred_layer, nt->uexpr_b, nt, false);
             delete nt->uexpr_b;
             nt->uexpr_b = tmp_expr_u;
         }
@@ -246,6 +256,9 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
             nt->uexpr_b = tmp_expr_u;
         }
         update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
+    }
+    else{
+        //call gurobi
     }
 }
 
@@ -267,14 +280,18 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     Neuron_t* pred_nt = NULL;
     Expr_t* mul_expr = NULL;
     Expr_t* temp_expr = NULL;
+    std::vector<Constr_t*> new_constr_vec;
+    create_constr_vec_with_init_expr(new_constr_vec, curr_nt->constr_vec, res_expr->size);
     for(size_t i=0; i<curr_expr->size; i++){
         if(curr_expr->coeff_inf[i] == 0 && curr_expr->coeff_sup[i] == 0){
+            update_independent_constr_FC(net, new_constr_vec, curr_nt->constr_vec, curr_nt);
             continue;
         }
 
         pred_nt = pred_layer->neurons[i];
+        mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i], is_lower);
+        update_dependent_constr_FC(net,new_constr_vec, curr_nt->constr_vec, mul_expr, pred_nt);
         if(curr_expr->coeff_inf[i] < 0 || curr_expr->coeff_sup[i] < 0){
-            mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i], is_lower);
             temp_expr = multiply_expr_with_coeff(net, mul_expr, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
             add_expr(net, res_expr, temp_expr);
             delete temp_expr;
@@ -295,11 +312,14 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
 
     res_expr->cst_inf = res_expr->cst_inf + curr_expr->cst_inf;
     res_expr->cst_sup = res_expr->cst_sup + curr_expr->cst_sup;
+    update_constr_vec_cst(new_constr_vec, curr_nt->constr_vec);
+    free_constr_vector_memory(curr_nt->constr_vec);
+    curr_nt->constr_vec = new_constr_vec;
 
     return res_expr;
 }
 
-Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, Expr_t* curr_expr, bool is_lower){
+Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, Expr_t* curr_expr, Neuron_t* nt, bool is_lower){
     assert(pred_layer->is_activation && "Not activation layer");
     Expr_t* res_expr = new Expr_t();
     res_expr->size = pred_layer->dims;
@@ -307,15 +327,21 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
     res_expr->cst_sup = curr_expr->cst_sup;
     res_expr->coeff_inf.resize(res_expr->size);
     res_expr->coeff_sup.resize(res_expr->size);
+
+    std::vector<Constr_t*> new_constr_vec;
+    create_constr_vec_by_size(new_constr_vec, nt->constr_vec, res_expr->size);
+
     for(size_t i=0; i<curr_expr->size; i++){
         Neuron_t* pred_nt = pred_layer->neurons[i];
         if((curr_expr->coeff_inf[i] == 0.0) && (curr_expr->coeff_sup[i] == 0.0)){
             res_expr->coeff_inf[i] = 0.0;
             res_expr->coeff_sup[i] = 0.0;
+            update_independent_constr_relu(net,new_constr_vec,nt->constr_vec,pred_nt);
             continue;
         }
         Expr_t* mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], 
-                                            curr_expr->coeff_sup[i], is_lower);       
+                                            curr_expr->coeff_sup[i], is_lower);
+        update_dependent_constr_relu(net,new_constr_vec, nt->constr_vec, mul_expr, pred_nt);       
         if(curr_expr->coeff_sup[i] < 0 || curr_expr->coeff_inf[i] < 0){
             /*
             double_interval_mul(&res_expr->coeff_inf[i], &res_expr->coeff_sup[i],
@@ -354,6 +380,9 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
 			}
         }
     }
+    free_constr_vector_memory(nt->constr_vec);
+    nt->constr_vec = new_constr_vec;
+
     return res_expr;
 }
 
@@ -370,39 +399,7 @@ void create_input_layer_expr(Network_t* net){
             nt->lb = 0.0;
         }
         nt->lb = -nt->lb;
-        /*
-        nt->uexpr = new Expr_t();
-        nt->uexpr->cst_inf = nt->ub;
-        nt->uexpr->cst_sup = nt->ub;
-        nt->uexpr->size = 0;
-        
-        nt->lexpr = new Expr_t();
-        nt->lexpr->cst_inf = -nt->lb;
-        nt->lexpr->cst_sup = -nt->lb;
-        nt->lexpr->size = 0;
-        */
     }
-}
-
-Expr_t* get_mul_expr(Neuron_t* pred_nt, double inf_coff, double supp_coff, bool is_lower){
-    Expr_t* mul_expr = NULL;
-    if(is_lower){
-        if(supp_coff < 0){
-            mul_expr =  pred_nt->uexpr;
-        }
-        else if(inf_coff < 0){
-            mul_expr = pred_nt->lexpr;
-        }
-    }
-    else{
-        if(supp_coff < 0){
-            mul_expr = pred_nt->lexpr;
-        }
-        else if(inf_coff < 0){
-            mul_expr = pred_nt->uexpr;
-        }
-    }
-    return mul_expr;
 }
 
 
@@ -428,50 +425,6 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
     return res;
 }
 
-Layer_t* get_pred_layer(Network_t* net, Layer_t* curr_layer){
-    return curr_layer->pred_layer;
-    /*
-    if(curr_layer->layer_index == 0){
-        return net->input_layer;
-    }
-    else if(curr_layer->layer_index > 0){
-        return net->layer_vec[curr_layer->layer_index - 1];
-    }
-    else{
-        assert(0 && "Pred layer not exist\n");
-    }
-    */
-}
-
-Expr_t* multiply_expr_with_coeff(Network_t* net, Expr_t* expr, double coeff_inf, double coeff_sup){
-    Expr_t* mul_expr = new Expr_t();
-    mul_expr->size = expr->size;
-    mul_expr->coeff_inf.resize(mul_expr->size);
-    mul_expr->coeff_sup.resize(mul_expr->size);
-    for(size_t i=0; i<expr->size; i++){
-        double_interval_mul_expr_coeff(net->ulp, &mul_expr->coeff_inf[i], &mul_expr->coeff_sup[i],
-                                        coeff_inf, coeff_sup, 
-                                        expr->coeff_inf[i], expr->coeff_sup[i]);
-    }
-    double_interval_mul_cst_coeff(net->ulp, net->min_denormal, &mul_expr->cst_inf, &mul_expr->cst_sup,
-                                    coeff_inf, coeff_sup, expr->cst_inf, expr->cst_sup);
-    return mul_expr;
-
-}
-
-void add_expr(Network_t* net, Expr_t* expr1, Expr_t* expr2){
-    assert(expr1->size == expr2->size && "Expression size mismatch while adding");
-    double max1 = fmax(fabs(expr1->cst_inf),fabs(expr1->cst_sup));
-	double max2 = fmax(fabs(expr2->cst_inf),fabs(expr2->cst_sup));
-    expr1->cst_inf += expr2->cst_inf  + (max1 + max2)*net->ulp + net->min_denormal;
-	expr1->cst_sup += expr2->cst_sup  + (max1 + max2)*net->ulp + net->min_denormal;
-    for(size_t i=0; i<expr1->size; i++){
-        max1 = fmax(fabs(expr1->coeff_inf[i]),fabs(expr1->coeff_sup[i]));
-		max2 = fmax(fabs(expr2->coeff_inf[i]),fabs(expr2->coeff_sup[i]));
-		expr1->coeff_inf[i] = expr1->coeff_inf[i] + expr2->coeff_inf[i] + (max1 + max1)*net->ulp;
-		expr1->coeff_sup[i] = expr1->coeff_sup[i] + expr2->coeff_sup[i] + (max1 + max2)*net->ulp;
-    }
-}
 
 bool is_image_verified(Network_t* net){
     for(size_t i=0; i<net->output_dim; i++){
@@ -519,48 +472,4 @@ bool is_greater(Network_t* net, size_t index1, size_t index2){
 
     return false;
 }
-
-void update_pred_layer_link(Network_t* net, Layer_t* pred_layer){
-    if(pred_layer->is_activation){
-        Layer_t* pred_pred_layer = new Layer_t();
-        Layer_t* curr_pred_pred_layer = NULL;
-        if(pred_layer->layer_index > 0){
-            curr_pred_pred_layer = net->layer_vec[pred_layer->layer_index-1];
-        }
-        else{
-            curr_pred_pred_layer = net->input_layer;
-        }
-        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
-        pred_pred_layer->dims = pred_layer->dims;
-        pred_pred_layer->activation = curr_pred_pred_layer->activation;
-        pred_pred_layer->is_activation = curr_pred_pred_layer->is_activation;
-        pred_pred_layer->layer_type = curr_pred_pred_layer->layer_type;
-        pred_pred_layer->layer_index = curr_pred_pred_layer->layer_index;
-        pred_pred_layer->pred_layer = curr_pred_pred_layer->pred_layer;
-        pred_pred_layer->neurons.resize(pred_layer->dims);
-        for(size_t i=0; i<pred_layer->dims; i++){
-            size_t index = pred_layer->neurons[i]->neuron_index;
-            pred_pred_layer->neurons[i] = curr_pred_pred_layer->neurons[index];
-        }
-        
-        pred_layer->pred_layer = pred_pred_layer;
-    }
-    else{
-        if(pred_layer->layer_index > 0){
-            pred_layer->pred_layer = net->layer_vec[pred_layer->layer_index -1];
-        }
-        else{
-            pred_layer->pred_layer = net->input_layer;
-        }
-    }
-}
-
-unsigned int get_num_thread(){
-    unsigned int num_system_cores = std::thread::hardware_concurrency();
-    if(num_system_cores < Configuration::num_thread){
-        return num_system_cores;
-    }
-    return Configuration::num_thread;
-}
-
 
