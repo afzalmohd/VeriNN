@@ -315,6 +315,13 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     update_constr_vec_cst(new_constr_vec, curr_nt->constr_vec);
     free_constr_vector_memory(curr_nt->constr_vec);
     curr_nt->constr_vec = new_constr_vec;
+    if(pred_layer->is_marked){
+        for(auto con : pred_layer->constr_vec){
+            Constr_t* constr = new Constr_t();
+            constr->deep_copy(con);
+            curr_nt->constr_vec.push_back(constr);
+        }
+    }
 
     return res_expr;
 }

@@ -6,6 +6,7 @@ BUILDDIR = $(PWD)/build
 SRCDIR = $(PWD)/src
 DEEPPOLYDIR = $(PWD)/deeppoly
 DEEPPOLY=deeppoly
+GUROBI_HOME=$(BUILDDIR)/gurobi912/linux64
 XTENSOR_VERSION=0.3.0  # dummy now
 XTL_VERSION=0.4.0 # dummy now
 LD=ld.gold
@@ -79,8 +80,16 @@ deeppoly: $(BUILDDIR)/deeppoly/buildr/Makefile
 	+make -C $(BUILDDIR)/deeppoly/buildr
 	cp -f $(BUILDDIR)/deeppoly/buildr/$(DEEPPOLY) $(DEEPPOLYDIR)/$(DEEPPOLY)
 
-$(BUILDDIR)/deeppoly/buildr/Makefile:
+$(BUILDDIR)/deeppoly/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
 	mkdir -p $(BUILDDIR)/deeppoly/buildr
 	cd $(BUILDDIR)/deeppoly/buildr; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DDEEPPOLY=$(DEEPPOLY) $(DEEPPOLYDIR)
+
+$(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a:
+	cd $(BUILDDIR); wget https://packages.gurobi.com/9.1/gurobi9.1.2_linux64.tar.gz; tar -xvf gurobi9.1.2_linux64.tar.gz; rm gurobi9.1.2_linux64.tar.gz
+	cd $(BUILDDIR)/gurobi912/linux64/src/build; make
+	cp -f $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a $(BUILDDIR)/gurobi912/linux64/lib
+
+
+
 
 test: release runtest

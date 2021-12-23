@@ -13,7 +13,8 @@ project(${DEEPPOLY})
 
 # SET (LLVM_DEBUG FALSE CACHE BOOL "Use Locally compiled and debug enabled LLVM")
 SET (Z3_DEBUG FALSE CACHE BOOL "Link debug verion of Z3")
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+SET (CMAKE_VERBOSE_MAKEFILE ON)
+
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("debug mode")
@@ -23,37 +24,28 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
   SET (Z3_DEBUG TRUE)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../gurobi_cmake")
+#message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 
 find_package(xtensor REQUIRED CONFIG)
 find_package(xtl REQUIRED CONFIG)
+find_package(GUROBI REQUIRED)
+
+if(GUROBI_FOUND)
+  message(STATUS "GUROBI FOUND")
+else(GUROBI_FOUND)
+  message(FATAL_ERROR "!!! GUROBI NOT FOUND !!!")
+endif(GUROBI_FOUND)
+#message("Check......")
 #find_package(boost REQUIRED CONFIG)
 # include_directories()
 include_directories(${xtl_INCLUDE_DIRS})
+include_directories(${GUROBI_INCLUDE_DIRS})
+#message("GUROBI_LIBRARY: ${GUROBI_LIBRARY}")
 
 message(STATUS "Found XTENSOR ${xtensor_FOUND}")
 message(STATUS "Found XTL ${XTENSOR_PACKAGE_VERSION}")
 
-# message(STATUS "DEBUG : LLVM - ${LLVM_DEBUG}")
-
-# IF(LLVM_DEBUG)
-#   SET( LLVM_DIR "${INSTALLED}/llvm-${LLVM_VERSION}")
-#   SET( CLANG_DIR "${INSTALLED}/llvm-${LLVM_VERSION}")
-#   find_package(LLVM REQUIRED CONFIG NO_DEFAULT_PATH HINTS "${LLVM_DIR}/lib/cmake/llvm/")
-#   find_package(Clang REQUIRED CONFIG NO_DEFAULT_PATH HINTS "${CLANG_DIR}/lib/cmake/clang/")
-# ELSE(LLVM_DEBUG)
-#   # change here to modify the relase version of LLVM
-#   find_package(LLVM 10 REQUIRED CONFIG)
-#   #find_package(Clang REQUIRED CONFIG)
-#   # find_package(Clang REQUIRED CONFIG NO_DEFAULT_PATH HINTS "/usr/lib/llvm-10/lib/cmake/clang")
-#   find_package(Clang REQUIRED CONFIG NO_DEFAULT_PATH HINTS "/usr/lib/cmake/clang-10/")
-#   message(STATUS "LLVM INCLUDE DIR - ${LLVM_INCLUDE_DIRS}")
-#   message(STATUS "CLANG INCLUDE DIR - ${CLANG_INCLUDE_DIRS}")
-#   # find_package(Clang REQUIRED clangTooling libClang)
-# ENDIF(LLVM_DEBUG)
-
-# message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-# message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-# message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
 
 SET(Boost_USE_STATIC_LIBS    OFF)
 SET(Boost_USE_STATIC_RUNTIME OFF)
@@ -66,61 +58,16 @@ ELSE(Z3_DEBUG)
   LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildr")
 ENDIF(Z3_DEBUG)
 
+LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
+
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" )
 # include_directories(${Boost_INCLUDE_DIRS})
 # LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-# add_definitions(${LLVM_DEFINITIONS})
-# include_directories(${LLVM_INCLUDE_DIRS})
-# include_directories(${CLANG_INCLUDE_DIRS})
 
-# IF(LLVM_DEBUG)
-#   # in debug llvm linkers take a lot of time
-#   # For enabling specialized linker; 
-#   # TODO: may be remove; breaks modularity
-#   SET( CMAKE_LINKER "/usr/bin/ld.lld-9.0" )
-#   add_definitions("-Wl,--threads -Wl,--thread-count,4")
-# ENDIF(LLVM_DEBUG)
-#   message(STATUS "Linker In use : ${CMAKE_LINKER}")
-
-
-# if(LLVM_VERSION EQUAL "7.0.0svn")
-#   ADD_DEFINITIONS(-DLLVM_SVN)
-# else(LLVM_VERSION EQUAL "7.0.0svn")
-# endif(LLVM_VERSION EQUAL "7.0.0svn")
-
-# # unexplained guard 
-# if( LLVM_DEBUG )
-#   llvm_map_components_to_libnames(llvm_libs
-#     aarch64asmparser aarch64codegen
-#     armasmparser armcodegen
-#     hexagoncodegen
-#     mipsasmparser mipscodegen
-#     msp430codegen
-#     nvptxcodegen
-#     powerpcasmparser powerpccodegen
-#     sparcasmparser sparccodegen
-#     systemzasmparser systemzcodegen
-#     x86asmparser x86codegen
-#     xcorecodegen
-#     amdgpuasmparser amdgpucodegen
-#     bpfasmparser bpfcodegen
-#     lanaicodegen
-#     objcarcopts
-#     )
-# endif( LLVM_DEBUG )
-
-# message(STATUS "LLVM LIBS : ${llvm_libs}")
-
-# SET(clang_libs clangDaemon clangFrontendTool)
-
-#LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
-
-# lib/bmc/bmc_loop_pass.cpp
-# main.cpp
-SET(SOURCES analysis.cc configuration.cc interval.cc network.cc parser.cc helper.cc) 
+SET(SOURCES analysis.cc configuration.cc interval.cc network.cc parser.cc helper.cc optimizer.cc) 
 
 add_executable(${DEEPPOLY} ${SOURCES})
 
@@ -128,4 +75,5 @@ add_executable(${DEEPPOLY} ${SOURCES})
 SET(xtensor_libs blas)
 SET(boost_lib boost_program_options)
 SET(pthread_lib pthread)
-target_link_libraries (${DEEPPOLY} ${LIBZ3} ${xtensor_libs} ${boost_lib} ${pthread_lib})
+SET(gurobi_lib gurobi_c++ gurobi91)
+target_link_libraries (${DEEPPOLY} ${LIBZ3} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib})
