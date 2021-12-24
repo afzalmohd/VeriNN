@@ -14,8 +14,14 @@ void copy_layer_constraints(Layer_t* layer, Neuron_t* nt){
     if(layer->is_marked && nt->is_marked){
         for(auto constr : layer->constr_vec){
             Constr_t* con = new Constr_t();
+            con->expr = new Expr_t();
             con->deep_copy(constr);
-            nt->constr_vec.push_back(con);
+            nt->uexpr_b->constr_vec.push_back(con);
+            
+            Constr_t* con1 = new Constr_t();
+            con1->expr = new Expr_t();
+            con1->deep_copy(constr);
+            nt->lexpr_b->constr_vec.push_back(con1);
         }
     }
     else{
@@ -157,6 +163,7 @@ void create_constr_vec_by_size(std::vector<Constr_t*>& constr_vec, std::vector<C
     constr_vec.resize(old_vec.size());
     for(size_t i=0; i<old_vec.size(); i++){
         Constr_t* con = new Constr_t();
+        con->expr = new Expr_t();
         Constr_t* old_con = old_vec[i];
         con->expr->size = constr_size;
         con->expr->cst_inf = old_con->expr->cst_inf;

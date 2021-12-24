@@ -26,7 +26,7 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
             model.setObjective(obj_expr, GRB_MAXIMIZE);
         }
 
-        for(auto con : nt->constr_vec){
+        for(auto con : expr->constr_vec){
             Expr_t* con_expr = con->expr;
             GRBLinExpr grb_expr = 0;
             grb_expr.addTerms(&con_expr->coeff_sup[0], &var_vector[0], var_vector.size());

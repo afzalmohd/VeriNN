@@ -55,7 +55,7 @@ class Neuron_t{
 		size_t neuron_index;
 		bool is_marked = false;//false means deeppoly's natural encoding
 		bool is_active; // false means relu is deactivated, true means relu is activated
-		std::vector<Constr_t*> constr_vec;
+		//std::vector<Constr_t*> constr_vec;
 		double lb=INFINITY;
 		double ub=INFINITY;
         Expr_t* uexpr;
@@ -67,9 +67,9 @@ class Neuron_t{
             delete lexpr;
 			delete uexpr_b;
 			delete lexpr_b;
-			for(auto constr : constr_vec){
-				delete constr->expr;
-			}
+			// for(auto constr : constr_vec){
+			// 	delete constr->expr;
+			// }
 		}
 		void print_neuron();
 };
@@ -128,5 +128,6 @@ void analyse(Network_t* net, std::string &image_path);
 void execute_neural_network(Network_t* net, std::string &image_path);
 void reset_network(Network_t* net);
 void reset_layer(Layer_t* layer);
+void mark_layer_and_neurons(Layer_t* layer);
 
 #endif

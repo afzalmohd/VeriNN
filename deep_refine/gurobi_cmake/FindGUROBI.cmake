@@ -1,4 +1,4 @@
-message("Ch: $ENV{GUROBI_HOME}")
+message("GUROBI_HOME: $ENV{GUROBI_HOME}")
 find_path(GUROBI_INCLUDE_DIRS
     NAMES gurobi_c++.h
     HINTS ${GUROBI_DIR} $ENV{GUROBI_HOME}

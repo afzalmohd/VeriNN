@@ -16,12 +16,12 @@ int main(int argc, char* argv[]){
     //execute_neural_network(net, Configuration::dataset_path);
     //create_input_layer_expr(net);
     //forward_analysis(net);
-    //net->print_network();
+    net->print_network();
     return 0;
 }
 
 void analyse(Network_t* net, std::string &image_path){
-    size_t num_test = 30;
+    size_t num_test = 1;
     size_t verified_counter = 0;
     size_t image_counter = 0;
     for(size_t i=1; i <= num_test; i++){
@@ -38,6 +38,7 @@ void analyse(Network_t* net, std::string &image_path){
         }
         else{
             reset_network(net);
+            mark_layer_and_neurons(net->layer_vec[0]);
             create_input_layer_expr(net);
             forward_analysis(net);
             bool is_varified = is_image_verified(net);
@@ -95,7 +96,9 @@ void Network_t::forward_propgate_network(size_t layer_index,
 }
 
 void Expr_t::deep_copy(Expr_t* expr){
+    //this->coeff_inf.resize(expr->coeff_inf.size());
     this->coeff_inf.assign(expr->coeff_inf.begin(), expr->coeff_inf.end());
+    //this->coeff_sup.resize(expr->coeff_sup.size());
     this->coeff_sup.assign(expr->coeff_sup.begin(), expr->coeff_sup.end());
     this->cst_inf = expr->cst_inf;
     this->cst_sup = expr->cst_sup;
@@ -164,6 +167,16 @@ void reset_layer(Layer_t* layer){
         nt->~Neuron_t();
          nt->lb = INFINITY;
          nt->ub = INFINITY;
+    }
+}
+
+void mark_layer_and_neurons(Layer_t* layer){
+    if(Configuration::is_small_ex){
+        if(layer->layer_index == 0){
+            layer->is_marked = true;
+            layer->neurons[0]->is_marked = true;
+            layer->neurons[0]->is_active = true;
+        }
     }
 }
 
