@@ -170,7 +170,7 @@ void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heur
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
     assert(layer->layer_index >= 0 && "Layer indexing is wrong");
     create_neuron_expr_FC(nt, layer);
-    if(layer->is_marked && nt->is_marked){
+    if(layer->is_marked){
         copy_layer_constraints(layer, nt);
     }
     Layer_t* pred_layer = get_pred_layer(net, layer);
@@ -237,7 +237,7 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else{
+    else if(nt->lexpr_b->constr_vec.size() > 0){
         compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
     }
 }
@@ -258,7 +258,7 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         }
         update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else{
+    else if(nt->uexpr_b->constr_vec.size() > 0){
         compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
     }
 }
@@ -315,13 +315,13 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     res_expr->cst_sup = res_expr->cst_sup + curr_expr->cst_sup;
     update_constr_vec_cst(new_constr_vec, curr_expr->constr_vec);
     free_constr_vector_memory(curr_expr->constr_vec);
-    curr_expr->constr_vec = new_constr_vec;
+    res_expr->constr_vec = new_constr_vec;
     if(pred_layer->is_marked){
         for(auto con : pred_layer->constr_vec){
             Constr_t* constr = new Constr_t();
             constr->expr = new Expr_t();
             constr->deep_copy(con);
-            curr_expr->constr_vec.push_back(constr);
+            res_expr->constr_vec.push_back(constr);
         }
     }
 
@@ -390,7 +390,7 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
         }
     }
     free_constr_vector_memory(curr_expr->constr_vec);
-    curr_expr->constr_vec = new_constr_vec;
+    res_expr->constr_vec = new_constr_vec;
 
     return res_expr;
 }

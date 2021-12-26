@@ -11,7 +11,7 @@ unsigned int get_num_thread(){
 }
 
 void copy_layer_constraints(Layer_t* layer, Neuron_t* nt){
-    if(layer->is_marked && nt->is_marked){
+    if(layer->is_marked){
         for(auto constr : layer->constr_vec){
             Constr_t* con = new Constr_t();
             con->expr = new Expr_t();
@@ -352,6 +352,13 @@ void free_constr_vector_memory(std::vector<Constr_t*>& constr_vec){
     for(auto con : constr_vec){
         delete con->expr;
         delete con;
+    }
+}
+
+void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<double> &vec2){
+    vec2.reserve(vec1.size());
+    for(auto val:vec1){
+        vec2.push_back(-val);
     }
 }
 

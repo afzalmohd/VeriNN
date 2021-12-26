@@ -38,7 +38,7 @@ void analyse(Network_t* net, std::string &image_path){
         }
         else{
             reset_network(net);
-            mark_layer_and_neurons(net->layer_vec[0]);
+            //mark_layer_and_neurons(net->layer_vec[0]);
             create_input_layer_expr(net);
             forward_analysis(net);
             bool is_varified = is_image_verified(net);
@@ -138,8 +138,10 @@ void Neuron_t::print_neuron(){
     std::cout<<"neuron,"<<this->neuron_index<<","<<-this->lb<<","<<this->ub<<std::endl;
     //std::cout<<"upper,";
     //this->uexpr->print_expr();
+    //std::cout<<std::endl;
     //std::cout<<"lower,";
     //this->lexpr->print_expr();
+    //std::cout<<std::endl;
 }
 
 void Layer_t::print_layer(){

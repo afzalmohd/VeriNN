@@ -18,6 +18,6 @@ void update_independent_constr_FC(Network_t* net, std::vector<Constr_t*>& new_co
 void update_dependent_constr_FC(Network_t* net, std::vector<Constr_t*>& new_constr_vec, std::vector<Constr_t*>& old_constr_vec, Expr_t* mul_expr, Neuron_t* pred_nt);
 void update_constr_vec_cst(std::vector<Constr_t*> new_constr_vec, std::vector<Constr_t*>& old_constr_vec);
 void free_constr_vector_memory(std::vector<Constr_t*>& constr_vec);
-
+void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<double> &vec2);
 
 #endif

@@ -12,13 +12,22 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
         for(size_t i=0; i<pred_layer->dims; i++){
             Neuron_t* nt1 = pred_layer->neurons[i];
             std::string var_str = "i_"+std::to_string(i);
-            GRBVar x = model.addVar(-nt1->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-            var_vector.push_back(x);
+            GRBVar x = model.addVar(-nt1->lb, nt1->ub, 0.0, GRB_CONTINUOUS, var_str);
+            var_vector[i] = x;
         }
 
         //add objective function to the model
         GRBLinExpr obj_expr = 0;
-        obj_expr.addTerms(&expr->coeff_sup[0], &var_vector[0], var_vector.size());
+        if(is_minimize){
+            std::vector<double> coeffs;
+            copy_vector_with_negative_vals(expr->coeff_inf, coeffs);
+            obj_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
+
+        }
+        else{
+            obj_expr.addTerms(&expr->coeff_sup[0], &var_vector[0], var_vector.size());
+        }
+        
         if(is_minimize){
             model.setObjective(obj_expr, GRB_MINIMIZE);
         }
@@ -41,7 +50,7 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
         model.optimize();
 
         if(is_minimize){
-            nt->lb = model.get(GRB_DoubleAttr_ObjVal);
+            nt->lb = -model.get(GRB_DoubleAttr_ObjVal);
         }
         else{
             nt->ub = model.get(GRB_DoubleAttr_ObjVal);
