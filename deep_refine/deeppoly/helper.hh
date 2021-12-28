@@ -19,5 +19,5 @@ void update_dependent_constr_FC(Network_t* net, std::vector<Constr_t*>& new_cons
 void update_constr_vec_cst(std::vector<Constr_t*> new_constr_vec, std::vector<Constr_t*>& old_constr_vec);
 void free_constr_vector_memory(std::vector<Constr_t*>& constr_vec);
 void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<double> &vec2);
-
+Constr_t* declare_constr_t();
 #endif

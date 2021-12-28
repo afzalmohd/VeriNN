@@ -284,12 +284,11 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     std::vector<Constr_t*> new_constr_vec;
     create_constr_vec_with_init_expr(new_constr_vec, curr_expr->constr_vec, res_expr->size);
     for(size_t i=0; i<curr_expr->size; i++){
+        pred_nt = pred_layer->neurons[i];
         if(curr_expr->coeff_inf[i] == 0 && curr_expr->coeff_sup[i] == 0){
-            update_independent_constr_FC(net, new_constr_vec, curr_expr->constr_vec, curr_nt);
+            update_independent_constr_FC(net, new_constr_vec, curr_expr->constr_vec, pred_nt);
             continue;
         }
-
-        pred_nt = pred_layer->neurons[i];
         mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i], is_lower);
         update_dependent_constr_FC(net,new_constr_vec, curr_expr->constr_vec, mul_expr, pred_nt);
         if(curr_expr->coeff_inf[i] < 0 || curr_expr->coeff_sup[i] < 0){

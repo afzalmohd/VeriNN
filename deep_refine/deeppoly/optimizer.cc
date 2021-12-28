@@ -22,10 +22,11 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
             std::vector<double> coeffs;
             copy_vector_with_negative_vals(expr->coeff_inf, coeffs);
             obj_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
-
+            obj_expr -= expr->cst_inf;
         }
         else{
             obj_expr.addTerms(&expr->coeff_sup[0], &var_vector[0], var_vector.size());
+            obj_expr += expr->cst_sup;
         }
         
         if(is_minimize){
@@ -38,22 +39,33 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
         for(auto con : expr->constr_vec){
             Expr_t* con_expr = con->expr;
             GRBLinExpr grb_expr = 0;
-            grb_expr.addTerms(&con_expr->coeff_sup[0], &var_vector[0], var_vector.size());
             if(con->is_positive){
-                model.addConstr(grb_expr, GRB_GREATER_EQUAL, -con_expr->cst_sup);
+                grb_expr.addTerms(&con_expr->coeff_sup[0], &var_vector[0], var_vector.size());
+                grb_expr += con_expr->cst_sup;
+                model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
             }
             else{
-                model.addConstr(grb_expr, GRB_LESS_EQUAL, -con_expr->cst_sup); 
+                std::vector<double> coeffs;
+                copy_vector_with_negative_vals(expr->coeff_inf, coeffs);
+                grb_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
+                grb_expr -= con_expr->cst_inf; //cst_inf already in negative form
+                model.addConstr(grb_expr, GRB_LESS_EQUAL, 0); 
             }
         }
 
         model.optimize();
 
         if(is_minimize){
-            nt->lb = -model.get(GRB_DoubleAttr_ObjVal);
+            double tmp = model.get(GRB_DoubleAttr_ObjVal);
+            if(tmp > -nt->lb){
+                nt->lb = -tmp;
+            }
         }
         else{
-            nt->ub = model.get(GRB_DoubleAttr_ObjVal);
+            double tmp = model.get(GRB_DoubleAttr_ObjVal);
+            if(tmp < nt->ub){
+                nt->ub = tmp;
+            }
         }
 
     }

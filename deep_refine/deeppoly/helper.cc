@@ -160,7 +160,7 @@ void create_marked_layer_splitting_constraints(Layer_t* layer){
 }
 
 void create_constr_vec_by_size(std::vector<Constr_t*>& constr_vec, std::vector<Constr_t*>& old_vec, size_t constr_size){
-    constr_vec.resize(old_vec.size());
+    constr_vec.reserve(old_vec.size());
     for(size_t i=0; i<old_vec.size(); i++){
         Constr_t* con = new Constr_t();
         con->expr = new Expr_t();
@@ -176,9 +176,9 @@ void create_constr_vec_by_size(std::vector<Constr_t*>& constr_vec, std::vector<C
 }
 
 void create_constr_vec_with_init_expr(std::vector<Constr_t*>& constr_vec, std::vector<Constr_t*>& old_vec, size_t constr_size){
-    constr_vec.resize(old_vec.size());
+    constr_vec.reserve(old_vec.size());
     for(size_t i=0; i<old_vec.size(); i++){
-        Constr_t* con = new Constr_t();
+        Constr_t* con = declare_constr_t();
         Constr_t* old_con = old_vec[i];
         con->expr->size = constr_size;
         con->expr->cst_inf = 0;
@@ -349,10 +349,11 @@ void update_constr_vec_cst(std::vector<Constr_t*> new_constr_vec, std::vector<Co
 }
 
 void free_constr_vector_memory(std::vector<Constr_t*>& constr_vec){
-    for(auto con : constr_vec){
-        delete con->expr;
-        delete con;
+    for(size_t i=0; i<constr_vec.size(); i++){
+        delete constr_vec[i]->expr;
+        delete constr_vec[i];
     }
+    constr_vec.clear();
 }
 
 void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<double> &vec2){
@@ -360,5 +361,11 @@ void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<doubl
     for(auto val:vec1){
         vec2.push_back(-val);
     }
+}
+
+Constr_t* declare_constr_t(){
+    Constr_t* con = new Constr_t();
+    con->expr = new Expr_t();
+    return con;
 }
 

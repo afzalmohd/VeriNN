@@ -46,7 +46,9 @@ class Expr_t{
 		~Expr_t(){
 			for(size_t i=0; i<constr_vec.size(); i++){
 				delete constr_vec[i]->expr;
+				delete constr_vec[i];
 			}
+			constr_vec.clear();
 		}
 };
 
@@ -94,6 +96,7 @@ class Layer_t{
 			for(size_t i=0; i< neurons.size(); i++){
 				delete neurons[i];
 			}
+			neurons.clear();
 		}
 
 		void print_layer();
@@ -116,6 +119,7 @@ class Network_t{
 			for(size_t i=0; i<layer_vec.size(); i++){
 				delete layer_vec[i];
 			}
+			layer_vec.clear();
             delete input_layer;
 		}
 

@@ -1,7 +1,6 @@
 #include "network.hh"
 #include "parser.hh"
 #include "analysis.hh"
-#include<vector>
 
 int main(int argc, char* argv[]){
     Configuration::init_options(argc, argv);
@@ -38,7 +37,7 @@ void analyse(Network_t* net, std::string &image_path){
         }
         else{
             reset_network(net);
-            //mark_layer_and_neurons(net->layer_vec[0]);
+            //mark_layer_and_neurons(net->layer_vec[2]);
             create_input_layer_expr(net);
             forward_analysis(net);
             bool is_varified = is_image_verified(net);
@@ -174,7 +173,7 @@ void reset_layer(Layer_t* layer){
 
 void mark_layer_and_neurons(Layer_t* layer){
     if(Configuration::is_small_ex){
-        if(layer->layer_index == 0){
+        if(layer->layer_index == 2){
             layer->is_marked = true;
             layer->neurons[0]->is_marked = true;
             layer->neurons[0]->is_active = true;
