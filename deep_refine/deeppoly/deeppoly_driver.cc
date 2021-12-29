@@ -2,7 +2,7 @@
 #include "deeppoly_configuration.hh"
 #include "parser.hh"
 #include "analysis.hh"
-
+/*
 int main(int argc, char* argv[]){
     Configuration_deeppoly::init_options(argc, argv);
     if(Configuration_deeppoly::vm.count("help")){
@@ -15,6 +15,7 @@ int main(int argc, char* argv[]){
     net->print_network();
     return 0;
 }
+*/
 
 
 int deeppoly_set_params(int argc, char* argv[]){
@@ -46,14 +47,8 @@ size_t execute_network(Network_t* net){
     return pred_label[0];
 }
 
-int run_deeppoly(Network_t* net){    
+bool run_deeppoly(Network_t* net){    
     forward_analysis(net);
     bool is_varified = is_image_verified(net);
-    if(is_varified){
-        std::cout<<" Image: "<<net->pred_label<<" verified!\n";
-    }
-    else{
-        std::cout<<" Image: "<<net->pred_label<<" not verified!\n";
-    }
-    return 0;
+    return is_varified;
 } 
