@@ -1,5 +1,5 @@
-#ifndef __CONFIGURATION_HH__
-#define __CONFIGURATION_HH__
+#ifndef __DEEPPOLY_CONFIGURATION_HH__
+#define __DEEPPOLY_CONFIGURATION_HH__
 #include <boost/program_options.hpp>
 //#define RELU "ReLU"
 //#define FC "FC"
