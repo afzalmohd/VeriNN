@@ -13,7 +13,7 @@ project(${DREFINE})
 
 # SET (LLVM_DEBUG FALSE CACHE BOOL "Use Locally compiled and debug enabled LLVM")
 SET (Z3_DEBUG FALSE CACHE BOOL "Link debug verion of Z3")
-SET (CMAKE_VERBOSE_MAKEFILE ON)
+SET (CMAKE_VERBOSE_MAKEFILE OFF)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("debug mode")
@@ -23,11 +23,21 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
   SET (Z3_DEBUG TRUE)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../gurobi_cmake")
+#message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 
 find_package(xtensor REQUIRED CONFIG)
 find_package(xtl REQUIRED CONFIG)
+find_package(GUROBI REQUIRED)
+if(GUROBI_FOUND)
+  message(STATUS "GUROBI FOUND")
+else(GUROBI_FOUND)
+  message(FATAL_ERROR "!!! GUROBI NOT FOUND !!!")
+endif(GUROBI_FOUND)
+
 #find_package(boost REQUIRED CONFIG)
 # include_directories()
+include_directories(${GUROBI_INCLUDE_DIRS})
 include_directories(${xtl_INCLUDE_DIRS})
 
 message(STATUS "Found XTENSOR ${xtensor_FOUND}")
@@ -66,66 +76,19 @@ ELSE(Z3_DEBUG)
   LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildr")
 ENDIF(Z3_DEBUG)
 
+LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
+
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/../z3/src/api" "${PROJECT_BINARY_DIR}/../z3/src/api/c++")
-# include_directories(${Boost_INCLUDE_DIRS})
-# LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
-
-# add_definitions(${LLVM_DEFINITIONS})
-# include_directories(${LLVM_INCLUDE_DIRS})
-# include_directories(${CLANG_INCLUDE_DIRS})
-
-# IF(LLVM_DEBUG)
-#   # in debug llvm linkers take a lot of time
-#   # For enabling specialized linker; 
-#   # TODO: may be remove; breaks modularity
-#   SET( CMAKE_LINKER "/usr/bin/ld.lld-9.0" )
-#   add_definitions("-Wl,--threads -Wl,--thread-count,4")
-# ENDIF(LLVM_DEBUG)
-#   message(STATUS "Linker In use : ${CMAKE_LINKER}")
-
-
-# if(LLVM_VERSION EQUAL "7.0.0svn")
-#   ADD_DEFINITIONS(-DLLVM_SVN)
-# else(LLVM_VERSION EQUAL "7.0.0svn")
-# endif(LLVM_VERSION EQUAL "7.0.0svn")
-
-# # unexplained guard 
-# if( LLVM_DEBUG )
-#   llvm_map_components_to_libnames(llvm_libs
-#     aarch64asmparser aarch64codegen
-#     armasmparser armcodegen
-#     hexagoncodegen
-#     mipsasmparser mipscodegen
-#     msp430codegen
-#     nvptxcodegen
-#     powerpcasmparser powerpccodegen
-#     sparcasmparser sparccodegen
-#     systemzasmparser systemzcodegen
-#     x86asmparser x86codegen
-#     xcorecodegen
-#     amdgpuasmparser amdgpucodegen
-#     bpfasmparser bpfcodegen
-#     lanaicodegen
-#     objcarcopts
-#     )
-# endif( LLVM_DEBUG )
-
-# message(STATUS "LLVM LIBS : ${llvm_libs}")
-
-# SET(clang_libs clangDaemon clangFrontendTool)
-
-#LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
-
-# lib/bmc/bmc_loop_pass.cpp
-# main.cpp
-SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc lib/configuration.cc main.cpp) 
-
+#SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc lib/configuration.cc main.cpp) 
+SET(SOURCES lib/drefine_driver.cc lib/configuration.cc main.cpp ../deeppoly/analysis.cc ../deeppoly/deeppoly_configuration.cc ../deeppoly/deeppoly_driver.cc ../deeppoly/helper.cc ../deeppoly/interval.cc ../deeppoly/network.cc ../deeppoly/optimizer.cc ../deeppoly/parser.cc)
 add_executable(${DREFINE} ${SOURCES})
 
 SET(LIBZ3 z3)
 SET(xtensor_libs blas)
 SET(boost_lib boost_program_options)
+SET(pthread_lib pthread)
+SET(gurobi_lib gurobi_c++ gurobi91)
 
-target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs} ${boost_lib})
+target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib})

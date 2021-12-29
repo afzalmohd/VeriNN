@@ -11,22 +11,18 @@ namespace Configuration{
     extern po::variables_map vm;
     
     extern std::string default_root_path;
-    extern std::string default_abs_out_file_path;
     extern std::string default_net_path;
     extern std::string default_dataset_path;
     extern std::string default_dataset;
     extern double default_epsilon;
-    extern std::string default_marked_neuron_path;
 
 
-    extern std::string abs_out_file_path;
     extern std::string net_path;
     extern std::string dataset_path;
     extern std::string dataset;
     extern size_t input_dim;
     extern double epsilon;
     extern bool is_small_ex;
-    extern std::string marked_neuron_path;
 
 }
 
