@@ -2,12 +2,13 @@
 #include "interval.hh"
 #include "helper.hh"
 #include "optimizer.hh"
+#include "deeppoly_configuration.hh"
 #include<thread>
 
 void forward_analysis(Network_t* net){
     for(auto layer:net->layer_vec){
         if(layer->is_activation){
-            if(Configuration::is_parallel){
+            if(Configuration_deeppoly::is_parallel){
                 forward_layer_ReLU_parallel(net, layer);
             }
             else{
@@ -16,7 +17,7 @@ void forward_analysis(Network_t* net){
         }
         else{
             create_marked_layer_splitting_constraints(layer);
-            if(Configuration::is_parallel){
+            if(Configuration_deeppoly::is_parallel){
                 forward_layer_FC_parallel(net, layer);
             }
             else{
@@ -396,10 +397,11 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
 
 void create_input_layer_expr(Network_t* net){
     Layer_t* layer = net->input_layer;
+    double ep = Configuration_deeppoly::epsilon;
     for(size_t i=0; i < layer->dims; i++){
         Neuron_t* nt = layer->neurons[i];
-        nt->ub = layer->res[i] + net->epsilon;
-        nt->lb = layer->res[i] - net->epsilon;
+        nt->ub = layer->res[i] + ep;
+        nt->lb = layer->res[i] - ep;
         if(nt->ub > 1.0){
             nt->ub = 1.0;
         }
@@ -408,7 +410,7 @@ void create_input_layer_expr(Network_t* net){
         }
         nt->lb = -nt->lb;
     }
-    if(Configuration::is_small_ex){
+    if(Configuration_deeppoly::is_small_ex){
         for(size_t i=0; i< layer->dims; i++){
             Neuron_t* nt = layer->neurons[i];
             nt->ub = 1;

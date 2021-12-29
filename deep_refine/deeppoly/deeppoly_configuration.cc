@@ -1,7 +1,7 @@
-#include "configuration.hh"
+#include "deeppoly_configuration.hh"
 #include<iostream>
 
-namespace Configuration{
+namespace Configuration_deeppoly{
     po::options_description desc("Options");
     po::variables_map vm;
     std::string default_root_path = "/home/u1411251/Documents/Phd/tools";

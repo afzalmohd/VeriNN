@@ -67,7 +67,7 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" )
 # LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 
-SET(SOURCES analysis.cc configuration.cc interval.cc network.cc parser.cc helper.cc optimizer.cc) 
+SET(SOURCES analysis.cc deeppoly_configuration.cc interval.cc network.cc parser.cc helper.cc optimizer.cc deeppoly_driver.cc) 
 
 add_executable(${DEEPPOLY} ${SOURCES})
 

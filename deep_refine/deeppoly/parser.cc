@@ -1,5 +1,5 @@
 #include "parser.hh"
-#include "configuration.hh"
+#include "deeppoly_configuration.hh"
 #include<fstream>
 
 
@@ -46,7 +46,7 @@ void init_network(Network_t* net, std::string &filepath){
                 }
             }
         }
-        net->input_layer = create_input_layer(Configuration::input_dim);
+        net->input_layer = create_input_layer(Configuration_deeppoly::input_dim);
         net->numlayers = net->layer_vec.size();
         net->input_dim = net->input_layer->dims;
         net->output_dim = net->layer_vec.back()->dims;
@@ -147,16 +147,14 @@ void parse_input_image(Network_t* net, std::string &image_path, size_t image_ind
 }
 
 void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
-    char delimeter = ',';
     std::vector<double> vec;
     std::string acc = "";
     size_t pixel_counter = 0;
     bool is_first = true;
     for(size_t i=0; i<image_str.size();i++){
-        if(image_str[i] == delimeter){
+        if(image_str[i] == IMAGE_DELIMETER){
             if(acc != ""){
                 if(is_first){
-                    //std::cout<<acc<<std::endl;
                     net->actual_label = std::stoi(acc);
                     is_first = false;
                     acc = "";

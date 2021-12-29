@@ -4,7 +4,6 @@
 #include<z3++.h>
 #include<vector>
 #include<math.h>
-#include "configuration.hh"
 
 #include <xtensor/xarray.hpp>
 #include <xtensor/xsort.hpp>
@@ -109,7 +108,6 @@ class Network_t{
 		size_t numlayers = 0;//Other than input layer
 		size_t input_dim = 0;
 		size_t output_dim=0;
-		double epsilon = 0;
         size_t actual_label;
 		size_t pred_label;
 		double min_denormal = ldexpl(1.0,-1074);
@@ -129,7 +127,6 @@ class Network_t{
 };
 
 void analyse(Network_t* net, std::string &image_path);
-void execute_neural_network(Network_t* net, std::string &image_path);
 void reset_network(Network_t* net);
 void reset_layer(Layer_t* layer);
 void mark_layer_and_neurons(Layer_t* layer);

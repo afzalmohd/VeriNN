@@ -10,11 +10,12 @@
     #define IFVERBOSE(x) (void*) 0
 #endif
 
+#define IMAGE_DELIMETER ','
 
 
 namespace po = boost::program_options;
 
-namespace Configuration{
+namespace Configuration_deeppoly{
     extern int init_options(int num_of_params, char* params[]);
     extern int show_options(po::variables_map &vm);
     extern po::options_description desc;

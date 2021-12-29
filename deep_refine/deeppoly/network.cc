@@ -1,23 +1,23 @@
 #include "network.hh"
 #include "parser.hh"
 #include "analysis.hh"
+#include "deeppoly_configuration.hh"
 
-int main(int argc, char* argv[]){
-    Configuration::init_options(argc, argv);
-    if(Configuration::vm.count("help")){
-        return 0;
-    }
+// int main(int argc, char* argv[]){
+//     Configuration::init_options(argc, argv);
+//     if(Configuration::vm.count("help")){
+//         return 0;
+//     }
 
-    Network_t* net = new Network_t();
-    init_network(net, Configuration::net_path);
-    net->epsilon = Configuration::epsilon;
-    analyse(net, Configuration::dataset_path);
-    //execute_neural_network(net, Configuration::dataset_path);
-    //create_input_layer_expr(net);
-    //forward_analysis(net);
-    net->print_network();
-    return 0;
-}
+//     Network_t* net = new Network_t();
+//     init_network(net, Configuration::net_path);
+//     analyse(net, Configuration::dataset_path);
+//     //execute_neural_network(net, Configuration::dataset_path);
+//     //create_input_layer_expr(net);
+//     //forward_analysis(net);
+//     net->print_network();
+//     return 0;
+// }
 
 void analyse(Network_t* net, std::string &image_path){
     size_t num_test = 1;
@@ -53,18 +53,6 @@ void analyse(Network_t* net, std::string &image_path){
     }
 
     std::cout<<"Images: "<<verified_counter<<"/"<<image_counter<<" verified"<<std::endl;
-}
-
-
-void execute_neural_network(Network_t* net, std::string &image_path){
-    size_t num_test = 1;
-    for(size_t i=1; i <= num_test; i++){
-        parse_input_image(net, image_path, i);
-        net->forward_propgate_network(0, net->input_layer->res);
-        auto pred_label = xt::argmax(net->layer_vec.back()->res);
-        net->pred_label = pred_label[0];
-        std::cout<<"Predicted, actual label: ("<<net->pred_label<<","<<net->actual_label<<")"<<std::endl;
-    }
 }
 
 void Network_t::forward_propgate_one_layer(size_t layer_index, 
@@ -172,7 +160,7 @@ void reset_layer(Layer_t* layer){
 }
 
 void mark_layer_and_neurons(Layer_t* layer){
-    if(Configuration::is_small_ex){
+    if(Configuration_deeppoly::is_small_ex){
         if(layer->layer_index == 2){
             layer->is_marked = true;
             layer->neurons[0]->is_marked = true;

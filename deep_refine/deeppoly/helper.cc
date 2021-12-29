@@ -1,13 +1,14 @@
 #include "helper.hh"
 #include "interval.hh"
+#include "deeppoly_configuration.hh"
 #include<thread>
 
 unsigned int get_num_thread(){
     unsigned int num_system_cores = std::thread::hardware_concurrency();
-    if(num_system_cores < Configuration::num_thread){
+    if(num_system_cores < Configuration_deeppoly::num_thread){
         return num_system_cores;
     }
-    return Configuration::num_thread;
+    return Configuration_deeppoly::num_thread;
 }
 
 void copy_layer_constraints(Layer_t* layer, Neuron_t* nt){
