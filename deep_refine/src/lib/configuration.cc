@@ -11,13 +11,13 @@ namespace Configuration{
     double default_epsilon = 0.03;
     size_t input_dim;
 
-    std::string abs_out_file_path;
     std::string net_path;
     std::string dataset_path;
     std::string dataset;
-    std::string marked_neuron_path;
     double epsilon;
     bool is_small_ex;
+    bool is_parallel;
+    unsigned int num_thread;
 
     int init_options(int num_of_params, char* params[]){
         try{
