@@ -444,10 +444,14 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
 
 
 bool is_image_verified(Network_t* net){
+    std::vector<GRBVar> var_vector;
+    GRBModel model = create_env_model_constr(net, var_vector);
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             if(!is_greater(net, net->actual_label, i)){
-                return false;
+                if(!verify_by_milp(net, model, var_vector, i)){
+                    return false;
+                }
             }
         }
     }
@@ -485,6 +489,7 @@ bool is_greater(Network_t* net, size_t index1, size_t index2){
         if(nt->lb < 0){ //lower bound is completely positive
             return true;
         }
+        std::cout<<"Deeppoly error with ("<<index1<<", "<<index2<<") :"<<nt->lb<<std::endl;
     }
 
     return false;

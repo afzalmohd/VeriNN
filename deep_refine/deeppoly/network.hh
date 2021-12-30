@@ -4,7 +4,6 @@
 #include<z3++.h>
 #include<vector>
 #include<math.h>
-
 #include <xtensor/xarray.hpp>
 #include <xtensor/xsort.hpp>
 #include <xtensor-blas/xlinalg.hpp>
@@ -55,10 +54,13 @@ class Neuron_t{
 	public:
 		size_t neuron_index;
 		bool is_marked = false;//false means deeppoly's natural encoding
-		bool is_active; // false means relu is deactivated, true means relu is activated
+		bool is_active = false; // false means relu is deactivated, true means relu is activated
 		//std::vector<Constr_t*> constr_vec;
 		double lb=INFINITY;
 		double ub=INFINITY;
+		bool is_back_prop_active = false;
+		double back_prop_lb;
+		double back_prop_ub;
         Expr_t* uexpr;
         Expr_t* lexpr;
 		Expr_t* uexpr_b;
