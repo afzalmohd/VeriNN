@@ -25,11 +25,11 @@ debug :  $(BUILDDIR)/buildd/Makefile
 	ln -s $(BUILDDIR)/buildd/$(DREFINE) $(DREFINE)
 
 
-$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/z3/buildr/libz3.so $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
+$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
 	mkdir -p $(BUILDDIR)/buildr
 	cd $(BUILDDIR)/buildr; cmake -DCMAKE_BUILD_TYPE=Release -DDREFINE=$(DREFINE) $(SRCDIR)
 
-$(BUILDDIR)/buildd/Makefile: $(BUILDDIR)/z3/buildd/libz3.so $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
+$(BUILDDIR)/buildd/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
 	mkdir -p $(BUILDDIR)/buildd
 	cd $(BUILDDIR)/buildd; cmake -DCMAKE_BUILD_TYPE=Debug -DINSTALLED=$(HOME_INSTALLED) -DDREFINE=$(DREFINE) $(SRCDIR)
 
