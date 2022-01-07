@@ -37,6 +37,7 @@ namespace Configuration_deeppoly{
     extern bool is_small_ex;
     extern bool is_parallel;
     extern unsigned int num_thread;
+    extern bool is_unmarked_deeppoly;
 
 }
 

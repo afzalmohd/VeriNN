@@ -197,6 +197,7 @@ void create_neurons_update_layer(Layer_t* layer){
     for(size_t i=0; i < layer->dims;i++){
         Neuron_t* nt = new Neuron_t();
         nt->neuron_index = i;
+        nt->layer_index = layer->layer_index;
         layer->neurons.push_back(nt);
     }
 }

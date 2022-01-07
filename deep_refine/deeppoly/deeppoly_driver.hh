@@ -9,5 +9,6 @@ void deeppoly_parse_input_image_string(Network_t* net, std::string & image_str);
 void deeppoly_reset_network(Network_t* net);
 size_t execute_network(Network_t* net);
 bool run_deeppoly(Network_t* net);
+void reset_backprop_vals(Network_t* net);
 
 #endif

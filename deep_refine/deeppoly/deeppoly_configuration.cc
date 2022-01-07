@@ -18,6 +18,7 @@ namespace Configuration_deeppoly{
     bool is_small_ex;
     bool is_parallel;
     unsigned int num_thread;
+    bool is_unmarked_deeppoly = true;
 
     int init_options(int num_of_params, char* params[]){
         try{

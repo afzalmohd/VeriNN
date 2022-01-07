@@ -238,9 +238,15 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else if(nt->lexpr_b->constr_vec.size() > 0){
-        compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
-    }
+    else{
+        if(nt->lexpr_b->constr_vec.size() > 0){
+            //printf("Check..l\n");
+            compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
+        }
+        if(Configuration_deeppoly::is_unmarked_deeppoly){
+            nt->unmarked_lb = nt->lb;
+        }
+    } 
 }
 
 void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
@@ -259,9 +265,16 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         }
         update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else if(nt->uexpr_b->constr_vec.size() > 0){
-        compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
-    }
+    else{
+        if(nt->uexpr_b->constr_vec.size() > 0){
+            //printf("Check..u\n");
+            compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
+        }
+        if(Configuration_deeppoly::is_unmarked_deeppoly){
+            nt->unmarked_ub = nt->ub;
+        }
+
+    } 
 }
 
 void update_neuron_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){

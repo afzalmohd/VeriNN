@@ -4,9 +4,7 @@
 void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, Expr_t* expr, bool is_minimize){
     Layer_t* pred_layer = get_pred_layer(net, layer);
     try{
-        GRBEnv env = GRBEnv(true);
-        env.start();
-        GRBModel model = GRBModel(env);
+        GRBModel model = create_env_and_model();
         std::vector<GRBVar> var_vector(pred_layer->dims);
         //add variables to the model
         for(size_t i=0; i<pred_layer->dims; i++){
@@ -54,19 +52,31 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
         }
 
         model.optimize();
-
-        if(is_minimize){
+        int status = model.get(GRB_IntAttr_Status);
+        if(status == GRB_OPTIMAL){
+            if(is_minimize){
             double tmp = model.get(GRB_DoubleAttr_ObjVal);
             if(tmp > -nt->lb){
                 nt->lb = -tmp;
             }
-        }
-        else{
-            double tmp = model.get(GRB_DoubleAttr_ObjVal);
-            if(tmp < nt->ub){
-                nt->ub = tmp;
+            }
+            else{
+                double tmp = model.get(GRB_DoubleAttr_ObjVal);
+                if(tmp < nt->ub){
+                    nt->ub = tmp;
+                }
             }
         }
+        else if(status == GRB_INFEASIBLE){
+            std::cout<<"Infisible bounds"<<std::endl;
+        }
+        else if(status == GRB_UNBOUNDED){
+            std::cout<<"UNBOUNDED bounds"<<std::endl;
+        }
+        else{
+            std::cout<<"UNKNOWN bounds"<<std::endl;
+        }
+        
 
     }
     catch(GRBException e){
@@ -80,9 +90,7 @@ void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, E
 
 
 GRBModel create_env_model_constr(Network_t* net, std::vector<GRBVar>& var_vector){
-    GRBEnv env = GRBEnv(true);
-    env.start();
-    GRBModel model = GRBModel(env); 
+    GRBModel model = create_env_and_model();
     creating_variables(net, model, var_vector);
     size_t var_counter = net->input_layer->dims;
     for(auto layer : net->layer_vec){
@@ -171,15 +179,15 @@ void create_milp_constr_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>&
         grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &new_vec[0], new_vec.size());
         grb_expr += nt->uexpr->cst_sup;
         grb_expr += -1*var_vector[var_counter+i];
-        if(nt->is_marked){
-            GRBLinExpr grb_exp1 = var_vector[var_counter+i];
-            if(nt->is_active){
-                model.addConstr(grb_exp1, GRB_GREATER_EQUAL, 0);
-            }
-            else{
-                model.addConstr(grb_exp1, GRB_LESS_EQUAL, 0);
-            }
-        }
+        // if(nt->is_marked){
+        //     GRBLinExpr grb_exp1 = var_vector[var_counter+i];
+        //     if(nt->is_active){
+        //         model.addConstr(grb_exp1, GRB_GREATER_EQUAL, 0);
+        //     }
+        //     else{
+        //         model.addConstr(grb_exp1, GRB_LESS_EQUAL, 0);
+        //     }
+        // }
         model.addConstr(grb_expr, GRB_EQUAL, 0);
     }
 }
@@ -240,4 +248,12 @@ size_t get_gurobi_var_index(Layer_t* layer, size_t index){
     }
     count += index;
     return count;
+}
+
+GRBModel create_env_and_model(){
+    GRBEnv env = GRBEnv(true);
+    env.start();
+    GRBModel model = GRBModel(env); 
+    model.set(GRB_IntParam_LogToConsole, 0);
+    return model;
 }

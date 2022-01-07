@@ -55,9 +55,7 @@ void pull_back_relu(Layer_t* layer){
 bool pull_back_FC(Layer_t* layer){
     assert(layer->layer_type == "FC" && "Layer is not FC\n");
     Layer_t* pred_layer = layer->pred_layer;
-    GRBEnv env = GRBEnv(true);
-    env.start();
-    GRBModel model = GRBModel(env);
+    GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
     var_vector.reserve(pred_layer->dims);
     create_gurobi_variable(model, var_vector, pred_layer);
@@ -86,12 +84,17 @@ bool pull_back_FC(Layer_t* layer){
                 std::string name = c[i].get(GRB_StringAttr_ConstrName);
                 std::string index_str(name.substr(1));
                 size_t nt_index = std::stoul(index_str);
-                layer->neurons[nt_index]->is_marked = true;
-                is_iss = true;
+                Neuron_t* nt = layer->neurons[nt_index];
+                if(nt->lb > 0 && nt->ub > 0){
+                    layer->neurons[nt_index]->is_marked = true;
+                    is_iss = true;
+                }
             }
         }
-        layer->is_marked = true;
-        return true;
+        if(is_iss){
+            layer->is_marked = true;
+            return true;
+        }
     }
     return false;
 }
@@ -120,4 +123,14 @@ void create_layer_constrains_pullback(GRBModel& model, std::vector<GRBVar>& var_
             }
         }
     }
+}
+
+GRBModel create_grb_env_and_model(){
+    GRBEnv env = GRBEnv(true);
+    env.set("LogFile", "milp.log");
+    env.start();
+    GRBModel model = GRBModel(env); 
+    model.set(GRB_IntParam_LogToConsole, 0);
+    model.set(GRB_IntParam_OutputFlag, 1);
+    return model;
 }

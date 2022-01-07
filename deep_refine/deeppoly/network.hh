@@ -31,6 +31,13 @@ class Constr_t{
 		//bool is_same_generator(Constr_t* constr);
 };
 
+class Sparse_neuron_t{
+	public:
+		size_t neuron_index;
+		int layer_index;
+		bool is_active;
+};
+
 class Expr_t{
 	public:
 		std::vector<double> coeff_inf;
@@ -53,11 +60,14 @@ class Expr_t{
 class Neuron_t{
 	public:
 		size_t neuron_index;
+		int layer_index;
 		bool is_marked = false;//false means deeppoly's natural encoding
 		bool is_active = false; // false means relu is deactivated, true means relu is activated
 		//std::vector<Constr_t*> constr_vec;
 		double lb=INFINITY;
 		double ub=INFINITY;
+		double unmarked_lb = INFINITY;
+		double unmarked_ub = INFINITY;
 		bool is_back_prop_active = false;
 		double back_prop_lb;
 		double back_prop_ub;
@@ -87,6 +97,8 @@ class Layer_t{
         std::string layer_type;
 		int layer_index; //input layer consider as -1 indexed
 		bool is_marked = false;
+		std::vector<std::vector<Sparse_neuron_t*>> IIS;
+		std::vector<Neuron_t*> marked_neurons;
 		std::vector<Constr_t*> constr_vec;
 		std::vector<size_t> w_shape;
 		xt::xarray<double> w;

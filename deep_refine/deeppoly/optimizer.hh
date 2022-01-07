@@ -12,6 +12,7 @@ void create_milp_constr_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>&
 void create_milp_constr_relu(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 void copy_vector_by_index(std::vector<GRBVar>& var_vector, std::vector<GRBVar>& new_vec, size_t start_index, size_t end_index);
 size_t get_gurobi_var_index(Layer_t* layer, size_t index);
+GRBModel create_env_and_model();
 
 
 #endif

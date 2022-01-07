@@ -154,8 +154,9 @@ void reset_layer(Layer_t* layer){
     for(size_t i=0; i < layer->neurons.size(); i++){
         Neuron_t* nt = layer->neurons[i];
         nt->~Neuron_t();
-         nt->lb = INFINITY;
-         nt->ub = INFINITY;
+        nt->lb = INFINITY;
+        nt->ub = INFINITY;
+        nt->is_back_prop_active = false;
     }
 }
 

@@ -48,7 +48,21 @@ size_t execute_network(Network_t* net){
 }
 
 bool run_deeppoly(Network_t* net){    
+    //reset_backprop_vals(net);
+    deeppoly_reset_network(net);
     forward_analysis(net);
     bool is_varified = is_image_verified(net);
     return is_varified;
 } 
+
+void reset_backprop_vals(Network_t* net){
+    for(Neuron_t* nt : net->input_layer->neurons){
+        nt->is_back_prop_active = false;
+    }
+
+    for(Layer_t* layer : net->layer_vec){
+        for(Neuron_t* nt : layer->neurons){
+            nt->is_back_prop_active = false;
+        }
+    }
+}
