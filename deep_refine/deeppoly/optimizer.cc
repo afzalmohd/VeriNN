@@ -179,15 +179,6 @@ void create_milp_constr_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>&
         grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &new_vec[0], new_vec.size());
         grb_expr += nt->uexpr->cst_sup;
         grb_expr += -1*var_vector[var_counter+i];
-        // if(nt->is_marked){
-        //     GRBLinExpr grb_exp1 = var_vector[var_counter+i];
-        //     if(nt->is_active){
-        //         model.addConstr(grb_exp1, GRB_GREATER_EQUAL, 0);
-        //     }
-        //     else{
-        //         model.addConstr(grb_exp1, GRB_LESS_EQUAL, 0);
-        //     }
-        // }
         model.addConstr(grb_expr, GRB_EQUAL, 0);
     }
 }
