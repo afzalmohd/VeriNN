@@ -4,6 +4,7 @@
 #include "drefine_driver.hh"
 #include "pullback.hh"
 #include "decision_making.hh"
+#include "milp_refine.hh"
 #include<fstream>
 
 int run_refine_poly(int num_args, char* params[]){
@@ -28,46 +29,9 @@ int run_refine_poly(int num_args, char* params[]){
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
-        bool is_ce = pull_back_full(net);
-        if(is_ce){
-            std::cout<<"Found counter example"<<std::endl;
-            return 0;
-        }
-        else{
-            std::vector<std::vector<Neuron_t*>> marked_vec;
-            bool is_marked_neurons_added = marked_neurons_vector(net, marked_vec);
-            assert(is_marked_neurons_added && "New neurons must added\n");
-            bool is_path_available = set_marked_path(net, marked_vec, true);
-            size_t counter = 1;
-            size_t upper_limit = 100;
-            while (is_path_available && counter <= upper_limit){
-                std::cout<<"Marked iteration: "<<counter<<std::endl;
-                counter++;
-                is_verified = run_deeppoly(net);
-                printf("Check..1\n");
-                if(is_verified){
-                    is_path_available = set_marked_path(net, marked_vec, false);
-                }
-                else{
-                    is_ce = pull_back_full(net);
-                    if(is_ce){
-                        std::cout<<"Found counter example"<<std::endl;
-                        std::cout<<"[";
-                        for(Neuron_t* nt : net->input_layer->neurons){
-                            std::cout<<nt->back_prop_ub<<", ";
-                        }
-                        std::cout<<"]"<<std::endl;
-                        return 0;
-                    }
-                    else{
-                        is_marked_neurons_added = marked_neurons_vector(net, marked_vec);
-                        is_path_available = set_marked_path(net, marked_vec, is_marked_neurons_added);
-                    }
-                }
-            }
-
-            std::cout<<"Image: "<<net->pred_label<<" verified!\n";
-        }
+        run_milp_refinement_with_pullback(net);
+        //run_path_split_with_pullback(net);
+        
     }
 
 
@@ -94,4 +58,76 @@ std::string get_image_str(std::string& image_path, size_t image_index){
     }
     assert(0 && "either empty image file or image_index out of bound");
     return "";
+}
+
+void run_milp_refinement_with_pullback(Network_t* net){
+    bool is_ce, is_verified = false;
+    size_t loop_counter = 0;
+    size_t upper_iter_limit = 15;
+    while (true){
+        is_ce = pull_back_full(net);
+        if(is_ce){
+            std::cout<<"Found counter example"<<std::endl;
+            break;
+        }
+        else{
+            is_verified = is_image_verified_by_milp(net);
+            if(is_verified){
+                std::cout<<"Image: "<<net->pred_label<<" verified!\n";
+                break;
+            }
+        }
+        loop_counter++;
+        if(loop_counter >= upper_iter_limit){
+            std::cout<<"Loop counter limit exceeded!\n";
+            break;
+        }
+    }
+}
+
+void run_path_split_with_pullback(Network_t* net){
+    bool is_ce = pull_back_full(net);
+    if(is_ce){
+        std::cout<<"Found counter example"<<std::endl;
+    }
+    else{
+        std::vector<std::vector<Neuron_t*>> marked_vec;
+        bool is_marked_neurons_added = marked_neurons_vector(net, marked_vec);
+        assert(is_marked_neurons_added && "New neurons must added\n");
+        bool is_path_available = set_marked_path(net, marked_vec, true);
+        size_t counter = 1;
+        size_t upper_limit = 100;
+        bool is_verified = false;
+        while (is_path_available && counter <= upper_limit){
+            std::cout<<"Marked iteration: "<<counter<<std::endl;
+            counter++;
+            is_verified = run_deeppoly(net);
+            printf("Check..1\n");
+            if(is_verified){
+                is_path_available = set_marked_path(net, marked_vec, false);
+            }
+            else{
+                is_ce = pull_back_full(net);
+                if(is_ce){
+                    std::cout<<"Found counter example"<<std::endl;
+                    std::cout<<"[";
+                    for(Neuron_t* nt : net->input_layer->neurons){
+                        std::cout<<nt->back_prop_ub<<", ";
+                    }
+                    std::cout<<"]"<<std::endl;
+                    break;
+                }
+                else{
+                    is_marked_neurons_added = marked_neurons_vector(net, marked_vec);
+                    is_path_available = set_marked_path(net, marked_vec, is_marked_neurons_added);
+                }
+            }
+        }
+        if(!is_path_available){
+            std::cout<<"Image: "<<net->pred_label<<" verified!\n";
+        }
+        else{
+            std::cout<<"Loop count iteration exceed\n";
+        }
+    }
 }
