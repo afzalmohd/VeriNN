@@ -82,7 +82,7 @@ ADD_DEFINITIONS(-std=c++14 -Wall)
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/../z3/src/api" "${PROJECT_BINARY_DIR}/../z3/src/api/c++")
 #SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc lib/configuration.cc main.cpp) 
-SET(SOURCES main.cpp lib/drefine_driver.cc lib/pullback.cc lib/decision_making.cc lib/milp_refine.cc ../deeppoly/analysis.cc ../deeppoly/deeppoly_configuration.cc ../deeppoly/deeppoly_driver.cc ../deeppoly/helper.cc ../deeppoly/interval.cc ../deeppoly/network.cc ../deeppoly/optimizer.cc ../deeppoly/parser.cc)
+SET(SOURCES main.cpp lib/drefine_driver.cc lib/pullback.cc lib/decision_making.cc lib/milp_refine.cc lib/milp_mark.cc ../deeppoly/analysis.cc ../deeppoly/deeppoly_configuration.cc ../deeppoly/deeppoly_driver.cc ../deeppoly/helper.cc ../deeppoly/interval.cc ../deeppoly/network.cc ../deeppoly/optimizer.cc ../deeppoly/parser.cc)
 add_executable(${DREFINE} ${SOURCES})
 
 SET(LIBZ3 z3)

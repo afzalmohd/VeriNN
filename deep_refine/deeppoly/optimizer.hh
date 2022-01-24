@@ -13,6 +13,7 @@ void create_milp_constr_relu(Layer_t* layer, GRBModel& model, std::vector<GRBVar
 void copy_vector_by_index(std::vector<GRBVar>& var_vector, std::vector<GRBVar>& new_vec, size_t start_index, size_t end_index);
 size_t get_gurobi_var_index(Layer_t* layer, size_t index);
 GRBModel create_env_and_model();
+void update_sat_vals(Network_t* net, std::vector<GRBVar>& var_vec);
 
 
 #endif

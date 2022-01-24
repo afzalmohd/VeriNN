@@ -127,6 +127,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     nt_counter->is_back_prop_active = true;
     nt_counter->back_prop_lb = var_vector[counter_class_var_index].get(GRB_DoubleAttr_X);
     nt_counter->back_prop_ub = nt_counter->back_prop_lb;
+    update_sat_vals(net, var_vector);
     return false;
 } 
 
@@ -247,4 +248,19 @@ GRBModel create_env_and_model(){
     GRBModel model = GRBModel(env); 
     model.set(GRB_IntParam_LogToConsole, 0);
     return model;
+}
+
+void update_sat_vals(Network_t* net, std::vector<GRBVar>& var_vec){
+    for(Neuron_t* nt : net->input_layer->neurons){
+        nt->sat_val = var_vec[nt->neuron_index].get(GRB_DoubleAttr_X);
+    }
+    size_t counter = net->input_layer->dims;
+    size_t layer_index;
+    for(layer_index=0; layer_index<net->layer_vec.size()-1; layer_index++){
+        counter += net->layer_vec[layer_index]->dims;
+    }
+    Layer_t* last_layer = net->layer_vec[layer_index];
+    for(Neuron_t* nt : last_layer->neurons){
+        nt->sat_val = var_vec[counter+nt->neuron_index].get(GRB_DoubleAttr_X);
+    }
 }

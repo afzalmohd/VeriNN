@@ -33,27 +33,17 @@ bool is_image_verified_by_milp(Network_t* net){
 }
 
 void creating_vars_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
-    for(auto nt : net->input_layer->neurons){
-        std::string var_str = "x,"+std::to_string(net->input_layer->layer_index)+","+std::to_string(nt->neuron_index);
+    create_vars_layer(net->input_layer, model, var_vector);
+    for(auto layer : net->layer_vec){
+        create_vars_layer(layer, model, var_vector);
+    }
+}
+
+void create_vars_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector){
+    for(auto nt: layer->neurons){
+        std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
         GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
         var_vector.push_back(x);
-    }
-    
-    for(auto layer : net->layer_vec){
-        if(layer->is_activation){
-            for(auto nt: layer->neurons){
-                std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-                GRBVar x = model.addVar(0, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-                var_vector.push_back(x);
-            }
-        }
-        else{
-            for(auto nt : layer->neurons){
-                std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-                GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);  
-                var_vector.push_back(x);
-            }  
-        }
     }
 }
 

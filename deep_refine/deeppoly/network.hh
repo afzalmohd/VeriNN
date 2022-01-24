@@ -63,7 +63,6 @@ class Neuron_t{
 		int layer_index;
 		bool is_marked = false;//false means deeppoly's natural encoding
 		bool is_active = false; // false means relu is deactivated, true means relu is activated
-		//std::vector<Constr_t*> constr_vec;
 		double lb=INFINITY;
 		double ub=INFINITY;
 		double unmarked_lb = INFINITY;
@@ -71,6 +70,7 @@ class Neuron_t{
 		bool is_back_prop_active = false;
 		double back_prop_lb;
 		double back_prop_ub;
+		double sat_val;
         Expr_t* uexpr;
         Expr_t* lexpr;
 		Expr_t* uexpr_b;

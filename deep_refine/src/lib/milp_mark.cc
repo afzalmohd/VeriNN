@@ -1,0 +1,156 @@
+#include "milp_mark.hh"
+#include "milp_refine.hh"
+#include "pullback.hh"
+#include "../../deeppoly/optimizer.hh"
+
+
+bool run_milp_mark_with_milp_refine(Network_t* net){
+    bool is_ce = is_sat_val_ce(net);
+    if(is_ce){
+        return true;
+    }
+    
+    for(Layer_t* layer : net->layer_vec){
+        bool is_marked = is_layer_marked(net, layer);
+        if(is_marked){
+            return false;
+        }
+    }
+    return false;
+}
+
+bool is_layer_marked(Network_t* net, Layer_t* start_layer){
+    GRBModel model = create_grb_env_and_model();
+    std::vector<GRBVar> var_vector;
+    creating_vars_with_constant_vars(net, model, var_vector, start_layer->layer_index);
+    size_t var_counter = start_layer->pred_layer->dims;
+    for(int layer_index = start_layer->layer_index; layer_index < net->layer_vec.size(); layer_index++){
+        Layer_t* layer = net->layer_vec[layer_index];
+        if(layer->is_activation){
+            create_relu_constr(layer, model, var_vector, var_counter);
+        }
+        else{
+            create_milp_constr_FC(layer, model, var_vector, var_counter);
+        }
+        var_counter += layer->dims;
+    }
+    var_counter = start_layer->pred_layer->dims;
+    create_optimization_constraints_layer(start_layer, model, var_vector, var_counter);
+    model.optimize();
+    bool is_marked = false;
+    int status = model.get(GRB_IntAttr_Status);
+    if(status == GRB_OPTIMAL){
+        for(size_t i=0; i<start_layer->neurons.size(); i++){
+            Neuron_t* nt = start_layer->neurons[i];
+            GRBVar var = var_vector[var_counter+i];
+            if(var.get(GRB_DoubleAttr_X) != start_layer->res[i]){
+                nt->is_marked = true;
+                is_marked = true;
+            }
+        }
+    }
+    else{
+        assert(0 && "Something is wrong\n");
+    }
+    if(is_marked){
+        start_layer->is_marked = true;
+        return true;
+    }
+    return false;
+}
+
+void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    GRBLinExpr obj=0;
+    for(size_t i=0; i<layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        std::string var_str = "b,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+        GRBVar bin_var = model.addVar(0, 1, 0.0, GRB_BINARY, var_str);
+        model.addGenConstrIndicator(bin_var, 1, var_vector[var_counter+i], GRB_EQUAL, layer->res[i]);
+        obj += bin_var;
+    }
+    model.setObjective(obj, GRB_MAXIMIZE);
+}
+
+void creating_vars_with_constant_vars(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t start_layer_index){ 
+    if(start_layer_index == 0){
+        create_constant_vars_satval_layer(net, net->input_layer, model, var_vector);
+    }
+    else{
+        create_constant_vars_satval_layer(net, net->layer_vec[start_layer_index-1], model, var_vector);
+    }
+    
+    size_t layer_index;
+    for(layer_index = start_layer_index; layer_index < net->layer_vec.size()-1; layer_index++){
+        Layer_t* layer = net->layer_vec[layer_index];
+        create_vars_layer(layer, model, var_vector);
+    }
+    Layer_t* out_layer = net->layer_vec[layer_index];
+    create_constant_vars_satval_layer(net,out_layer, model, var_vector);
+}
+
+
+
+void create_constant_vars_satval_layer(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector){
+    if(layer->layer_index == -1 || layer->layer_index == net->layer_vec.size()-1){//input or output layer
+        for(Neuron_t* nt : layer->neurons){
+            std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+            GRBVar x = model.addVar(nt->sat_val, nt->sat_val, 0.0, GRB_CONTINUOUS, var_str);
+            var_vector.push_back(x);
+        }
+    }
+    else{
+        for(size_t i=0; i<layer->dims; i++){
+            Neuron_t* nt = layer->neurons[i];
+            std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+            GRBVar x = model.addVar(layer->res[i], layer->res[i], 0.0, GRB_CONTINUOUS, var_str);
+            var_vector.push_back(x);
+        }
+    }
+    
+}
+
+void create_relu_constr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    assert(layer->is_activation && "Not activation layer\n");
+    for(size_t i=0; i< layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        Neuron_t* pred_nt = layer->pred_layer->neurons[i];
+        if(pred_nt->lb <= 0){
+            GRBLinExpr grb_expr = var_vector[var_counter+i] - var_vector[var_counter + i - layer->pred_layer->dims];
+            model.addConstr(grb_expr, GRB_EQUAL, 0);
+        }
+        else if(pred_nt->ub <= 0){
+            GRBLinExpr grb_expr = var_vector[var_counter + i];
+            model.addConstr(grb_expr, GRB_EQUAL, 0);
+        }
+        else{
+            double lb = -pred_nt->lb;
+            GRBLinExpr grb_expr = -pred_nt->ub*var_vector[var_counter + i - layer->pred_layer->dims] + pred_nt->ub*lb;
+            grb_expr += (nt->ub - lb)*var_vector[var_counter+i];
+            model.addConstr(grb_expr, GRB_LESS_EQUAL, 0);
+
+            GRBLinExpr grb_expr1 = var_vector[var_counter+i] - var_vector[var_counter + i - layer->pred_layer->dims];
+            model.addConstr(grb_expr1, GRB_GREATER_EQUAL, 0);
+        }
+
+    }
+}
+
+
+bool is_sat_val_ce(Network_t* net){
+    create_satvals_to_image(net->input_layer);
+    net->forward_propgate_network(0, net->input_layer->res);
+    auto pred_label = xt::argmax(net->layer_vec.back()->res);
+    net->pred_label = pred_label[0];
+    if(net->actual_label != net->pred_label){
+        std::cout<<"Found counter example!!"<<std::endl;
+        return true;
+    }
+    return false;
+}
+
+void create_satvals_to_image(Layer_t* layer){
+    for(size_t i=0; i<layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        layer->res[i] = nt->sat_val;
+    }
+}
