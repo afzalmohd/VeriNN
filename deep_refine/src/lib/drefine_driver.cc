@@ -5,6 +5,7 @@
 #include "pullback.hh"
 #include "decision_making.hh"
 #include "milp_refine.hh"
+#include "milp_mark.hh"
 #include<fstream>
 
 int run_refine_poly(int num_args, char* params[]){
@@ -29,8 +30,9 @@ int run_refine_poly(int num_args, char* params[]){
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
-        run_milp_refinement_with_pullback(net);
+        //run_milp_refinement_with_pullback(net);
         //run_path_split_with_pullback(net);
+        run_milp_refine_with_milp_mark(net);
         
     }
 
@@ -129,5 +131,26 @@ void run_path_split_with_pullback(Network_t* net){
         else{
             std::cout<<"Loop count iteration exceed\n";
         }
+    }
+}
+
+void run_milp_refine_with_milp_mark(Network_t* net){
+    size_t loop_upper_bound = 10;
+    size_t loop_counter = 0;
+    while(loop_counter < loop_upper_bound){
+        bool is_ce = run_milp_mark_with_milp_refine(net);
+        std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
+        if(is_ce){
+            std::cout<<"Found counter example!!"<<std::endl;
+            break;
+        }
+        else{
+            bool is_image_verified = is_image_verified_by_milp(net);
+            if(is_image_verified){
+                std::cout<<"Image verified!!"<<std::endl;
+                break;
+            }
+        }
+        loop_counter++;
     }
 }

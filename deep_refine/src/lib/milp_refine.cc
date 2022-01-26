@@ -11,7 +11,7 @@ bool is_image_verified_by_milp(Network_t* net){
     size_t var_counter = net->input_layer->dims;
     for(auto layer : net->layer_vec){
         if(layer->is_activation){
-            create_constr_relu_milp(layer, model, var_vector, var_counter);
+            create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
             create_milp_constr_FC(layer, model, var_vector, var_counter);
@@ -47,7 +47,7 @@ void create_vars_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var
     }
 }
 
-void create_constr_relu_milp(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+void create_relu_constr_milp_refine(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
     assert(layer->is_activation && "Not activation layer\n");
     for(size_t i=0; i< layer->dims; i++){
         Neuron_t* nt = layer->neurons[i];
@@ -77,9 +77,8 @@ void create_constr_relu_milp(Layer_t* layer, GRBModel& model, std::vector<GRBVar
             grb_expr = var_vector[var_counter+i];
             model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
 
-            model.addGenConstrIndicator(bin_var, true, var_vector[var_counter+i], GRB_GREATER_EQUAL, 0.0);
-            model.addGenConstrIndicator(bin_var, false, var_vector[var_counter+i], GRB_LESS_EQUAL, 0.0);
-
+            model.addGenConstrIndicator(bin_var, true, var_vector[var_counter + i - layer->pred_layer->dims], GRB_GREATER_EQUAL, 0.0);
+            model.addGenConstrIndicator(bin_var, false, var_vector[var_counter + i - layer->pred_layer->dims], GRB_LESS_EQUAL, 0.0);
         }
         else{
             double lb = -pred_nt->lb;
