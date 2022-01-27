@@ -16,7 +16,7 @@ bool run_milp_mark_with_milp_refine(Network_t* net){
         if(layer->is_activation){
             is_marked = is_layer_marked(net, layer);
             if(is_marked){
-                std::cout<<"Layer: "<<layer->layer_index<<" marked"<<std::endl;
+                //std::cout<<"Layer: "<<layer->layer_index<<" marked"<<std::endl;
                 break;
             }
         }
@@ -45,6 +45,9 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
         }
         var_counter += layer->dims;
     }
+    
+    //create_negate_property(model, var_vector, net, start_layer);
+
     var_counter = start_layer->pred_layer->dims;
     create_optimization_constraints_layer(start_layer, model, var_vector, var_counter);
     model.optimize();
@@ -54,12 +57,18 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
         std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
         for(size_t i=0; i<start_layer->neurons.size(); i++){
             Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
-            GRBVar var = var_vector[var_counter+i - start_layer->pred_layer->dims];
-            if(var.get(GRB_DoubleAttr_X) != start_layer->res[i]){
+            GRBVar var = var_vector[var_counter+i];
+            double sat_val = var.get(GRB_DoubleAttr_X);
+            sat_val = round_off(sat_val, 4);
+            double res = start_layer->res[i];
+            res = round_off(res, 4);
+            if(sat_val != res){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
                     pred_nt->is_marked = true;
                     is_marked = true;
                     std::cout<<pred_nt->neuron_index<<", ";
+                    //std::cout<<"Values: "<<sat_val<<" , "<<res<<" , "<<start_layer->pred_layer->res[i]<<std::endl;
+                    //std::cout<<pred_nt->neuron_index<<std::endl;
                 }
             }
         }
@@ -170,4 +179,14 @@ void create_satvals_to_image(Layer_t* layer){
         Neuron_t* nt = layer->neurons[i];
         layer->res[i] = nt->sat_val;
     }
+}
+
+void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
+    size_t var_counter = curr_layer->pred_layer->dims;
+    int numlayer = net->layer_vec.size();
+    for(int i=curr_layer->layer_index; i<numlayer-1; i++){
+        var_counter += net->layer_vec[i]->dims;
+    }
+    GRBLinExpr grb_expr = var_vector[var_counter + net->counter_class_dim] - var_vector[var_counter + net->actual_label];
+    model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
 }

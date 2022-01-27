@@ -6,6 +6,7 @@
 #include "decision_making.hh"
 #include "milp_refine.hh"
 #include "milp_mark.hh"
+#include<cmath>
 #include<fstream>
 
 int run_refine_poly(int num_args, char* params[]){
@@ -135,6 +136,8 @@ void run_path_split_with_pullback(Network_t* net){
 }
 
 void run_milp_refine_with_milp_mark(Network_t* net){
+    net->verified_out_dims.clear();
+    net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = 10;
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){

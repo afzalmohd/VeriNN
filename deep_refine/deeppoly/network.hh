@@ -124,6 +124,8 @@ class Network_t{
 		size_t output_dim=0;
         size_t actual_label;
 		size_t pred_label;
+		std::vector<size_t> verified_out_dims;
+		size_t counter_class_dim;
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);
 
@@ -144,5 +146,6 @@ void analyse(Network_t* net, std::string &image_path);
 void reset_network(Network_t* net);
 void reset_layer(Layer_t* layer);
 void mark_layer_and_neurons(Layer_t* layer);
+double round_off(double num, size_t prec);
 
 #endif

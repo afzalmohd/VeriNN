@@ -70,17 +70,17 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 
 # find_package(Boost 1.58.0 COMPONENTS regex program_options system filesystem REQUIRED) 
 
-IF(Z3_DEBUG)
-  LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildd")
-ELSE(Z3_DEBUG)
-  LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildr")
-ENDIF(Z3_DEBUG)
+# IF(Z3_DEBUG)
+#   LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildd")
+# ELSE(Z3_DEBUG)
+#   LINK_DIRECTORIES("${PROJECT_BINARY_DIR}/../z3/buildr")
+# ENDIF(Z3_DEBUG)
 
 LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
-include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/../z3/src/api" "${PROJECT_BINARY_DIR}/../z3/src/api/c++")
+include_directories (${CMAKE_CURRENT_BINARY_DIR} "${PROJECT_SOURCE_DIR}") #"${PROJECT_BINARY_DIR}/../z3/src/api" "${PROJECT_BINARY_DIR}/../z3/src/api/c++")
 #SET(SOURCES lib/backprop.cc lib/network.cc lib/z3expr.cc lib/configuration.cc main.cpp) 
 SET(SOURCES main.cpp lib/drefine_driver.cc lib/pullback.cc lib/decision_making.cc lib/milp_refine.cc lib/milp_mark.cc ../deeppoly/analysis.cc ../deeppoly/deeppoly_configuration.cc ../deeppoly/deeppoly_driver.cc ../deeppoly/helper.cc ../deeppoly/interval.cc ../deeppoly/network.cc ../deeppoly/optimizer.cc ../deeppoly/parser.cc)
 add_executable(${DREFINE} ${SOURCES})
@@ -91,4 +91,4 @@ SET(boost_lib boost_program_options)
 SET(pthread_lib pthread)
 SET(gurobi_lib gurobi_c++ gurobi91)
 
-target_link_libraries (${DREFINE} ${LIBZ3} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib})
+target_link_libraries (${DREFINE} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib})

@@ -21,9 +21,24 @@ bool is_image_verified_by_milp(Network_t* net){
 
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
-            if(!is_greater(net, net->actual_label, i)){
-                if(!verify_by_milp(net, model, var_vector, i)){
-                    return false;
+            bool is_already_verified = false;
+            for(size_t val : net->verified_out_dims){
+                if(val == i){
+                    is_already_verified = true;
+                }
+            }
+            if(!is_already_verified){
+                if(!is_greater(net, net->actual_label, i)){
+                    if(!verify_by_milp(net, model, var_vector, i)){
+                        net->counter_class_dim = i;
+                        return false;
+                    }
+                    else{
+                        net->verified_out_dims.push_back(i);
+                    }
+                }
+                else{
+                    net->verified_out_dims.push_back(i);
                 }
             }
         }
