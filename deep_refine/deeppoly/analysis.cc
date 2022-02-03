@@ -5,7 +5,8 @@
 #include "deeppoly_configuration.hh"
 #include<thread>
 
-void forward_analysis(Network_t* net){
+bool forward_analysis(Network_t* net){
+    bool is_verified = false;
     for(auto layer:net->layer_vec){
         if(layer->is_activation){
             if(Configuration_deeppoly::is_parallel){
@@ -16,7 +17,11 @@ void forward_analysis(Network_t* net){
             }
         }
         else{
-            create_marked_layer_splitting_constraints(layer);
+            if(layer->is_marked){
+                is_verified = milp_based_deeppoly(net, layer);
+                return is_verified;
+            }
+            //create_marked_layer_splitting_constraints(layer);
             if(Configuration_deeppoly::is_parallel){
                 forward_layer_FC_parallel(net, layer);
             }
@@ -24,6 +29,136 @@ void forward_analysis(Network_t* net){
                 forward_layer_FC(net, layer, 0, layer->dims);
             }
         }
+    }
+    is_verified = is_image_verified(net);
+    return is_verified;
+}
+
+
+bool milp_based_deeppoly(Network_t* net, Layer_t* marked_layer){
+    GRBModel model = create_env_and_model();
+    std::vector<GRBVar> var_vector;
+    creating_variables_one_layer(net, model, var_vector, net->input_layer);
+    size_t var_counter = net->input_layer->dims;
+    for(int i=0; i<marked_layer->layer_index; i++){
+        Layer_t* layer = net->layer_vec[i];
+        creating_variables_one_layer(net, model, var_vector, layer);
+        if(layer->is_activation){
+            create_milp_constr_relu(layer, model, var_vector, var_counter);
+        }
+        else{
+            create_milp_constr_FC(layer, model, var_vector, var_counter);
+        }
+        var_counter += layer->dims;
+    }
+    int numlayer = net->layer_vec.size();
+    for(int i=marked_layer->layer_index; i<numlayer; i++){
+        Layer_t* layer = net->layer_vec[i];
+        forward_layer_milp(net, layer, model, var_vector, var_counter);
+        var_counter += layer->dims;
+    }
+
+    bool is_verified = is_image_verified_milp(net, model, var_vector);
+    return is_verified;
+}
+
+void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    if(layer->is_activation){
+        if(Configuration_deeppoly::is_parallel){
+            forward_layer_ReLU_parallel(net, layer);
+        }
+        else{
+            forward_layer_ReLU(net, layer, 0, layer->dims);
+        }
+        creating_variables_one_layer(net, model, var_vector, layer);
+        create_milp_constr_relu(layer, model, var_vector, var_counter);
+    }
+    else{
+        creating_variables_one_layer(net, model, var_vector, layer);
+        size_t start_index = var_counter - layer->pred_layer->dims;
+        size_t end_index = var_counter;
+        std::vector<GRBVar> pred_layer_vars;
+        pred_layer_vars.reserve(layer->pred_layer->dims);
+        copy_vector_by_index(var_vector, pred_layer_vars, start_index, end_index);
+        milp_layer_FC(layer, model, pred_layer_vars, var_vector, var_counter, 0, layer->dims);
+        // if(Configuration_deeppoly::is_parallel){
+        //     milp_layer_FC_parallel(layer, model, pred_layer_vars, var_vector, var_counter);
+        // }
+        // else{
+        //     milp_layer_FC(layer, model, pred_layer_vars, var_vector, var_counter, 0, layer->dims);
+        // }
+    }
+}
+
+void milp_layer_FC_parallel(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter){
+    unsigned int num_thread = get_num_thread();
+    std::vector<std::thread> threads;
+    size_t num_neurons = layer->dims;
+    size_t pool_size = num_neurons/num_thread;
+    if(num_neurons < num_thread){
+        pool_size = 1;
+    }
+    size_t start_index = 0;
+    size_t end_index = start_index + pool_size;
+
+    for(size_t i=0; i<num_thread; i++){
+        threads.push_back(std::thread(milp_layer_FC, layer, std::ref(model), std::ref(pred_layer_vars), std::ref(var_vector), var_counter, start_index, end_index));
+        if(end_index >= num_neurons){
+            break;
+        }
+        start_index = end_index;
+        end_index = start_index + pool_size;
+        if(end_index > num_neurons){
+            end_index = num_neurons;
+        }
+        if(i == num_thread-2){
+            end_index = num_neurons;
+        }
+    }
+
+    for(auto &th : threads){
+        th.join();
+    }
+}
+
+void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index){
+    for(size_t i=start_index; i<end_index; i++){
+        Neuron_t* nt = layer->neurons[i];
+        create_milp_constr_FC_node(nt, model, var_vector, pred_layer_vars, var_counter);
+        
+        GRBLinExpr obj_expr = var_vector[var_counter+nt->neuron_index];
+        model.setObjective(obj_expr, GRB_MINIMIZE);
+        model.optimize();
+        set_neurons_bounds(layer, nt, model, true);
+        var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_LB, -nt->lb);
+        
+        set_neurons_bounds(layer, nt, model, false);
+        model.setObjective(obj_expr, GRB_MAXIMIZE);
+        model.optimize();
+        var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_UB, nt->ub);
+    }
+}
+
+void set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_lower){
+    int status = model.get(GRB_IntAttr_Status);
+    if(status == GRB_OPTIMAL){
+        if(is_lower){
+            double lb = model.get(GRB_DoubleAttr_ObjVal);
+            nt->lb = -fmax(lb, -nt->lb);
+        }
+        else{
+            double ub = model.get(GRB_DoubleAttr_ObjVal);
+            nt->ub = fmin(ub, nt->ub);
+        }
+    }
+    else if(status == GRB_INFEASIBLE){
+        std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": Infisible bounds"<<std::endl;
+    }
+    else if(status == GRB_UNBOUNDED){
+        std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": UBOUNDED bounds"<<std::endl;
+    }
+    else{
+        std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": UNKNOWN bounds"<<std::endl;
     }
 }
 
@@ -457,18 +592,29 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
 
 
 bool is_image_verified(Network_t* net){
+    bool is_verified = true;
+    bool is_first= true;
+    net->verified_out_dims.clear();
     std::vector<GRBVar> var_vector;
     GRBModel model = create_env_model_constr(net, var_vector);
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             if(!is_greater(net, net->actual_label, i)){
-                if(!verify_by_milp(net, model, var_vector, i)){
-                    return false;
+                if(!verify_by_milp(net, model, var_vector, i, is_first)){
+                    //return false;
+                    is_first = false;
+                    is_verified = false;
                 }
+                else{
+                    net->verified_out_dims.push_back(i);
+                }
+            }
+            else{
+                net->verified_out_dims.push_back(i);
             }
         }
     }
-    return true;
+    return is_verified;
 }
 
 bool is_greater(Network_t* net, size_t index1, size_t index2){
@@ -506,5 +652,27 @@ bool is_greater(Network_t* net, size_t index1, size_t index2){
     }
 
     return false;
+}
+
+bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
+    bool is_first = true;
+    for(size_t i=0; i<net->output_dim; i++){
+        if(i != net->actual_label){
+            bool is_already_verified_dim = false;
+            for(size_t val : net->verified_out_dims){
+                if(val == i){
+                    is_already_verified_dim = true;
+                }
+            }
+            if(!is_already_verified_dim){
+                if(!verify_by_milp(net, model, var_vector, i, is_first)){
+                    is_first = false;
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
 }
 

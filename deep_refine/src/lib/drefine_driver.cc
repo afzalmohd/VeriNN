@@ -32,8 +32,8 @@ int run_refine_poly(int num_args, char* params[]){
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
         //run_milp_refinement_with_pullback(net);
-        //run_path_split_with_pullback(net);
-        run_milp_refine_with_milp_mark(net);
+        run_path_split_with_pullback(net);
+        //run_milp_refine_with_milp_mark(net);
         
     }
 
@@ -105,7 +105,6 @@ void run_path_split_with_pullback(Network_t* net){
             std::cout<<"Marked iteration: "<<counter<<std::endl;
             counter++;
             is_verified = run_deeppoly(net);
-            printf("Check..1\n");
             if(is_verified){
                 is_path_available = set_marked_path(net, marked_vec, false);
             }

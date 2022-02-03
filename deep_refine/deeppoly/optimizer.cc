@@ -105,7 +105,7 @@ GRBModel create_env_model_constr(Network_t* net, std::vector<GRBVar>& var_vector
     return model;
 }
 
-bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t counter_class_index){
+bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t counter_class_index, bool is_first){
     Layer_t* layer = net->layer_vec.back();
     size_t actual_class_var_index  = get_gurobi_var_index(layer, net->actual_label);
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
@@ -118,51 +118,68 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     }
     // std::cout<<var_vector[actual_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[actual_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
     // std::cout<<var_vector[counter_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[counter_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
-    std::cout<<"MILP error with ("<<net->actual_label<<","<<counter_class_index<<"): "<<-obj_val<<std::endl;
-    Neuron_t* nt_actual = layer->neurons[net->actual_label];
-    Neuron_t* nt_counter = layer->neurons[counter_class_index];
-    nt_actual->is_back_prop_active = true;
-    nt_actual->back_prop_lb = var_vector[actual_class_var_index].get(GRB_DoubleAttr_X);
-    nt_actual->back_prop_ub = nt_actual->back_prop_lb;
-    nt_counter->is_back_prop_active = true;
-    nt_counter->back_prop_lb = var_vector[counter_class_var_index].get(GRB_DoubleAttr_X);
-    nt_counter->back_prop_ub = nt_counter->back_prop_lb;
-    update_sat_vals(net, var_vector);
+    if(is_first){
+        std::cout<<"MILP error with ("<<net->actual_label<<","<<counter_class_index<<"): "<<-obj_val<<std::endl;
+        Neuron_t* nt_actual = layer->neurons[net->actual_label];
+        Neuron_t* nt_counter = layer->neurons[counter_class_index];
+        nt_actual->is_back_prop_active = true;
+        nt_actual->back_prop_lb = var_vector[actual_class_var_index].get(GRB_DoubleAttr_X);
+        nt_actual->back_prop_ub = nt_actual->back_prop_lb;
+        nt_counter->is_back_prop_active = true;
+        nt_counter->back_prop_lb = var_vector[counter_class_var_index].get(GRB_DoubleAttr_X);
+        nt_counter->back_prop_ub = nt_counter->back_prop_lb;
+        update_sat_vals(net, var_vector);
+    }
     return false;
 } 
 
-void creating_variables(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
-    for(auto nt : net->input_layer->neurons){
-        std::string var_str = "x,"+std::to_string(net->input_layer->layer_index)+","+std::to_string(nt->neuron_index);
-        GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-        var_vector.push_back(x);
-    }
-
-    for(auto layer : net->layer_vec){
-        if(layer->is_activation){
-            for(auto nt: layer->neurons){
-                std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-                GRBVar x = model.addVar(0, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-                var_vector.push_back(x);
-            }
+void creating_variables_one_layer(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, Layer_t* layer){
+    if(layer->is_activation){
+        for(auto nt: layer->neurons){
+            std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+            GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
+            var_vector.push_back(x);
         }
-        else{
-            for(auto nt : layer->neurons){
-                std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-                GRBVar x;
-                if(nt->is_marked){
-                    if(nt->is_active){
-                        x = model.addVar(0, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-                    }
-                    else{
-                        x = model.addVar(-nt->lb, 0, 0.0, GRB_CONTINUOUS, var_str);
-                    }
+    }
+    else{
+        for(auto nt : layer->neurons){
+            std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+            GRBVar x;
+            if(nt->is_marked){
+                if(nt->is_active){
+                    x = model.addVar(0, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
                 }
                 else{
-                    x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-                }   
-                var_vector.push_back(x);
+                    x = model.addVar(-nt->lb, 0, 0.0, GRB_CONTINUOUS, var_str);
+                }
+            }
+            else{
+                x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
             }   
+            var_vector.push_back(x);
+        } 
+    }
+}
+
+void creating_variables(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
+    creating_variables_one_layer(net, model, var_vector, net->input_layer);
+    for(auto layer : net->layer_vec){
+        creating_variables_one_layer(net, model, var_vector, layer);
+    }
+}
+
+void create_milp_constr_FC_node(Neuron_t* nt, GRBModel& model, std::vector<GRBVar>& var_vector, std::vector<GRBVar>& new_vec, size_t var_counter){
+    GRBLinExpr grb_expr;// = -1*var_vector[end_index+i];
+    grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &new_vec[0], new_vec.size());
+    grb_expr += nt->uexpr->cst_sup;
+    grb_expr += -1*var_vector[var_counter+nt->neuron_index];
+    model.addConstr(grb_expr, GRB_EQUAL, 0);
+    if(nt->is_marked){
+        if(nt->is_active){
+            model.addConstr(var_vector[var_counter+nt->neuron_index], GRB_GREATER_EQUAL, 0);
+        }
+        else{
+            model.addConstr(var_vector[var_counter+nt->neuron_index], GRB_LESS_EQUAL, 0);
         }
     }
 }
@@ -176,11 +193,7 @@ void create_milp_constr_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>&
     copy_vector_by_index(var_vector, new_vec, start_index, end_index);
     for(size_t i=0; i<layer->dims; i++){
         Neuron_t* nt = layer->neurons[i];
-        GRBLinExpr grb_expr;// = -1*var_vector[end_index+i];
-        grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &new_vec[0], new_vec.size());
-        grb_expr += nt->uexpr->cst_sup;
-        grb_expr += -1*var_vector[var_counter+i];
-        model.addConstr(grb_expr, GRB_EQUAL, 0);
+        create_milp_constr_FC_node(nt, model, var_vector, new_vec, var_counter);
     }
 }
 

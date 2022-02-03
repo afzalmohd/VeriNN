@@ -29,7 +29,7 @@ bool is_image_verified_by_milp(Network_t* net){
             }
             if(!is_already_verified){
                 if(!is_greater(net, net->actual_label, i)){
-                    if(!verify_by_milp(net, model, var_vector, i)){
+                    if(!verify_by_milp(net, model, var_vector, i, true)){
                         net->counter_class_dim = i;
                         return false;
                     }
