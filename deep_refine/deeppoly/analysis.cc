@@ -80,6 +80,7 @@ void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::ve
         std::vector<GRBVar> pred_layer_vars;
         pred_layer_vars.reserve(layer->pred_layer->dims);
         copy_vector_by_index(var_vector, pred_layer_vars, start_index, end_index);
+        //create_milp_constr_FC(layer, model, var_vector, var_counter);
         milp_layer_FC(layer, model, pred_layer_vars, var_vector, var_counter, 0, layer->dims);
         // if(Configuration_deeppoly::is_parallel){
         //     milp_layer_FC_parallel(layer, model, pred_layer_vars, var_vector, var_counter);
@@ -124,6 +125,7 @@ void milp_layer_FC_parallel(Layer_t* layer, GRBModel& model, std::vector<GRBVar>
 void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index){
     for(size_t i=start_index; i<end_index; i++){
         Neuron_t* nt = layer->neurons[i];
+        create_neuron_expr_FC(nt, layer);
         create_milp_constr_FC_node(nt, model, var_vector, pred_layer_vars, var_counter);
         
         GRBLinExpr obj_expr = var_vector[var_counter+nt->neuron_index];
@@ -132,10 +134,12 @@ void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_la
         set_neurons_bounds(layer, nt, model, true);
         var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_LB, -nt->lb);
         
-        set_neurons_bounds(layer, nt, model, false);
         model.setObjective(obj_expr, GRB_MAXIMIZE);
         model.optimize();
+        set_neurons_bounds(layer, nt, model, false);
         var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_UB, nt->ub);
+        //std::cout<<"Layer: "<<layer->layer_index<<" , "<<nt->neuron_index<<" bounds: ["<<-nt->lb<<","<<nt->ub<<"]"<<std::endl;
+        //model.reset();
     }
 }
 

@@ -111,12 +111,20 @@ void run_path_split_with_pullback(Network_t* net){
             else{
                 is_ce = pull_back_full(net);
                 if(is_ce){
+                    xt::xarray<double> res;
+                    std::vector<double> vec;
                     std::cout<<"Found counter example"<<std::endl;
                     std::cout<<"[";
                     for(Neuron_t* nt : net->input_layer->neurons){
                         std::cout<<nt->back_prop_ub<<", ";
+                        vec.push_back(nt->back_prop_ub);
                     }
                     std::cout<<"]"<<std::endl;
+                    std::vector<size_t> shape = {net->input_dim};
+                    res = xt::adapt(vec, shape);
+                    net->forward_propgate_network(0, res);
+                    auto pred_label = xt::argmax(net->layer_vec.back()->res);
+                    std::cout<<"Pred label: "<<pred_label[0]<<std::endl;
                     break;
                 }
                 else{
@@ -128,7 +136,7 @@ void run_path_split_with_pullback(Network_t* net){
         if(!is_path_available){
             std::cout<<"Image: "<<net->pred_label<<" verified!\n";
         }
-        else{
+        else if(!is_ce){
             std::cout<<"Loop count iteration exceed\n";
         }
     }
