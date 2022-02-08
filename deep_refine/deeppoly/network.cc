@@ -90,27 +90,27 @@ void Expr_t::deep_copy(Expr_t* expr){
     this->cst_inf = expr->cst_inf;
     this->cst_sup = expr->cst_sup;
     this->size = expr->size;
-    for(auto constr : expr->constr_vec){
-        Constr_t* con = new Constr_t();
-        con->deep_copy(constr);
-        this->constr_vec.push_back(con);
-    }
+    // for(auto constr : expr->constr_vec){
+    //     Constr_t* con = new Constr_t();
+    //     con->deep_copy(constr);
+    //     this->constr_vec.push_back(con);
+    // }
 }
 
-void Constr_t::deep_copy(Constr_t* constr){
-    this->expr->deep_copy(constr->expr);
-    this->is_positive = constr->is_positive;
-}
+// void Constr_t::deep_copy(Constr_t* constr){
+//     this->expr->deep_copy(constr->expr);
+//     this->is_positive = constr->is_positive;
+// }
 
-void Constr_t::print_constr(){
-    this->expr->print_expr();
-    if(this->is_positive){
-        std::cout<<" > 0";
-    }
-    else{
-        std::cout<<" <= 0";
-    }
-}
+// void Constr_t::print_constr(){
+//     this->expr->print_expr();
+//     if(this->is_positive){
+//         std::cout<<" > 0";
+//     }
+//     else{
+//         std::cout<<" <= 0";
+//     }
+// }
 
 void Expr_t::print_expr(){
     for(size_t i=0; i<this->coeff_sup.size(); i++){
@@ -153,6 +153,7 @@ void reset_network(Network_t* net){
 void reset_layer(Layer_t* layer){
     for(size_t i=0; i < layer->neurons.size(); i++){
         Neuron_t* nt = layer->neurons[i];
+        //std::cout<<"Layer: "<<layer->layer_index<<" , neuron: "<<nt->neuron_index<<std::endl;
         nt->~Neuron_t();
         nt->lb = INFINITY;
         nt->ub = INFINITY;

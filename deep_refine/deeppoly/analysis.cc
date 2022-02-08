@@ -19,6 +19,13 @@ bool forward_analysis(Network_t* net){
         else{
             if(layer->is_marked){
                 is_verified = milp_based_deeppoly(net, layer);
+                if(!is_verified){
+                    for(Neuron_t* nt : net->layer_vec.back()->neurons){
+                        if(nt->is_back_prop_active){
+                            std::cout<<"Neuron: "<<nt->neuron_index<<", backprop val: "<<nt->back_prop_ub<<std::endl;
+                        }
+                    }
+                }
                 return is_verified;
             }
             //create_marked_layer_splitting_constraints(layer);
@@ -54,7 +61,10 @@ bool milp_based_deeppoly(Network_t* net, Layer_t* marked_layer){
     int numlayer = net->layer_vec.size();
     for(int i=marked_layer->layer_index; i<numlayer; i++){
         Layer_t* layer = net->layer_vec[i];
-        forward_layer_milp(net, layer, model, var_vector, var_counter);
+        bool is_verif = forward_layer_milp(net, layer, model, var_vector, var_counter);
+        if(is_verif){
+            return true;
+        }
         var_counter += layer->dims;
     }
 
@@ -62,7 +72,7 @@ bool milp_based_deeppoly(Network_t* net, Layer_t* marked_layer){
     return is_verified;
 }
 
-void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+bool forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
     if(layer->is_activation){
         if(Configuration_deeppoly::is_parallel){
             forward_layer_ReLU_parallel(net, layer);
@@ -72,6 +82,7 @@ void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::ve
         }
         creating_variables_one_layer(net, model, var_vector, layer);
         create_milp_constr_relu(layer, model, var_vector, var_counter);
+        return false;
     }
     else{
         creating_variables_one_layer(net, model, var_vector, layer);
@@ -81,7 +92,8 @@ void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::ve
         pred_layer_vars.reserve(layer->pred_layer->dims);
         copy_vector_by_index(var_vector, pred_layer_vars, start_index, end_index);
         //create_milp_constr_FC(layer, model, var_vector, var_counter);
-        milp_layer_FC(layer, model, pred_layer_vars, var_vector, var_counter, 0, layer->dims);
+        bool is_infisiable_path = milp_layer_FC(layer, model, pred_layer_vars, var_vector, var_counter, 0, layer->dims);
+        return is_infisiable_path;
         // if(Configuration_deeppoly::is_parallel){
         //     milp_layer_FC_parallel(layer, model, pred_layer_vars, var_vector, var_counter);
         // }
@@ -122,7 +134,7 @@ void milp_layer_FC_parallel(Layer_t* layer, GRBModel& model, std::vector<GRBVar>
     }
 }
 
-void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index){
+bool milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index){
     for(size_t i=start_index; i<end_index; i++){
         Neuron_t* nt = layer->neurons[i];
         create_neuron_expr_FC(nt, layer);
@@ -131,19 +143,26 @@ void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_la
         GRBLinExpr obj_expr = var_vector[var_counter+nt->neuron_index];
         model.setObjective(obj_expr, GRB_MINIMIZE);
         model.optimize();
-        set_neurons_bounds(layer, nt, model, true);
+        bool is_unsat = set_neurons_bounds(layer, nt, model, true);
+        if(is_unsat){
+            return true;
+        }
         var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_LB, -nt->lb);
         
         model.setObjective(obj_expr, GRB_MAXIMIZE);
         model.optimize();
-        set_neurons_bounds(layer, nt, model, false);
+        is_unsat = set_neurons_bounds(layer, nt, model, false);
+        if(is_unsat){
+            return true;
+        }
         var_vector[var_counter+nt->neuron_index].set(GRB_DoubleAttr_UB, nt->ub);
         //std::cout<<"Layer: "<<layer->layer_index<<" , "<<nt->neuron_index<<" bounds: ["<<-nt->lb<<","<<nt->ub<<"]"<<std::endl;
         //model.reset();
     }
+    return false;
 }
 
-void set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_lower){
+bool set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_lower){
     int status = model.get(GRB_IntAttr_Status);
     if(status == GRB_OPTIMAL){
         if(is_lower){
@@ -157,6 +176,7 @@ void set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_l
     }
     else if(status == GRB_INFEASIBLE){
         std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": Infisible bounds"<<std::endl;
+        return true;
     }
     else if(status == GRB_UNBOUNDED){
         std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": UBOUNDED bounds"<<std::endl;
@@ -164,6 +184,7 @@ void set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_l
     else{
         std::cout<<"Layer index: "<<layer->layer_index<<" , neuron index: "<<nt->neuron_index<<": UNKNOWN bounds"<<std::endl;
     }
+    return false;
 }
 
 void forward_layer_FC_parallel(Network_t* net, Layer_t* curr_layer){
@@ -310,9 +331,9 @@ void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heur
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
     assert(layer->layer_index >= 0 && "Layer indexing is wrong");
     create_neuron_expr_FC(nt, layer);
-    if(layer->is_marked){
-        copy_layer_constraints(layer, nt);
-    }
+    // if(layer->is_marked){
+    //     copy_layer_constraints(layer, nt);
+    // }
     Layer_t* pred_layer = get_pred_layer(net, layer);
     update_neuron_bound_back_substitution(net, pred_layer, nt);
 }
@@ -378,10 +399,10 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
     else{
-        if(nt->lexpr_b->constr_vec.size() > 0){
-            //printf("Check..l\n");
-            compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
-        }
+        // if(nt->lexpr_b->constr_vec.size() > 0){
+        //     //printf("Check..l\n");
+        //     compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
+        // }
         if(Configuration_deeppoly::is_unmarked_deeppoly){
             nt->unmarked_lb = nt->lb;
         }
@@ -405,10 +426,10 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
     else{
-        if(nt->uexpr_b->constr_vec.size() > 0){
-            //printf("Check..u\n");
-            compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
-        }
+        // if(nt->uexpr_b->constr_vec.size() > 0){
+        //     //printf("Check..u\n");
+        //     compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
+        // }
         if(Configuration_deeppoly::is_unmarked_deeppoly){
             nt->unmarked_ub = nt->ub;
         }
@@ -434,16 +455,16 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
     Neuron_t* pred_nt = NULL;
     Expr_t* mul_expr = NULL;
     Expr_t* temp_expr = NULL;
-    std::vector<Constr_t*> new_constr_vec;
-    create_constr_vec_with_init_expr(new_constr_vec, curr_expr->constr_vec, res_expr->size);
+    //std::vector<Constr_t*> new_constr_vec;
+    //create_constr_vec_with_init_expr(new_constr_vec, curr_expr->constr_vec, res_expr->size);
     for(size_t i=0; i<curr_expr->size; i++){
         pred_nt = pred_layer->neurons[i];
         if(curr_expr->coeff_inf[i] == 0 && curr_expr->coeff_sup[i] == 0){
-            update_independent_constr_FC(net, new_constr_vec, curr_expr->constr_vec, pred_nt);
+            //update_independent_constr_FC(net, new_constr_vec, curr_expr->constr_vec, pred_nt);
             continue;
         }
         mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i], is_lower);
-        update_dependent_constr_FC(net,new_constr_vec, curr_expr->constr_vec, mul_expr, pred_nt);
+        //update_dependent_constr_FC(net,new_constr_vec, curr_expr->constr_vec, mul_expr, pred_nt);
         if(curr_expr->coeff_inf[i] < 0 || curr_expr->coeff_sup[i] < 0){
             temp_expr = multiply_expr_with_coeff(net, mul_expr, curr_expr->coeff_inf[i], curr_expr->coeff_sup[i]);
             add_expr(net, res_expr, temp_expr);
@@ -465,17 +486,17 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
 
     res_expr->cst_inf = res_expr->cst_inf + curr_expr->cst_inf;
     res_expr->cst_sup = res_expr->cst_sup + curr_expr->cst_sup;
-    update_constr_vec_cst(new_constr_vec, curr_expr->constr_vec);
-    free_constr_vector_memory(curr_expr->constr_vec);
-    res_expr->constr_vec = new_constr_vec;
-    if(pred_layer->is_marked){
-        for(auto con : pred_layer->constr_vec){
-            Constr_t* constr = new Constr_t();
-            constr->expr = new Expr_t();
-            constr->deep_copy(con);
-            res_expr->constr_vec.push_back(constr);
-        }
-    }
+    // update_constr_vec_cst(new_constr_vec, curr_expr->constr_vec);
+    // free_constr_vector_memory(curr_expr->constr_vec);
+    // res_expr->constr_vec = new_constr_vec;
+    // if(pred_layer->is_marked){
+    //     for(auto con : pred_layer->constr_vec){
+    //         Constr_t* constr = new Constr_t();
+    //         constr->expr = new Expr_t();
+    //         constr->deep_copy(con);
+    //         res_expr->constr_vec.push_back(constr);
+    //     }
+    // }
 
     return res_expr;
 }
@@ -489,20 +510,20 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
     res_expr->coeff_inf.resize(res_expr->size);
     res_expr->coeff_sup.resize(res_expr->size);
 
-    std::vector<Constr_t*> new_constr_vec;
-    create_constr_vec_by_size(new_constr_vec, curr_expr->constr_vec, res_expr->size);
+    //std::vector<Constr_t*> new_constr_vec;
+    //create_constr_vec_by_size(new_constr_vec, curr_expr->constr_vec, res_expr->size);
 
     for(size_t i=0; i<curr_expr->size; i++){
         Neuron_t* pred_nt = pred_layer->neurons[i];
         if((curr_expr->coeff_inf[i] == 0.0) && (curr_expr->coeff_sup[i] == 0.0)){
             res_expr->coeff_inf[i] = 0.0;
             res_expr->coeff_sup[i] = 0.0;
-            update_independent_constr_relu(net,new_constr_vec,curr_expr->constr_vec,pred_nt);
+            //update_independent_constr_relu(net,new_constr_vec,curr_expr->constr_vec,pred_nt);
             continue;
         }
         Expr_t* mul_expr = get_mul_expr(pred_nt, curr_expr->coeff_inf[i], 
                                             curr_expr->coeff_sup[i], is_lower);
-        update_dependent_constr_relu(net,new_constr_vec, curr_expr->constr_vec, mul_expr, pred_nt);       
+        //update_dependent_constr_relu(net,new_constr_vec, curr_expr->constr_vec, mul_expr, pred_nt);       
         if(curr_expr->coeff_sup[i] < 0 || curr_expr->coeff_inf[i] < 0){
             /*
             double_interval_mul(&res_expr->coeff_inf[i], &res_expr->coeff_sup[i],
@@ -541,8 +562,8 @@ Expr_t* update_expr_relu_backsubstitution(Network_t* net, Layer_t* pred_layer, E
 			}
         }
     }
-    free_constr_vector_memory(curr_expr->constr_vec);
-    res_expr->constr_vec = new_constr_vec;
+    //free_constr_vector_memory(curr_expr->constr_vec);
+    //res_expr->constr_vec = new_constr_vec;
 
     return res_expr;
 }

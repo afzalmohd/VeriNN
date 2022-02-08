@@ -4,10 +4,10 @@
 #include "gurobi_c++.h"
 bool forward_analysis(Network_t* net);
 bool milp_based_deeppoly(Network_t* net, Layer_t* marked_layer);
-void forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
+bool forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 void milp_layer_FC_parallel(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter);
-void milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index);
-void set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_lower);
+bool milp_layer_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& pred_layer_vars, std::vector<GRBVar>& var_vector, size_t var_counter, size_t start_index, size_t end_index);
+bool set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_lower);
 void forward_layer_FC_parallel(Network_t* net, Layer_t* curr_layer);
 void forward_layer_FC(Network_t* net, Layer_t* curr_layer, size_t start_index, size_t end_index);
 void forward_layer_ReLU_parallel(Network_t* net, Layer_t* curr_layer);

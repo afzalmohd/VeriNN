@@ -1,5 +1,19 @@
 #include "pullback.hh"
 
+void exec_net(Network_t* net, Layer_t* layer){
+    std::vector<double> vec;
+    xt::xarray<double> res;
+    for(Neuron_t* nt : layer->pred_layer->neurons){
+        vec.push_back(nt->back_prop_ub);
+        //std::cout<<nt->back_prop_lb<<" , "<<nt->back_prop_ub<<std::endl;
+    }
+    std::vector<size_t> shape = {layer->pred_layer->dims};
+    res = xt::adapt(vec, shape);
+    net->forward_propgate_network(layer->layer_index, res);
+    auto pred_label = xt::argmax(net->layer_vec.back()->res);
+    std::cout<<res<<std::endl;
+    std::cout<<"Layer index: "<<layer->layer_index<<", Pred label: "<<pred_label[0]<<" , "<<net->layer_vec.back()->res<<std::endl;
+}
 
 bool pull_back_full(Network_t* net){
     for(int i = net->layer_vec.size()-1; i>=0; i--){
@@ -64,10 +78,10 @@ bool pull_back_FC(Layer_t* layer){
     int status = model.get(GRB_IntAttr_Status);
     if(status == GRB_OPTIMAL){
         for(size_t i=0; i<var_vector.size(); i++){
-            Neuron_t* nt = pred_layer->neurons[i];
-            nt->back_prop_ub = var_vector[i].get(GRB_DoubleAttr_X);
-            nt->back_prop_lb = nt->back_prop_ub;
-            nt->is_back_prop_active = true;
+            Neuron_t* pred_nt = pred_layer->neurons[i];
+            pred_nt->back_prop_ub = var_vector[i].get(GRB_DoubleAttr_X);
+            pred_nt->back_prop_lb = pred_nt->back_prop_ub;
+            pred_nt->is_back_prop_active = true;
         }
         if(pred_layer->layer_index == -1){
             std::cout<<"Counter example found!!"<<std::endl;
@@ -85,14 +99,18 @@ bool pull_back_FC(Layer_t* layer){
                 std::string index_str(name.substr(1));
                 size_t nt_index = std::stoul(index_str);
                 Neuron_t* nt = layer->neurons[nt_index];
+                //printf("Check..iss..outside\n");
                 if(nt->lb > 0 && nt->ub > 0){
                     layer->neurons[nt_index]->is_marked = true;
-                    is_iss = true;
+                    layer->is_marked = true;
+                    //is_iss = true;
+                    //printf("Check..iss\n");
                 }
+                is_iss = true;
             }
         }
         if(is_iss){
-            layer->is_marked = true;
+            //layer->is_marked = true;
             return true;
         }
     }
@@ -108,6 +126,7 @@ void create_gurobi_variable(GRBModel& model, std::vector<GRBVar>& var_vector, La
 }
 
 void create_layer_constrains_pullback(GRBModel& model, std::vector<GRBVar>& var_vector, Layer_t* layer){
+    //std::cout<<"Layer index in constraints: "<<layer->layer_index<<std::endl;
     for(auto nt : layer->neurons){
         if(nt->is_back_prop_active){
             std::string constr_str = "c"+std::to_string(nt->neuron_index);
@@ -118,8 +137,10 @@ void create_layer_constrains_pullback(GRBModel& model, std::vector<GRBVar>& var_
                 model.addConstr(grb_expr == nt->back_prop_ub, constr_str);
             }
             else{
+                std::string constr_str1 = "d"+std::to_string(nt->neuron_index);
+                //std::cout<<constr_str1<<std::endl;
                 model.addConstr(grb_expr >= nt->back_prop_lb, constr_str);
-                model.addConstr(grb_expr <= nt->back_prop_ub, constr_str);
+                model.addConstr(grb_expr <= nt->back_prop_ub, constr_str1);
             }
         }
     }

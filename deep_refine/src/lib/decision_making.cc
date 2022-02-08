@@ -1,5 +1,6 @@
 #include "decision_making.hh"
 #include "pullback.hh"
+#include "../../deeppoly/helper.hh"
 
 bool marked_neurons_vector(Network_t* net, std::vector<std::vector<Neuron_t*>>& marked_nt){
     std::vector<Neuron_t*> nt_vec;
@@ -201,10 +202,12 @@ bool is_valid_path_with_milp(Layer_t* layer){
 
 void create_layer_constrains_for_valid_path(GRBModel& model, std::vector<GRBVar>& var_vector, Layer_t* layer){
     for(Neuron_t* nt : layer->marked_neurons){
+        std::vector<double> coeffs = get_neuron_incomming_weigts(nt, layer);
+        double cst = get_neuron_bias(nt, layer);
         std::string constr_str = "c"+std::to_string(nt->neuron_index);
         GRBLinExpr grb_expr;
-        grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &var_vector[0], var_vector.size());
-        grb_expr += nt->uexpr->cst_sup;
+        grb_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
+        grb_expr += cst;
         if(nt->is_active){
             model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0, constr_str);
         }
@@ -221,3 +224,4 @@ void create_gurobi_variable_with_unmarked_bounds(GRBModel& model, std::vector<GR
         var_vector.push_back(var);
     }
 }
+
