@@ -14,7 +14,7 @@ bool is_image_verified_by_milp(Network_t* net){
             create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
-            create_milp_constr_FC(layer, model, var_vector, var_counter);
+            create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
         }
         var_counter += layer->dims;
     }
@@ -28,7 +28,7 @@ bool is_image_verified_by_milp(Network_t* net){
                 }
             }
             if(!is_already_verified){
-                if(!is_greater(net, net->actual_label, i)){
+                //if(!is_greater(net, net->actual_label, i)){
                     if(!verify_by_milp(net, model, var_vector, i, true)){
                         net->counter_class_dim = i;
                         return false;
@@ -36,10 +36,10 @@ bool is_image_verified_by_milp(Network_t* net){
                     else{
                         net->verified_out_dims.push_back(i);
                     }
-                }
-                else{
-                    net->verified_out_dims.push_back(i);
-                }
+                // }
+                // else{
+                //     net->verified_out_dims.push_back(i);
+                // }
             }
         }
     }
@@ -105,6 +105,23 @@ void create_relu_constr_milp_refine(Layer_t* layer, GRBModel& model, std::vector
             model.addConstr(grb_expr1, GRB_GREATER_EQUAL, 0);
         }
 
+    }
+}
+
+void create_milp_constr_FC_without_marked(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){    
+    assert(layer->layer_type == "FC" && "Layer type is not FC");
+    size_t start_index = var_counter - layer->pred_layer->dims;
+    size_t end_index = var_counter;
+    std::vector<GRBVar> new_vec;
+    new_vec.reserve(layer->pred_layer->dims);
+    copy_vector_by_index(var_vector, new_vec, start_index, end_index);
+    for(size_t i=0; i<layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        GRBLinExpr grb_expr;// = -1*var_vector[end_index+i];
+        grb_expr.addTerms(&nt->uexpr->coeff_sup[0], &new_vec[0], new_vec.size());
+        grb_expr += nt->uexpr->cst_sup;
+        grb_expr += -1*var_vector[var_counter+nt->neuron_index];
+        model.addConstr(grb_expr, GRB_EQUAL, 0);
     }
 }
 

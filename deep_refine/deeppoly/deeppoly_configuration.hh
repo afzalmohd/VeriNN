@@ -11,6 +11,11 @@
 #endif
 
 #define IMAGE_DELIMETER ','
+#define NUM_TEST_IMAGES 30
+#define MILP_WITH_MILP_LIMIT 50
+#define PULL_BACK_WITH_MILP_LIMIT 50
+#define PULL_BACK_WITH_PATH_SPLIT 2000
+
 
 
 namespace po = boost::program_options;
@@ -38,6 +43,10 @@ namespace Configuration_deeppoly{
     extern bool is_parallel;
     extern unsigned int num_thread;
     extern bool is_unmarked_deeppoly;
+    extern bool is_milp_based_refine;
+    extern bool is_milp_based_mark;
+    extern std::string result_file;
+    extern size_t image_index;
 
 }
 

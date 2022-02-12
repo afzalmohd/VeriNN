@@ -7,72 +7,41 @@ Created on Mon Jul 26 09:09:35 2021
 """
 
 import os
-
-ERANROOT = "/home/u1411251/Documents/Phd/tools/eran"
-ERANMAIN = ERANROOT+"/tf_verify"
+NUMTEST = 30
+epsilons = [0.03, 0.04, 0.05]
+NETWORK_FILE = "mnist_relu_3_100.tf"
+IS_MILP_REFINE = 1
+IS_OPTIMIZATION_MARK = 1
+drefine_timeout = 1000
 DREFINEROOT = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine"
 OUTPATH = DREFINEROOT+"/outfiles"
-DEEPPOLYOUT = OUTPATH+"/deeppoly_out.txt"
-OUTPUTBU = OUTPATH+"/marked_bounds_updated.txt"
-OUTASSIGN = OUTPATH+"/assign.txt"
-DREFINEOUT = OUTPATH+"/marked_neurons.txt"
-NETPATH = DREFINEROOT+"/benchmarks/networks/mnist_relu_3_50.tf"
+NETPATH = DREFINEROOT+"/benchmarks/networks/tf/"+NETWORK_FILE
 DATASETFILE = DREFINEROOT+"/benchmarks/dataset/mnist/mnist_test.csv"
-
-epsilon = 0.04
+SCRIPT_OUT = "script_out.txt"
 dataset = "mnist"
-domain = "deeppoly"
-k = 4
 
-
-if not os.path.isdir(OUTPATH):
-    os.mkdir(OUTPATH)
+APPROACH = ""
+if IS_MILP_REFINE == 1 and IS_OPTIMIZATION_MARK == 1:
+    APPROACH = "MILP_WITH_MILP"
+elif IS_MILP_REFINE == 0 and IS_OPTIMIZATION_MARK == 0:
+    APPROACH = "PATHSPLIT_WITH_PULLBACK"
 else:
-    if os.path.isfile(DREFINEOUT):
-        os.remove(DREFINEOUT)
-    if os.path.isfile(OUTPUTBU):
-        os.remove(OUTPUTBU)
+    print("Wrong options\n")
+    exit(0)
 
 
-os.environ['OUTPUTBU'] = OUTPUTBU
-os.environ['DREFINEOUT'] = DREFINEOUT
-os.environ['DEEPPOLYOUT'] = DEEPPOLYOUT
-os.environ['OUTASSIGN'] = OUTASSIGN
-os.environ['ISDREFINE'] = "Y"
-os.chdir(ERANMAIN)
-print("In directory: "+os.getcwd())
+def write_to_file(image_index, epsilon):
+    my_file = open(SCRIPT_OUT, "a")
+    my_file.write(NETWORK_FILE+" , "+str(epsilon)+" , "+APPROACH+" , "+str(image_index)+"\n")
+    my_file.close()
 
-print("-----------------------KPOLY STARTED-----------------------------")
-
-#os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset)
-
-domain = "refinepoly"
-os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset+" --k "+str(k))                   
-
-counter = 0
-counter_limit  = 10
-
-while counter < counter_limit:
-    counter += 1
-    os.chdir(DREFINEROOT)
-
-    print("------------------------DREFINE STARTED------------------------------")
-    os.system("./drefine -f "+DEEPPOLYOUT+" --network "+NETPATH+" --dataset-file "+DREFINEROOT+" --epsilon "+str(epsilon)+" --m "+DREFINEOUT)
-
-
-    print("-----------------------KPOLY STARTED---------------------------------")
-    os.chdir(ERANMAIN)  
-    domain = "refinepoly"
-    os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset+" --k "+str(k))     
-
-    if os.environ.get('ISTERMINATE') == "Y":
-        print("Terminated after {} iterations".format(counter))    
-        break;                 
-    
-    #print("-----------------------DEEPPOLY STARTED-----------------------------")
-    #domain = "deeppoly"
-    #os.system("python3 . --netname "+NETPATH+" --epsilon "+str(epsilon)+" --domain "+domain+" --dataset "+dataset)
-
+for epsilon in epsilons:
+    RESULT_FILE = OUTPATH+"/"+NETWORK_FILE[:-3]+"_"+APPROACH+"_"+str(epsilon)+".txt"
+    for i in range(1,NUMTEST+1):
+        write_to_file(i, epsilon)
+        command = "timeout -k 2s "+str(drefine_timeout)+" ./drefine --network "+NETPATH+" --epsilon "+str(epsilon)+" --dataset-file "+DATASETFILE+" --result-file "+RESULT_FILE+" --is-milp-refine "+str(IS_MILP_REFINE)+" --is-optimization-mark "+str(IS_OPTIMIZATION_MARK)+" --image-index "+str(i)                                     
+        print(command)
+        os.system(command)
 
 
 

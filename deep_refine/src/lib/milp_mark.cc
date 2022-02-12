@@ -41,7 +41,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
-            create_milp_constr_FC(layer, model, var_vector, var_counter);
+            create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
         }
         var_counter += layer->dims;
     }
