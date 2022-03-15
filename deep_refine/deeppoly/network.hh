@@ -1,7 +1,7 @@
 
 #ifndef _DEEPPOLY_NETWORK_H_
 #define _DEEPPOLY_NETWORK_H_
-#include<z3++.h>
+//#include<z3++.h>
 #include<vector>
 #include<math.h>
 #include <xtensor/xarray.hpp>

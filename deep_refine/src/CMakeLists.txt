@@ -24,10 +24,13 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../gurobi_cmake")
-#message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../build/xtl")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../build/xtensor")
+# list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../build/xtensor-blas")
+message("CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 
-find_package(xtensor REQUIRED CONFIG)
-find_package(xtl REQUIRED CONFIG)
+# find_package(xtensor REQUIRED CONFIG)
+# find_package(xtl REQUIRED CONFIG)
 find_package(GUROBI REQUIRED)
 if(GUROBI_FOUND)
   message(STATUS "GUROBI FOUND")
@@ -39,6 +42,8 @@ endif(GUROBI_FOUND)
 # include_directories()
 include_directories(${GUROBI_INCLUDE_DIRS})
 include_directories(${xtl_INCLUDE_DIRS})
+include_directories("${CMAKE_SOURCE_DIR}/../build/xt-build/include")
+include_directories("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0")
 
 message(STATUS "Found XTENSOR ${xtensor_FOUND}")
 message(STATUS "Found XTL ${XTENSOR_PACKAGE_VERSION}")
@@ -77,6 +82,7 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 # ENDIF(Z3_DEBUG)
 
 LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
+LINK_LIBRARIES("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0/stage/lib")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 

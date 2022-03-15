@@ -7,6 +7,7 @@ SRCDIR = $(PWD)/src
 DEEPPOLYDIR = $(PWD)/deeppoly
 DEEPPOLY=deeppoly
 export GUROBI_HOME=$(BUILDDIR)/gurobi912/linux64
+export XT_HOME = $(BUILDDIR)/xt-build
 XTENSOR_VERSION=0.3.0  # dummy now
 XTL_VERSION=0.4.0 # dummy now
 LD=ld.gold
@@ -25,11 +26,11 @@ debug :  $(BUILDDIR)/buildd/Makefile
 	ln -s $(BUILDDIR)/buildd/$(DREFINE) $(DREFINE)
 
 
-$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
+$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a xt_build $(BUILDDIR)/boost_1_78_0/boost/program_options.hpp
 	mkdir -p $(BUILDDIR)/buildr
-	cd $(BUILDDIR)/buildr; cmake -DCMAKE_BUILD_TYPE=Release -DDREFINE=$(DREFINE) $(SRCDIR)
+	cd $(BUILDDIR)/buildr; cmake -DCMAKE_BUILD_TYPE=Release -DDREFINE=$(DREFINE) $(SRCDIR) 
 
-$(BUILDDIR)/buildd/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a
+$(BUILDDIR)/buildd/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a xt_build
 	mkdir -p $(BUILDDIR)/buildd
 	cd $(BUILDDIR)/buildd; cmake -DCMAKE_BUILD_TYPE=Debug -DINSTALLED=$(HOME_INSTALLED) -DDREFINE=$(DREFINE) $(SRCDIR)
 
@@ -85,11 +86,43 @@ $(BUILDDIR)/deeppoly/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/li
 	cd $(BUILDDIR)/deeppoly/buildr; cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DDEEPPOLY=$(DEEPPOLY) $(DEEPPOLYDIR)
 
 $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a:
+	mkdir -p $(BUILDDIR)
 	cd $(BUILDDIR); wget https://packages.gurobi.com/9.1/gurobi9.1.2_linux64.tar.gz; tar -xvf gurobi9.1.2_linux64.tar.gz; rm gurobi9.1.2_linux64.tar.gz
 	cd $(BUILDDIR)/gurobi912/linux64/src/build; make
 	cp -f $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a $(BUILDDIR)/gurobi912/linux64/lib
 
+$(BUILDDIR)/xtl/README.md:
+	mkdir -p $(BUILDDIR)
+	cd $(BUILDDIR);$(git) clone https://github.com/xtensor-stack/xtl.git
+
+$(BUILDDIR)/xtensor-blas/README.md:
+	mkdir -p $(BUILDDIR)
+	cd $(BUILDDIR);$(git) clone https://github.com/xtensor-stack/xtensor-blas.git
+
+$(BUILDDIR)/xtensor/README.md:
+	mkdir -p $(BUILDDIR)
+	cd $(BUILDDIR);$(git) clone https://github.com/xtensor-stack/xtensor.git
+
+$(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp: $(BUILDDIR)/xtl/README.md
+	mkdir -p $(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtl;cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtl; make install
+
+$(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp: $(BUILDDIR)/xtensor/README.md
+	mkdir -p $(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtensor;cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtensor; make install
+
+$(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp: $(BUILDDIR)/xtensor-blas/README.md
+	mkdir -p $(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtensor-blas;cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/xt-build
+	cd $(BUILDDIR)/xtensor-blas; make install
+
+$(BUILDDIR)/boost_1_78_0/boost/program_options.hpp:
+	cd $(BUILDDIR); wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2; tar -xvf boost_1_78_0.tar.bz2; rm boost_1_78_0.tar.bz2
 
 
+
+xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp
 
 test: release runtest
