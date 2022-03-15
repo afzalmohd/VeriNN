@@ -7,11 +7,14 @@ Created on Mon Jul 26 09:09:35 2021
 """
 
 import os
+from datetime import datetime
+
 NUMTEST = 30
-epsilons = [0.03, 0.04, 0.05]
-NETWORK_FILE = "mnist_relu_3_100.tf"
-IS_MILP_REFINE = 1
-IS_OPTIMIZATION_MARK = 1
+epsilons = [0.03,0.04,0.05]
+epsilons = [0.05]
+NETWORK_FILE = "mnist_relu_6_100.tf"
+IS_MILP_REFINE = 0
+IS_OPTIMIZATION_MARK = 0
 drefine_timeout = 1000
 DREFINEROOT = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine"
 OUTPATH = DREFINEROOT+"/outfiles"
@@ -32,7 +35,9 @@ else:
 
 def write_to_file(image_index, epsilon):
     my_file = open(SCRIPT_OUT, "a")
-    my_file.write(NETWORK_FILE+" , "+str(epsilon)+" , "+APPROACH+" , "+str(image_index)+"\n")
+    now = datetime.now()
+    time = now.strftime("%H:%M")
+    my_file.write(NETWORK_FILE+" , "+str(epsilon)+" , "+APPROACH+" , "+str(image_index)+" , "+time+"\n")
     my_file.close()
 
 for epsilon in epsilons:
