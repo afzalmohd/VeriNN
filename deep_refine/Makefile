@@ -121,8 +121,11 @@ $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp: $(BUILDDIR)/xtensor-
 $(BUILDDIR)/boost_1_78_0/boost/program_options.hpp:
 	cd $(BUILDDIR); wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2; tar -xvf boost_1_78_0.tar.bz2; rm boost_1_78_0.tar.bz2
 
+$(BUILDDIR)/BLAS-3.10.0/Makefile:
+	cd $(BUILDDIR); wget http://www.netlib.org/blas/blas-3.10.0.tgz; tar -xvf blas-3.10.0.tgz; rm blas-3.10.0.tgz
+	cd $(BUILDDIR)/BLAS-3.10.0; make; mv blas_LINUX.a libblas.a; mkdir -p $(BUILDDIR)/BLAS-3.10.0/lib; mv *.a $(BUILDDIR)/BLAS-3.10.0/lib
 
 
-xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp
+xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp $(BUILDDIR)/BLAS-3.10.0/Makefile
 
 test: release runtest

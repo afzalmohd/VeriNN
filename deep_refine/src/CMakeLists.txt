@@ -41,7 +41,7 @@ endif(GUROBI_FOUND)
 #find_package(boost REQUIRED CONFIG)
 # include_directories()
 include_directories(${GUROBI_INCLUDE_DIRS})
-include_directories(${xtl_INCLUDE_DIRS})
+#include_directories(${xtl_INCLUDE_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}/../build/xt-build/include")
 include_directories("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0")
 
@@ -82,7 +82,8 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 # ENDIF(Z3_DEBUG)
 
 LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
-LINK_LIBRARIES("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0/stage/lib")
+LINK_DIRECTORIES("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0/stage/lib")
+LINK_DIRECTORIES("#{CMAKE_SOURCE_DIR}/../build/BLAS-3.10.0/lib")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
