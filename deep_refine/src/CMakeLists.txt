@@ -85,6 +85,7 @@ LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
 LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/boost_1_78_0/installed/lib")
 LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/OpenBLAS-0.3.9/installed/lib")
 LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/lapack-release/installed/lib")
+LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/CBLAS/lib")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
@@ -98,5 +99,7 @@ SET(xtensor_libs blas)
 SET(boost_lib boost_program_options)
 SET(pthread_lib pthread)
 SET(gurobi_lib gurobi_c++ gurobi91)
+SET(cblas_lib cblas)
+SET(gfortran_lib gfortran)
 
-target_link_libraries (${DREFINE} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib})
+target_link_libraries (${DREFINE} ${cblas_lib} ${xtensor_libs} ${boost_lib} ${pthread_lib} ${gurobi_lib} ${gfortran_lib})
