@@ -13,7 +13,7 @@ project(${DREFINE})
 
 # SET (LLVM_DEBUG FALSE CACHE BOOL "Use Locally compiled and debug enabled LLVM")
 SET (Z3_DEBUG FALSE CACHE BOOL "Link debug verion of Z3")
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+SET (CMAKE_VERBOSE_MAKEFILE ON)
 
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message("debug mode")
@@ -43,7 +43,7 @@ endif(GUROBI_FOUND)
 include_directories(${GUROBI_INCLUDE_DIRS})
 #include_directories(${xtl_INCLUDE_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}/../build/xt-build/include")
-include_directories("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0")
+include_directories("${CMAKE_SOURCE_DIR}/../build/boost_1_78_0/installed/include")
 
 message(STATUS "Found XTENSOR ${xtensor_FOUND}")
 message(STATUS "Found XTL ${XTENSOR_PACKAGE_VERSION}")
@@ -82,8 +82,9 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 # ENDIF(Z3_DEBUG)
 
 LINK_DIRECTORIES("${GUROBI_LIBRARY_PATH}")
-LINK_DIRECTORIES("#{CMAKE_SOURCE_DIR}/../build/boost_1_78_0/stage/lib")
-LINK_DIRECTORIES("#{CMAKE_SOURCE_DIR}/../build/BLAS-3.10.0/lib")
+LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/boost_1_78_0/installed/lib")
+LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/OpenBLAS-0.3.9/installed/lib")
+LINK_DIRECTORIES("${CMAKE_SOURCE_DIR}/../build/lapack-release/installed/lib")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 

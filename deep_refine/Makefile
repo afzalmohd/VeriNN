@@ -120,12 +120,15 @@ $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp: $(BUILDDIR)/xtensor-
 
 $(BUILDDIR)/boost_1_78_0/boost/program_options.hpp:
 	cd $(BUILDDIR); wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2; tar -xvf boost_1_78_0.tar.bz2; rm boost_1_78_0.tar.bz2
+	cd $(BUILDDIR)/boost_1_78_0; ./bootstrap.sh --prefix=$(BUILDDIR)/boost_1_78_0/installed --with-libraries=program_options,timer,chrono,thread; mkdir -p $(BUILDDIR)/boost_1_78_0/installed; ./b2 cxxflags=-fPIC link=static install
 
-$(BUILDDIR)/BLAS-3.10.0/Makefile:
-	cd $(BUILDDIR); wget http://www.netlib.org/blas/blas-3.10.0.tgz; tar -xvf blas-3.10.0.tgz; rm blas-3.10.0.tgz
-	cd $(BUILDDIR)/BLAS-3.10.0; make; mv blas_LINUX.a libblas.a; mkdir -p $(BUILDDIR)/BLAS-3.10.0/lib; mv *.a $(BUILDDIR)/BLAS-3.10.0/lib
+$(BUILDDIR)/lapack-release/installed/lib/libblas.a:
+	cd $(BUILDDIR); git clone -b lapack-3.10.0 https://github.com/Reference-LAPACK/lapack-release.git
+	mkdir -p $(BUILDDIR)/lapack-release/build
+	mkdir -p $(BUILDDIR)/lapack-release/installed
+	cd $(BUILDDIR)/lapack-release/build; cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/lapack-release/installed; cmake --build . -j --target install
 
 
-xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp $(BUILDDIR)/BLAS-3.10.0/Makefile
+xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp $(BUILDDIR)/lapack-release/installed/lib/libblas.a
 
 test: release runtest
