@@ -126,7 +126,7 @@ $(BUILDDIR)/lapack-release/installed/lib/libblas.a:
 	cd $(BUILDDIR); git clone -b lapack-3.10.0 https://github.com/Reference-LAPACK/lapack-release.git
 	mkdir -p $(BUILDDIR)/lapack-release/build
 	mkdir -p $(BUILDDIR)/lapack-release/installed
-	cd $(BUILDDIR)/lapack-release/build; cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/lapack-release/installed ..; cmake --build . -j --target install
+	cd $(BUILDDIR)/lapack-release/build; cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/lapack-release/installed -DCBLAS=ON ..; cmake --build . -j --target install
 
 
 xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp $(BUILDDIR)/lapack-release/installed/lib/libblas.a
