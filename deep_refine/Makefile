@@ -26,7 +26,7 @@ debug :  $(BUILDDIR)/buildd/Makefile
 	ln -s $(BUILDDIR)/buildd/$(DREFINE) $(DREFINE)
 
 
-$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a xt_build $(BUILDDIR)/boost_1_78_0/boost/program_options.hpp
+$(BUILDDIR)/buildr/Makefile: $(BUILDDIR)/gurobi912/linux64/src/build/libgurobi_c++.a xt_build
 	mkdir -p $(BUILDDIR)/buildr
 	cd $(BUILDDIR)/buildr; cmake -DCMAKE_BUILD_TYPE=Release -DDREFINE=$(DREFINE) $(SRCDIR) 
 
@@ -118,17 +118,17 @@ $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp: $(BUILDDIR)/xtensor-
 	cd $(BUILDDIR)/xtensor-blas;cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/xt-build
 	cd $(BUILDDIR)/xtensor-blas; make install
 
-$(BUILDDIR)/boost_1_78_0/boost/program_options.hpp:
-	cd $(BUILDDIR); wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2; tar -xvf boost_1_78_0.tar.bz2; rm boost_1_78_0.tar.bz2
-	cd $(BUILDDIR)/boost_1_78_0; ./bootstrap.sh --prefix=$(BUILDDIR)/boost_1_78_0/installed --with-libraries=program_options,timer,chrono,thread; mkdir -p $(BUILDDIR)/boost_1_78_0/installed; ./b2 cxxflags=-fPIC link=static install
+# $(BUILDDIR)/boost_1_78_0/boost/program_options.hpp:
+# 	cd $(BUILDDIR); wget https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.bz2; tar -xvf boost_1_78_0.tar.bz2; rm boost_1_78_0.tar.bz2
+# 	cd $(BUILDDIR)/boost_1_78_0; ./bootstrap.sh --prefix=$(BUILDDIR)/boost_1_78_0/installed --with-libraries=program_options,timer,chrono,thread; mkdir -p $(BUILDDIR)/boost_1_78_0/installed; ./b2 cxxflags=-fPIC link=static install
 
-$(BUILDDIR)/lapack-release/installed/lib/libblas.a:
-	cd $(BUILDDIR); git clone -b lapack-3.10.0 https://github.com/Reference-LAPACK/lapack-release.git
-	mkdir -p $(BUILDDIR)/lapack-release/build
-	mkdir -p $(BUILDDIR)/lapack-release/installed
-	cd $(BUILDDIR)/lapack-release/build; cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/lapack-release/installed -DCBLAS=ON ..; cmake --build . -j --target install
+# $(BUILDDIR)/lapack-release/installed/lib/libblas.a:
+# 	cd $(BUILDDIR); git clone -b lapack-3.10.0 https://github.com/Reference-LAPACK/lapack-release.git
+# 	mkdir -p $(BUILDDIR)/lapack-release/build
+# 	mkdir -p $(BUILDDIR)/lapack-release/installed
+# 	cd $(BUILDDIR)/lapack-release/build; cmake -DCMAKE_INSTALL_PREFIX=$(BUILDDIR)/lapack-release/installed -DCBLAS=ON ..; cmake --build . -j --target install
 
 
-xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp $(BUILDDIR)/lapack-release/installed/lib/libblas.a
+xt_build: $(BUILDDIR)/xt-build/include/xtl/xtl_config.hpp $(BUILDDIR)/xt-build/include/xtensor/xtensor_config.hpp $(BUILDDIR)/xt-build/include/xtensor-blas/xblas_config.hpp
 
 test: release runtest

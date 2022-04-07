@@ -11,4 +11,5 @@ void write_to_file(std::string& file_path, std::string& s);
 void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
 void print_verified_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
 void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
+bool is_real_ce_mnist(Network_t* net);
 #endif

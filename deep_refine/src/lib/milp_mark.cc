@@ -2,6 +2,7 @@
 #include "milp_refine.hh"
 #include "pullback.hh"
 #include "../../deeppoly/optimizer.hh"
+#include "../../deeppoly/deeppoly_configuration.hh"
 
 
 bool run_milp_mark_with_milp_refine(Network_t* net){
@@ -168,7 +169,7 @@ bool is_sat_val_ce(Network_t* net){
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
     if(net->actual_label != net->pred_label){
-        std::cout<<"Found counter example!!"<<std::endl;
+        std::cout<<"Found counter assignment!!"<<std::endl;
         return true;
     }
     return false;

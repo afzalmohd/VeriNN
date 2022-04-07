@@ -5,7 +5,7 @@ namespace Configuration_deeppoly{
     po::options_description desc("Options");
     po::variables_map vm;
     std::string default_root_path = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine";
-    std::string default_net_path = default_root_path+"/benchmarks/networks/mnist_relu_3_50.tf";
+    std::string default_net_path = default_root_path+"/benchmarks/networks/tf/mnist_relu_3_50.tf";
     std::string default_dataset_path = default_root_path+"/benchmarks/dataset/mnist/mnist_test.csv";
     std::string default_result_file = default_root_path+"/outfiles/result.txt";
     std::string default_dataset = "MNIST";

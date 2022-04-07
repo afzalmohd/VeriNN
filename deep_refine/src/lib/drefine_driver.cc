@@ -92,7 +92,7 @@ void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chro
     deeppoly_parse_input_image_string(net, image_str);
     net->pred_label = execute_network(net);
     if(net->actual_label != net->pred_label){
-        std::string str = "Image,"+std::to_string(image_index)+", (actual pred_label),("+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+")";
+        std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
         return;
@@ -105,7 +105,7 @@ void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chro
     if(is_verified){
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-        std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,time,"+std::to_string(duration.count());
+        std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
     }
@@ -152,12 +152,23 @@ std::string get_image_str(std::string& image_path, size_t image_index){
 
 void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
     bool is_ce, is_verified = false;
-    size_t loop_counter = 0;
+    size_t loop_counter = 1;
     size_t upper_iter_limit = PULL_BACK_WITH_MILP_LIMIT;
     while (true){
         is_ce = pull_back_full(net);
         if(is_ce){
-            print_failed_string(net, image_index, loop_counter, start_time);
+            bool is_real_ce = true;
+            if(Configuration_deeppoly::dataset == "MNIST"){
+                is_real_ce = is_real_ce_mnist(net);
+            }
+            if(is_real_ce){
+                std::cout<<"Found counter example!!"<<std::endl;
+                print_failed_string(net, image_index, loop_counter, start_time);
+                is_ce = true;
+            }
+            else{
+                print_unknown_string(net, image_index, loop_counter, start_time);
+            }
             break;
         }
         else{
@@ -179,7 +190,18 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
     bool is_ce = pull_back_full(net);
     size_t counter = 1;
     if(is_ce){
-        print_failed_string(net, image_index, counter, start_time);
+        bool is_real_ce = true;
+        if(Configuration_deeppoly::dataset == "MNIST"){
+            is_real_ce = is_real_ce_mnist(net);
+        }
+        if(is_real_ce){
+            std::cout<<"Found counter example!!"<<std::endl;
+            print_failed_string(net, image_index, counter, start_time);
+            is_ce = true;
+        }
+        else{
+            print_unknown_string(net, image_index, counter, start_time);
+        }
     }
     else{
         std::vector<std::vector<Neuron_t*>> marked_vec;
@@ -198,7 +220,18 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
             else{
                 is_ce = pull_back_full(net);
                 if(is_ce){
-                    print_failed_string(net, image_index, counter, start_time);
+                    bool is_real_ce = true;
+                    if(Configuration_deeppoly::dataset == "MNIST"){
+                        is_real_ce = is_real_ce_mnist(net);
+                    }
+                    if(is_real_ce){
+                        std::cout<<"Found counter example!!"<<std::endl;
+                        print_failed_string(net, image_index, counter, start_time);
+                        is_ce = true;
+                    }
+                    else{
+                        print_unknown_string(net, image_index, counter, start_time);
+                    }
                     break;
                 }
                 else{
@@ -221,23 +254,38 @@ void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chr
     net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
     size_t loop_counter = 0;
+    bool is_bound_exceeded = true;
     while(loop_counter < loop_upper_bound){
         bool is_ce = run_milp_mark_with_milp_refine(net);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
-            print_failed_string(net, image_index, loop_counter, start_time);
-            return;
+            bool is_real_ce = true;
+            if(Configuration_deeppoly::dataset == "MNIST"){
+               is_real_ce = is_real_ce_mnist(net);
+            }
+            if(is_real_ce){
+                std::cout<<"Found counter example!!"<<std::endl;
+                print_failed_string(net, image_index, loop_counter, start_time);
+            }
+            else{
+                print_unknown_string(net, image_index, loop_counter, start_time);
+            }
+            is_bound_exceeded = false;
+            break;
         }
         else{
             bool is_image_verified = is_image_verified_by_milp(net);
             if(is_image_verified){
                 print_verified_string(net, image_index, loop_counter, start_time);
-                return;
+                is_bound_exceeded = false;
+                break;
             }
         }
         loop_counter++;
     }
-    print_unknown_string(net, image_index, loop_counter, start_time);
+    if(is_bound_exceeded){
+        print_unknown_string(net, image_index, loop_counter, start_time);
+    }
 
 }
 
@@ -258,17 +306,39 @@ void create_ce_and_run_nn(Network_t* net){
     std::cout<<"Pred label: "<<pred_label[0]<<" , "<<net->layer_vec.back()->res<<std::endl;
 }
 
+bool is_real_ce_mnist(Network_t* net){
+    if(Configuration_deeppoly::dataset == "MNIST"){
+        net->input_layer->res = net->input_layer->res * 255;
+        net->input_layer->res = xt::round(net->input_layer->res);
+        net->input_layer->res = net->input_layer->res/255;
+    }
+    net->forward_propgate_network(0, net->input_layer->res);
+    auto pred_label = xt::argmax(net->layer_vec.back()->res);
+    net->pred_label = pred_label[0];
+    if(net->actual_label != net->pred_label){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 void write_to_file(std::string& file_path, std::string& s){
     std::ofstream my_file;
     my_file.open(file_path, std::ios::app);
-    my_file<<s<<std::endl;
-    my_file.close();
+    if(my_file.is_open()){
+        my_file<<s<<std::endl;
+        my_file.close();
+    }
+    else{
+        assert(0 && "result file could not open\n");
+    }
 }
 
 void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",failed,count,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -276,7 +346,7 @@ void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter
 void print_verified_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,count,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -284,7 +354,7 @@ void print_verified_string(Network_t* net, size_t image_index, size_t loop_count
 void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,count,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
