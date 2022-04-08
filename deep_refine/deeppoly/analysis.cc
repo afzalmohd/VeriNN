@@ -625,13 +625,18 @@ bool is_image_verified(Network_t* net){
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             if(!is_greater(net, net->actual_label, i)){
-                if(!verify_by_milp(net, model, var_vector, i, is_first)){
-                    //return false;
-                    is_first = false;
-                    is_verified = false;
+                if(Configuration_deeppoly::tool == "drefine"){
+                    if(!verify_by_milp(net, model, var_vector, i, is_first)){
+                        //return false;
+                        is_first = false;
+                        is_verified = false;
+                    }
+                    else{
+                        net->verified_out_dims.push_back(i);
+                    }
                 }
                 else{
-                    net->verified_out_dims.push_back(i);
+                    return false;
                 }
             }
             else{

@@ -79,23 +79,24 @@ int run_refine_poly(int num_args, char* params[]){
     // }
 
     auto start_time =  std::chrono::high_resolution_clock::now();
-    run_refine_poly_for_one_image(net, Configuration_deeppoly::image_index, start_time);
+    int temp = run_refine_poly_for_one_image(net, Configuration_deeppoly::image_index, start_time);
 
 
     
     return 0;
 }
 
-void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
     std::cout<<"Image index: "<<image_index<<std::endl;
     std::string image_str = get_image_str(Configuration_deeppoly::dataset_path, image_index);
     deeppoly_parse_input_image_string(net, image_str);
     net->pred_label = execute_network(net);
     if(net->actual_label != net->pred_label){
-        std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
+        std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+        std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
-        return;
+        return 0;
     }
     Configuration_deeppoly::is_unmarked_deeppoly = true;
     bool is_verified = run_deeppoly(net);
@@ -105,12 +106,22 @@ void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chro
     if(is_verified){
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-        std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
+        std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+        std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
+        if(Configuration_deeppoly::tool == "deeppoly"){
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+            std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
+            std::cout<<str<<std::endl;
+            write_to_file(Configuration_deeppoly::result_file, str);
+            return 0;
+        }
         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
             run_milp_refine_with_milp_mark(net, image_index, start_time);
         }
@@ -119,14 +130,15 @@ void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chro
         }
         else if(!Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
             std::cout<<"Pull back with milp based refinement not workable"<<std::endl;
-            return;
+            return 0;
         }
         else if(Configuration_deeppoly::is_milp_based_mark && !Configuration_deeppoly::is_milp_based_refine){
             std::cout<<"Optimization marked with path spliting not yet implemented"<<std::endl;
-            return;
+            return 0;
         }
         
     }
+    return 0;
 }
 
 std::string get_image_str(std::string& image_path, size_t image_index){
@@ -338,7 +350,8 @@ void write_to_file(std::string& file_path, std::string& s){
 void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -346,7 +359,8 @@ void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter
 void print_verified_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -354,9 +368,14 @@ void print_verified_string(Network_t* net, size_t image_index, size_t loop_count
 void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string str = "Image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
 
+std::string get_absolute_file_name_from_path(std::string & path){
+    std::string base_net_name = path.substr(path.find_last_of("/")+1);
+    return base_net_name;
+}
 

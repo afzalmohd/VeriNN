@@ -15,7 +15,7 @@
 #define MILP_WITH_MILP_LIMIT 100
 #define PULL_BACK_WITH_MILP_LIMIT 100
 #define PULL_BACK_WITH_PATH_SPLIT 5000
-#define NUM_GUROBI_THREAD 1
+#define NUM_GUROBI_THREAD 2
 
 
 
@@ -33,6 +33,7 @@ namespace Configuration_deeppoly{
     extern std::string default_dataset_path;
     extern double default_epsilon;
     extern std::string default_dataset;
+    extern std::string default_tool;
 
     extern std::string abs_out_file_path;
     extern std::string net_path;
@@ -48,6 +49,7 @@ namespace Configuration_deeppoly{
     extern bool is_milp_based_mark;
     extern std::string result_file;
     extern size_t image_index;
+    extern std::string tool;
 
 }
 

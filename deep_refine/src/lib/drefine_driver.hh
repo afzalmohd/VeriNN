@@ -1,7 +1,7 @@
 #ifndef __DREFINE_DRIVER__
 #define __DREFINE_DRIVER__
 #include<string>
-void run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
+int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
 std::string get_image_str(std::string& image_path, size_t image_index);
 void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
 void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
@@ -12,4 +12,5 @@ void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter
 void print_verified_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
 void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
 bool is_real_ce_mnist(Network_t* net);
+std::string get_absolute_file_name_from_path(std::string & path);
 #endif

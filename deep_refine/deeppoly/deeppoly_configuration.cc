@@ -9,6 +9,7 @@ namespace Configuration_deeppoly{
     std::string default_dataset_path = default_root_path+"/benchmarks/dataset/mnist/mnist_test.csv";
     std::string default_result_file = default_root_path+"/outfiles/result.txt";
     std::string default_dataset = "MNIST";
+    std::string default_tool = "drefine";
     double default_epsilon = 0.03;
     size_t input_dim;
 
@@ -24,6 +25,7 @@ namespace Configuration_deeppoly{
     bool is_milp_based_mark;
     std::string result_file;
     size_t image_index;
+    std::string tool;
 
     int init_options(int num_of_params, char* params[]){
         try{
@@ -40,6 +42,7 @@ namespace Configuration_deeppoly{
             ("is-optimization-mark", po::value<bool>(&is_milp_based_mark)->default_value(true), "Is optimizationan based refinement")
             ("result-file", po::value<std::string>(&result_file)->default_value(default_result_file), "result file")
             ("image-index", po::value<size_t>(&image_index)->default_value(1), "Image index to be verify")
+            ("tool", po::value<std::string>(&tool)->default_value(default_tool), "tool name drefine/deeppoly")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
@@ -67,10 +70,6 @@ namespace Configuration_deeppoly{
             std::cout << desc;
             return 0;
         }
-        
-        if(vm.count("abs-out-file")){
-            std::cout<<"Abstraction output file: "<<vm["abs-out-file"].as<std::string>() << std::endl;
-        }
 
         if(vm.count("network")){
             std::cout<<"Network file: "<<vm["network"].as<std::string>() << std::endl;
@@ -86,6 +85,19 @@ namespace Configuration_deeppoly{
 
         if(vm.count("epsilon")){
             std::cout<<"Epsilon: "<<vm["epsilon"].as<double>() << std::endl;
+        }
+
+        if(vm.count("tool")){
+            std::cout<<"Tool: "<<vm["tool"].as<std::string>()<<std::endl;
+        }
+
+        if(vm.count("is-parallel")){
+            if(vm["is-parallel"].as<bool>()){
+                std::cout<<"Parallization: on" << std::endl;
+            }
+            else{
+                std::cout<<"Parallization: off" << std::endl;
+            }
         }
 
         if(vm.count("is-small-example")){
