@@ -1,5 +1,6 @@
 #include "optimizer.hh"
 #include "helper.hh"
+#include "deeppoly_configuration.hh"
 
 // void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, Expr_t* expr, bool is_minimize){
 //     Layer_t* pred_layer = get_pred_layer(net, layer);
@@ -260,6 +261,7 @@ GRBModel create_env_and_model(){
     env.start();
     GRBModel model = GRBModel(env); 
     model.set(GRB_IntParam_LogToConsole, 0);
+    model.set(GRB_IntParam_Threads,NUM_GUROBI_THREAD);
     return model;
 }
 

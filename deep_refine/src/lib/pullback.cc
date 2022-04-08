@@ -1,4 +1,5 @@
 #include "pullback.hh"
+#include "../../deeppoly/deeppoly_configuration.hh"
 
 void exec_net(Network_t* net, Layer_t* layer){
     std::vector<double> vec;
@@ -153,5 +154,6 @@ GRBModel create_grb_env_and_model(){
     GRBModel model = GRBModel(env); 
     model.set(GRB_IntParam_LogToConsole, 0);
     model.set(GRB_IntParam_OutputFlag, 1);
+    model.set(GRB_IntParam_Threads,NUM_GUROBI_THREAD);
     return model;
 }
