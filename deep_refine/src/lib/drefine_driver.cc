@@ -11,75 +11,17 @@
 #include<iostream>
 #include<chrono>
 
-void testing(Network_t* net){
-    std::vector<double> vec;
-    vec.reserve(net->layer_vec[0]->dims);
-    for(size_t i=0; i<net->layer_vec[0]->dims; i++){
-        vec.push_back(0);
-    }
-    std::vector<size_t> shape = {net->layer_vec[0]->dims};
-    xt::xarray<double> res = xt::adapt(vec, shape);
-    std::cout<<res<<std::endl;
-    net->forward_propgate_network(1, res);
-    auto pred_label = xt::argmax(net->layer_vec.back()->res);
-    std::cout<<"Pred label: "<<pred_label[0]<<" , "<<net->layer_vec.back()->res<<std::endl;
-    std::vector<GRBVar> var_vector;
-    var_vector.reserve(net->input_layer->dims);
-    GRBModel model = create_grb_env_and_model();
-    for(Neuron_t* nt : net->input_layer->neurons){
-        std::string var_str = "x"+std::to_string(nt->neuron_index);
-        GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
-        var_vector.push_back(x);
-    }
-
-    for(size_t i=0; i<net->layer_vec[0]->dims; i++){
-        Neuron_t* nt = net->layer_vec[0]->neurons[i];
-        Expr_t* expr = nt->uexpr;
-        GRBLinExpr grb_expr;
-        grb_expr.addTerms(&expr->coeff_sup[0], &var_vector[0], var_vector.size());
-        grb_expr += expr->cst_sup;
-        model.addConstr(grb_expr==0);
-    }
-
-    model.optimize();
-    int status = model.get(GRB_IntAttr_Status);
-    if(status == GRB_OPTIMAL){
-        std::cout<<"Found counter example!!"<<std::endl;
-        std::vector<double> vec;
-        xt::xarray<double> res;
-        for(size_t i=0; i< net->input_dim; i++){
-            double val = var_vector[i].get(GRB_DoubleAttr_X);
-            vec.push_back(val);
-        }
-        std::vector<size_t> shape = {net->input_dim};
-        res = xt::adapt(vec, shape);
-        net->forward_propgate_network(0, res);
-        auto pred_label = xt::argmax(net->layer_vec.back()->res);
-        std::cout<<res<<std::endl;
-        std::cout<<"Pred label: "<<pred_label[0]<<" , "<<net->layer_vec.back()->res<<std::endl;
-    }
-    else{
-        std::cout<<"Not found!!"<<status<<std::endl;
-    }
-}
-
 int run_refine_poly(int num_args, char* params[]){
     int is_help = deeppoly_set_params(num_args, params);
-    if(is_help){
+    if(is_help || (!is_valid_dataset())){
         return 1;
     }
-    //size_t num_images = NUM_TEST_IMAGES;
+
     Network_t* net = deeppoly_initialize_network();
-    // for(size_t i = 1; i<num_images+1; i++){
-    //     auto start_time =  std::chrono::high_resolution_clock::now();
-    //     if( i > 1){
-    //         break;
-    //     }
-    //     run_refine_poly_for_one_image(net, i, start_time);
-    // }
+    
 
     auto start_time =  std::chrono::high_resolution_clock::now();
-    int temp = run_refine_poly_for_one_image(net, Configuration_deeppoly::image_index, start_time);
+    run_refine_poly_for_one_image(net, Configuration_deeppoly::image_index, start_time);
 
 
     
@@ -377,5 +319,122 @@ void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counte
 std::string get_absolute_file_name_from_path(std::string & path){
     std::string base_net_name = path.substr(path.find_last_of("/")+1);
     return base_net_name;
+}
+
+bool is_valid_dataset(){
+    std::vector<std::string> dataset_vec = Configuration_deeppoly::dataset_vec;
+    bool is_valid_dataset = false;
+    for(auto& dt:dataset_vec){
+        if(Configuration_deeppoly::dataset == dt){
+            is_valid_dataset = true;
+            break;
+        }
+    }
+    if(!is_valid_dataset){
+        std::string valid_dts = dataset_vec[0];
+        for(size_t i=1; i<dataset_vec.size(); i++){
+            valid_dts += ","+dataset_vec[i];
+        }
+        std::cerr<<"terminated due to invalid dataset, valid datasets are: "<<valid_dts<<std::endl;
+    }
+    return is_valid_dataset;
+}
+
+void set_stds_means(Network_t* net){
+    if(Configuration_deeppoly::dataset == "MNIST"){
+        net->means.push_back(0);
+        net->stds.push_back(0);
+    }
+    else if(Configuration_deeppoly::dataset == "CIFAR10"){
+        net->means.push_back(0.4914);
+        net->means.push_back(0.4822);
+        net->means.push_back(0.4465);
+
+        net->stds.push_back(0.2023);
+        net->stds.push_back(0.1994);
+        net->stds.push_back(0.2010);
+    }
+    else if(Configuration_deeppoly::dataset == "ACASXU"){
+        net->means.push_back(19791.091);
+        net->means.push_back(0.0);
+        net->means.push_back(0.0);
+        net->means.push_back(650.0);
+        net->means.push_back(600.0);
+
+        net->stds.push_back(60261.0);
+        net->stds.push_back(6.28318530718);
+        net->stds.push_back(6.28318530718);
+        net->stds.push_back(1100.0);
+        net->stds.push_back(1200.0);
+
+    }
+}
+
+void normalize_input_image(Network_t* net){
+    xt::xarray<double> im = net->input_layer->res;
+    std::string dataset = Configuration_deeppoly::dataset;
+    std::vector<double> means = net->means;
+    std::vector<double> stds = net->stds;
+    if(dataset == "MNIST"){
+        net->input_layer->res = (im - net->means[0])/net->stds[0];
+    }
+    else if(dataset == "CIFAR10"){
+        size_t count = 0;
+        xt::xarray<double> temp = xt::zeros<double>({Configuration_deeppoly::input_dim});
+        for(size_t i=0; i<1024; i++){
+            temp[count] = (im[count] - means[0])/stds[0];
+            count += 1;
+            temp[count] = (im[count] - means[1])/stds[1];
+            count += 1;
+            temp[count] = (im[count] - means[2])/stds[2];
+            count += 1;
+        }
+
+        count = 0;
+        for(size_t i=0; i<1024; i++){
+            net->input_layer->res[i] = temp[count];
+            count += 1;
+            net->input_layer->res[i+1024] = temp[count];
+            count += 1;
+            net->input_layer->res[i+2048] = temp[count];
+            count += 1;
+        }
+    }
+    else if(dataset == "ACASXU"){
+        for(size_t i=0; i<means.size(); i++){
+            if(stds[i] != 0){
+                net->input_layer->res[i] = (im[i] - means[i])/stds[i];
+            }
+        }
+    }
+    else{
+        assert(0 && "Invalid dataset in normalization of image");
+    }
+}
+
+void denormalize_image(Network_t* net){
+    xt::xarray<double> im = net->input_layer->res;
+    std::string dataset = Configuration_deeppoly::dataset;
+    std::vector<double> means = net->means;
+    std::vector<double> stds = net->stds;
+    if(dataset == "MNIST"){
+        net->input_layer->res = (im*net->stds[0]) + net->means[0];
+    }
+    else if(dataset == "CIFAR10"){
+        size_t count = 0;
+        for(size_t i=0; i<1024; i++){
+            net->input_layer->res[i] = (im[i]*stds[0]) + means[0];
+            net->input_layer->res[i+1024] = (im[i+1024]*stds[1]) + means[1];
+            net->input_layer->res[i+2048] = (im[i+2048]*stds[2]) + means[2];
+        } 
+    }
+    else if(dataset == "ACASXU"){
+        for(size_t i=0; i<means.size(); i++){
+            net->input_layer->res[i] = (im[i]*stds[i]) + means[i];
+        }
+    }
+    else{
+        assert(0 && "Invalid dataset in denormalization of image");
+    }
 }
 

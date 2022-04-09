@@ -129,6 +129,8 @@ class Network_t{
         size_t actual_label;
 		size_t pred_label;
 		std::vector<size_t> verified_out_dims;
+		std::vector<double> stds;
+		std::vector<double> means;
 		size_t counter_class_dim;
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);

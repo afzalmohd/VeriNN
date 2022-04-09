@@ -13,4 +13,8 @@ void print_verified_string(Network_t* net, size_t image_index, size_t loop_count
 void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time);
 bool is_real_ce_mnist(Network_t* net);
 std::string get_absolute_file_name_from_path(std::string & path);
+bool is_valid_dataset();
+void set_stds_means(Network_t* net);
+void normalize_input_image(Network_t* net);
+void denormalize_image(Network_t* net);
 #endif

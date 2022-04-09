@@ -34,6 +34,7 @@ namespace Configuration_deeppoly{
     extern double default_epsilon;
     extern std::string default_dataset;
     extern std::string default_tool;
+    extern std::vector<std::string> dataset_vec;
 
     extern std::string abs_out_file_path;
     extern std::string net_path;

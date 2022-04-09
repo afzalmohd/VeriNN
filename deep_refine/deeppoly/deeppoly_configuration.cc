@@ -11,7 +11,8 @@ namespace Configuration_deeppoly{
     std::string default_dataset = "MNIST";
     std::string default_tool = "drefine";
     double default_epsilon = 0.03;
-    size_t input_dim;
+    std::vector<std::string> dataset_vec = {"MNIST","CIFAR10","ACASXU"};
+    size_t input_dim = 784;
 
     std::string net_path;
     std::string dataset_path;
@@ -48,12 +49,20 @@ namespace Configuration_deeppoly{
             po::notify(vm);
             show_options(vm);
 
-            if(dataset == "MNIST"){
-                input_dim = 784;
-            }
             if(is_small_ex){
                 input_dim = 2;
             }
+
+            if(dataset == "MNIST"){
+                input_dim = 784;
+            }
+            else if(dataset == "CIFAR10"){
+                input_dim = 3072;
+            }
+            else if(dataset == "ACASXU"){
+                input_dim = 5;
+            }
+
 
 
         }
