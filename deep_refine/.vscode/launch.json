@@ -11,16 +11,23 @@
             "program": "${workspaceFolder}/my_drefine",
             "args": [
                 "--network",
-                "${workspaceFolder}/benchmarks/networks/tf/mnist_relu_3_50.tf",
+                "${workspaceFolder}/benchmarks/networks/cifar10/cifar_relu_4_100.tf",
                 "--dataset-file",
-                "${workspaceFolder}/benchmarks/dataset/mnist/mnist_test.csv"
+                "${workspaceFolder}/benchmarks/dataset/cifar10/cifar10_test.csv",
+                "--dataset",
+                "CIFAR10",
+                "--tool",
+                "deeppoly",
+                "--image-index",
+                "14"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [
                 {
                     "name":  "LD_LIBRARY_PATH",
-                    "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib:${workspaceFolder}/build/lapack-release/installed/lib:${workspaceFolder}/build/boost_1_78_0/installed/lib"
+                    // "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib:${workspaceFolder}/build/lapack-release/installed/lib:${workspaceFolder}/build/boost_1_78_0/installed/lib",
+                    "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib"
                 }
             ],
             "externalConsole": false,

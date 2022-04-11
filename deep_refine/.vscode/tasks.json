@@ -13,21 +13,21 @@
                 "${workspaceFolder}/my_drefine",
                 "-L${workspaceFolder}/build/gurobi912/linux64/lib",
                 "-L${workspaceFolder}/build/xt-build/lib",
-                "-L${workspaceFolder}/build/lapack-release/installed/lib",
-                "-L${workspaceFolder}/build/boost_1_78_0/installed/lib",
+                // "-L${workspaceFolder}/build/lapack-release/installed/lib",
+                // "-L${workspaceFolder}/build/boost_1_78_0/installed/lib",
                 "-I${workspaceFolder}/build/gurobi912/linux64/include",
                 "-I${workspaceFolder}/build/xt-build/include",
-                "-I${workspaceFolder}/build/lapack-release/installed/include",
-                "-I${workspaceFolder}/build/boost_1_78_0/installed/include",
+                // "-I${workspaceFolder}/build/lapack-release/installed/include",
+                // "-I${workspaceFolder}/build/boost_1_78_0/installed/include",
                 "-I${workspaceFolder}/src",
                 "-I${workspaceFolder}/deeppoly",
-                "-lcblas",
+                // "-lcblas",
                 "-lblas",
                 "-lboost_program_options",
                 "-lpthread",
                 "-lgurobi_c++",
                 "-lgurobi91",
-                "-lgfortran"
+                // "-lgfortran"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

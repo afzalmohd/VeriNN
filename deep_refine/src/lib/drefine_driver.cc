@@ -18,6 +18,7 @@ int run_refine_poly(int num_args, char* params[]){
     }
 
     Network_t* net = deeppoly_initialize_network();
+    set_stds_means(net);
     
 
     auto start_time =  std::chrono::high_resolution_clock::now();
@@ -32,7 +33,16 @@ int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chron
     std::cout<<"Image index: "<<image_index<<std::endl;
     std::string image_str = get_image_str(Configuration_deeppoly::dataset_path, image_index);
     deeppoly_parse_input_image_string(net, image_str);
+    normalize_input_image(net);
+    // for(size_t i=0; i<net->input_dim; i++){
+    //     std::cout<<net->input_layer->res[i]<<" ";
+    // }
+    // std::cout<<std::endl;
     net->pred_label = execute_network(net);
+    for(size_t i=0; i<net->output_dim; i++){
+        std::cout<<net->layer_vec.back()->res[i]<<" ";
+    }
+    std::cout<<std::endl;
     if(net->actual_label != net->pred_label){
         std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
         std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
@@ -111,10 +121,7 @@ void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::
     while (true){
         is_ce = pull_back_full(net);
         if(is_ce){
-            bool is_real_ce = true;
-            if(Configuration_deeppoly::dataset == "MNIST"){
-                is_real_ce = is_real_ce_mnist(net);
-            }
+            bool is_real_ce = is_real_ce_mnist_cifar10(net);
             if(is_real_ce){
                 std::cout<<"Found counter example!!"<<std::endl;
                 print_failed_string(net, image_index, loop_counter, start_time);
@@ -144,10 +151,7 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
     bool is_ce = pull_back_full(net);
     size_t counter = 1;
     if(is_ce){
-        bool is_real_ce = true;
-        if(Configuration_deeppoly::dataset == "MNIST"){
-            is_real_ce = is_real_ce_mnist(net);
-        }
+        bool is_real_ce = is_real_ce_mnist_cifar10(net);
         if(is_real_ce){
             std::cout<<"Found counter example!!"<<std::endl;
             print_failed_string(net, image_index, counter, start_time);
@@ -174,10 +178,7 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
             else{
                 is_ce = pull_back_full(net);
                 if(is_ce){
-                    bool is_real_ce = true;
-                    if(Configuration_deeppoly::dataset == "MNIST"){
-                        is_real_ce = is_real_ce_mnist(net);
-                    }
+                    bool is_real_ce = is_real_ce_mnist_cifar10(net);
                     if(is_real_ce){
                         std::cout<<"Found counter example!!"<<std::endl;
                         print_failed_string(net, image_index, counter, start_time);
@@ -213,10 +214,7 @@ void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chr
         bool is_ce = run_milp_mark_with_milp_refine(net);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
-            bool is_real_ce = true;
-            if(Configuration_deeppoly::dataset == "MNIST"){
-               is_real_ce = is_real_ce_mnist(net);
-            }
+            bool is_real_ce = is_real_ce_mnist_cifar10(net);
             if(is_real_ce){
                 std::cout<<"Found counter example!!"<<std::endl;
                 print_failed_string(net, image_index, loop_counter, start_time);
@@ -260,12 +258,14 @@ void create_ce_and_run_nn(Network_t* net){
     std::cout<<"Pred label: "<<pred_label[0]<<" , "<<net->layer_vec.back()->res<<std::endl;
 }
 
-bool is_real_ce_mnist(Network_t* net){
-    if(Configuration_deeppoly::dataset == "MNIST"){
+bool is_real_ce_mnist_cifar10(Network_t* net){
+    denormalize_image(net);
+    if(Configuration_deeppoly::dataset == "MNIST" || Configuration_deeppoly::dataset == "CIFAR10"){
         net->input_layer->res = net->input_layer->res * 255;
         net->input_layer->res = xt::round(net->input_layer->res);
         net->input_layer->res = net->input_layer->res/255;
     }
+    normalize_image(net);
     net->forward_propgate_network(0, net->input_layer->res);
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
@@ -343,7 +343,7 @@ bool is_valid_dataset(){
 void set_stds_means(Network_t* net){
     if(Configuration_deeppoly::dataset == "MNIST"){
         net->means.push_back(0);
-        net->stds.push_back(0);
+        net->stds.push_back(1);
     }
     else if(Configuration_deeppoly::dataset == "CIFAR10"){
         net->means.push_back(0.4914);
@@ -367,6 +367,9 @@ void set_stds_means(Network_t* net){
         net->stds.push_back(1100.0);
         net->stds.push_back(1200.0);
 
+    }
+    else{
+        assert(0 && "Invalid dataset in normalize image");
     }
 }
 
@@ -412,6 +415,33 @@ void normalize_input_image(Network_t* net){
     }
 }
 
+void normalize_image(Network_t* net){
+    xt::xarray<double> im = net->input_layer->res;
+    std::string dataset = Configuration_deeppoly::dataset;
+    std::vector<double> means = net->means;
+    std::vector<double> stds = net->stds;
+    if(dataset == "MNIST"){
+        net->input_layer->res = (im - net->means[0])/net->stds[0];
+    }
+    else if(dataset == "CIFAR10"){
+        for(size_t i=0; i<1024; i++){
+            net->input_layer->res[i] = (im[i] - means[0])/stds[0];
+            net->input_layer->res[i+1024] = (im[i+1024] - means[1])/stds[1];
+            net->input_layer->res[i+2048] = (im[i+2048] - means[2])/stds[2];
+        }
+    }
+    else if(dataset == "ACASXU"){
+        for(size_t i=0; i<means.size(); i++){
+            if(stds[i] != 0){
+                net->input_layer->res[i] = (im[i] - means[i])/stds[i];
+            }
+        }
+    }
+    else{
+        assert(0 && "Invalid dataset in normalization of image");
+    }
+}
+
 void denormalize_image(Network_t* net){
     xt::xarray<double> im = net->input_layer->res;
     std::string dataset = Configuration_deeppoly::dataset;
@@ -421,7 +451,6 @@ void denormalize_image(Network_t* net){
         net->input_layer->res = (im*net->stds[0]) + net->means[0];
     }
     else if(dataset == "CIFAR10"){
-        size_t count = 0;
         for(size_t i=0; i<1024; i++){
             net->input_layer->res[i] = (im[i]*stds[0]) + means[0];
             net->input_layer->res[i+1024] = (im[i+1024]*stds[1]) + means[1];
