@@ -1,7 +1,8 @@
 #ifndef __DREFINE_DRIVER__
 #define __DREFINE_DRIVER__
 #include<string>
-int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
+bool is_actual_and_pred_label_same(Network_t* net, size_t image_index);
+int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time);
 std::string get_image_str(std::string& image_path, size_t image_index);
 void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
 void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time);
@@ -18,4 +19,5 @@ void set_stds_means(Network_t* net);
 void normalize_input_image(Network_t* net); //use for the first time
 void normalize_image(Network_t* net); //use in between of the execution of the tool
 void denormalize_image(Network_t* net);
+bool run_drefine_vnnlib(VerinnLib_t* verinn_lib, Network_t* net);
 #endif

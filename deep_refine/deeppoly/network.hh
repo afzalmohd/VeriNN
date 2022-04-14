@@ -31,6 +31,16 @@ class Float_number{
 // 		//bool is_same_generator(Constr_t* constr);
 // };
 
+class VerinnLib_t{
+	public:
+		size_t input_dims;
+		size_t output_dims;
+		std::vector<double> inp_lb;
+		std::vector<double> inp_ub;
+		std::vector<double> out_lb;
+		std::vector<double> out_ub;
+};
+
 class Sparse_neuron_t{
 	public:
 		size_t neuron_index;

@@ -27,6 +27,7 @@ namespace Configuration_deeppoly{
     std::string result_file;
     size_t image_index;
     std::string tool;
+    std::string vnnlib_prp_file_path;
 
     int init_options(int num_of_params, char* params[]){
         try{
@@ -44,6 +45,7 @@ namespace Configuration_deeppoly{
             ("result-file", po::value<std::string>(&result_file)->default_value(default_result_file), "result file")
             ("image-index", po::value<size_t>(&image_index)->default_value(1), "Image index to be verify")
             ("tool", po::value<std::string>(&tool)->default_value(default_tool), "tool name drefine/deeppoly")
+            ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);

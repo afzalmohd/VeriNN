@@ -10,5 +10,6 @@ void deeppoly_reset_network(Network_t* net);
 size_t execute_network(Network_t* net);
 bool run_deeppoly(Network_t* net);
 void reset_backprop_vals(Network_t* net);
+VerinnLib_t* parse_vnnlib(std::string& file_path);
 
 #endif

@@ -1,6 +1,7 @@
 //#include "../../deeppoly/configuration.hh"
 #include "../../deeppoly/deeppoly_driver.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
+#include "../../deeppoly/helper.hh"
 #include "drefine_driver.hh"
 #include "pullback.hh"
 #include "decision_making.hh"
@@ -17,27 +18,32 @@ int run_refine_poly(int num_args, char* params[]){
         return 1;
     }
 
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        VerinnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
+        Network_t* net = deeppoly_initialize_network();
+        run_drefine_vnnlib(verinn_lib, net);
+        return 1;
+    }
     Network_t* net = deeppoly_initialize_network();
     set_stds_means(net);
-    
 
     auto start_time =  std::chrono::high_resolution_clock::now();
-    run_refine_poly_for_one_image(net, Configuration_deeppoly::image_index, start_time);
+    bool is_same_label = is_actual_and_pred_label_same(net, Configuration_deeppoly::image_index);
+    if(!is_same_label){
+        return 0;
+    }
+    run_refine_poly_for_one_task(net, start_time);
 
 
     
     return 0;
 }
 
-int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     std::cout<<"Image index: "<<image_index<<std::endl;
     std::string image_str = get_image_str(Configuration_deeppoly::dataset_path, image_index);
     deeppoly_parse_input_image_string(net, image_str);
     normalize_input_image(net);
-    // for(size_t i=0; i<net->input_dim; i++){
-    //     std::cout<<net->input_layer->res[i]<<" ";
-    // }
-    // std::cout<<std::endl;
     net->pred_label = execute_network(net);
     for(size_t i=0; i<net->output_dim; i++){
         std::cout<<net->layer_vec.back()->res[i]<<" ";
@@ -48,13 +54,16 @@ int run_refine_poly_for_one_image(Network_t* net, size_t image_index, std::chron
         std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
-        return 0;
+        return false;
     }
+    return true;
+}
+
+int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time){
+    size_t image_index = Configuration_deeppoly::image_index;
     Configuration_deeppoly::is_unmarked_deeppoly = true;
     bool is_verified = run_deeppoly(net);
     Configuration_deeppoly::is_unmarked_deeppoly = false;
-    //testing(net);
-    //return 0;
     if(is_verified){
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
@@ -465,5 +474,11 @@ void denormalize_image(Network_t* net){
     else{
         assert(0 && "Invalid dataset in denormalization of image");
     }
+}
+
+bool run_drefine_vnnlib(VerinnLib_t* verinn_lib, Network_t* net){
+    create_input_property_vnnlib(verinn_lib, net); 
+    
+    return false;
 }
 

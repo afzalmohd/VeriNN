@@ -51,6 +51,7 @@ namespace Configuration_deeppoly{
     extern std::string result_file;
     extern size_t image_index;
     extern std::string tool;
+    extern std::string vnnlib_prp_file_path;
 
 }
 

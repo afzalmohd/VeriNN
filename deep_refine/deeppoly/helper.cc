@@ -149,6 +149,14 @@ double get_neuron_bias(Neuron_t* nt, Layer_t* layer){
     return cst;
 }
 
+void create_input_property_vnnlib(VerinnLib_t* vnnlib, Network_t* net){
+    for(size_t i=0; i<net->input_dim; i++){
+        Neuron_t* nt = net->input_layer->neurons[i];
+        nt->lb = vnnlib->inp_lb[i];
+        nt->ub = vnnlib->inp_ub[i];
+    }
+}
+
 // void create_marked_layer_splitting_constraints(Layer_t* layer){
 //     if(layer->is_marked){
 //         assert(layer->layer_type == "FC" && "Layer is not marked but creating expression as per marked layer\n");
