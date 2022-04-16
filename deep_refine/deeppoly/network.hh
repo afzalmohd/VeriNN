@@ -8,7 +8,7 @@
 #include <xtensor/xsort.hpp>
 #include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xadapt.hpp>
-
+#include "vnnlib.hh"
 class Float_number{
     public:
         double inf;
@@ -31,15 +31,6 @@ class Float_number{
 // 		//bool is_same_generator(Constr_t* constr);
 // };
 
-class VerinnLib_t{
-	public:
-		size_t input_dims;
-		size_t output_dims;
-		std::vector<double> inp_lb;
-		std::vector<double> inp_ub;
-		std::vector<double> out_lb;
-		std::vector<double> out_ub;
-};
 
 class Sparse_neuron_t{
 	public:
@@ -144,6 +135,7 @@ class Network_t{
 		size_t counter_class_dim;
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);
+		VnnLib_t* vnn_lib;
 
 		~Network_t(){
 			for(size_t i=0; i<layer_vec.size(); i++){

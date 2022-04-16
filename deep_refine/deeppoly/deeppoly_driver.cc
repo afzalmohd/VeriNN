@@ -67,7 +67,7 @@ void reset_backprop_vals(Network_t* net){
     }
 }
 
-VerinnLib_t* parse_vnnlib(std::string& file_path){
-    VerinnLib_t* verinn_lib =  parse_vnnlib_file(file_path);
+VnnLib_t* parse_vnnlib(std::string& file_path){
+    VnnLib_t* verinn_lib =  parse_vnnlib_file(file_path);
     return verinn_lib;
 }

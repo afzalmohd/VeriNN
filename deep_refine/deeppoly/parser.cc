@@ -212,8 +212,8 @@ Layer_t* create_input_layer(size_t dim){
 
 
 
-VerinnLib_t* parse_vnnlib_file(std::string& prop_file){
-    VerinnLib_t* verinn_lib  = new VerinnLib_t();
+VnnLib_t* parse_vnnlib_file(std::string& prop_file){
+    VnnLib_t* verinn_lib  = new VnnLib_t();
     std::fstream vnn_file;
     vnn_file.open(prop_file, std::ios::in);
     std::string white_space = "[ \t\r\n\f]*";
@@ -258,14 +258,14 @@ VerinnLib_t* parse_vnnlib_file(std::string& prop_file){
         }
         std::cout<<"Num input vars: "<<num_in_vars<<" , max index input vars: "<<max_index_in_vars<<std::endl;
         std::cout<<"Num out vars: "<<num_out_vars<<" , max index out vars: "<<max_index_out_vars<<std::endl;
-        // std::cout<<"Input bounds: "<<std::endl;
-        // for(size_t i=0; i<inp_lb.size(); i++){
-        //     std::cout<<"lb: "<<inp_lb[i]<<", ub: "<<inp_ub[i]<<std::endl;
-        // }
-        // std::cout<<"Output bounds: "<<std::endl;
-        // for(size_t i=0; i<out_lb.size(); i++){
-        //     std::cout<<"lb: "<<out_lb[i]<<", ub: "<<out_ub[i]<<std::endl;
-        // }
+        std::cout<<"Input bounds: "<<std::endl;
+        for(size_t i=0; i<inp_lb.size(); i++){
+            std::cout<<"lb: "<<inp_lb[i]<<", ub: "<<inp_ub[i]<<std::endl;
+        }
+        std::cout<<"Output bounds: "<<std::endl;
+        for(size_t i=0; i<out_lb.size(); i++){
+            std::cout<<"lb: "<<out_lb[i]<<", ub: "<<out_ub[i]<<std::endl;
+        }
         Configuration_deeppoly::input_dim = num_in_vars;
         verinn_lib->input_dims = num_in_vars;
         verinn_lib->output_dims = num_out_vars;
@@ -273,9 +273,12 @@ VerinnLib_t* parse_vnnlib_file(std::string& prop_file){
         verinn_lib->inp_ub = inp_ub;
         verinn_lib->out_lb = out_lb;
         verinn_lib->out_ub = out_ub;
-
-        return verinn_lib;
     }
+    else{
+        assert(0 && "vnnlib file could not open");
+    }
+
+    return verinn_lib;
 }
 
 void init_bound_vecs(size_t max_inp_index, size_t max_out_index, std::vector<double>& inp_lb, std::vector<double>& inp_ub, std::vector<double>& out_lb, std::vector<double>& out_ub){

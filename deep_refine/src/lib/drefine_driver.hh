@@ -19,5 +19,5 @@ void set_stds_means(Network_t* net);
 void normalize_input_image(Network_t* net); //use for the first time
 void normalize_image(Network_t* net); //use in between of the execution of the tool
 void denormalize_image(Network_t* net);
-bool run_drefine_vnnlib(VerinnLib_t* verinn_lib, Network_t* net);
+bool run_drefine_vnnlib(Network_t* net);
 #endif
