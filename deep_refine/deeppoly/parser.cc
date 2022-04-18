@@ -212,74 +212,75 @@ Layer_t* create_input_layer(size_t dim){
 
 
 
-VnnLib_t* parse_vnnlib_file(std::string& prop_file){
-    VnnLib_t* verinn_lib  = new VnnLib_t();
-    std::fstream vnn_file;
-    vnn_file.open(prop_file, std::ios::in);
-    std::string white_space = "[ \t\r\n\f]*";
-    if(vnn_file.is_open()){
-        std::string tp;
-        size_t max_index_in_vars = 0;
-        size_t max_index_out_vars = 0;
-        size_t num_in_vars = 0;
-        size_t num_out_vars = 0;
-        std::vector<double> inp_lb;
-        std::vector<double> inp_ub;
-        std::vector<double> out_lb;
-        std::vector<double> out_ub;
-        bool is_set_vec_size = false;
-        bool is_constr_visited = false;
-        std::string reg_var_str = ".*declare-const"+white_space+"([a-zA-Z]+)_([0-9]+)"+white_space+"([a-zA-Z]+).*";
-        std::string reg_constr_str = ".*assert.*(<=|>=|<|>)"+white_space+"([a-zA-Z]+)_([0-9]+)"+white_space+"([-]*[0-9]*\.[0-9]*).*";
-        std::regex reg_for_vars(reg_var_str);
-        std::regex reg_for_constr(reg_constr_str);
-        while (getline(vnn_file, tp)){
-            if(tp != ""){
-                std::cmatch m_var;
-                bool is_dec = regex_search(tp.c_str(), m_var, reg_for_vars);
-                if(is_dec){
-                    get_vars(m_var, max_index_in_vars, max_index_out_vars, num_in_vars, num_out_vars);
-                    assert(!is_constr_visited && "Constrains declares before variable declaration in vnnlib property file");
-                }
-                else{
-                    std::cmatch m_constr;
-                    bool is_constr = regex_search(tp.c_str(), m_constr, reg_for_constr);
-                    if(is_constr){
-                        is_constr_visited = true;
-                        if(!is_set_vec_size){
-                            init_bound_vecs(max_index_in_vars, max_index_out_vars, inp_lb, inp_ub, out_lb, out_ub);
-                            is_set_vec_size = true;
-                        }
-                        parse_constraints_vnnlib(m_constr, inp_lb, inp_ub, out_lb, out_ub);
-                    }
-                }
+// VnnLib_t* parse_vnnlib_file(std::string& prop_file){
+//     VnnLib_t* verinn_lib  = new VnnLib_t();
+//     std::fstream vnn_file;
+//     vnn_file.open(prop_file, std::ios::in);
+//     std::string white_space = "[ \t\r\n\f]*";
+//     std::string comparison_str = "()";
+//     if(vnn_file.is_open()){
+//         std::string tp;
+//         size_t max_index_in_vars = 0;
+//         size_t max_index_out_vars = 0;
+//         size_t num_in_vars = 0;
+//         size_t num_out_vars = 0;
+//         std::vector<double> inp_lb;
+//         std::vector<double> inp_ub;
+//         std::vector<double> out_lb;
+//         std::vector<double> out_ub;
+//         bool is_set_vec_size = false;
+//         bool is_constr_visited = false;
+//         std::string reg_var_str = ".*declare-const"+white_space+"([a-zA-Z]+)_([0-9]+)"+white_space+"([a-zA-Z]+).*";
+//         std::string reg_constr_str = ".*assert.*(<=|>=|<|>)"+white_space+"([a-zA-Z]+)_([0-9]+)"+white_space+"([-]*[0-9]*\.[0-9]*).*";
+//         std::regex reg_for_vars(reg_var_str);
+//         std::regex reg_for_constr(reg_constr_str);
+//         while (getline(vnn_file, tp)){
+//             if(tp != ""){
+//                 std::cmatch m_var;
+//                 bool is_dec = regex_search(tp.c_str(), m_var, reg_for_vars);
+//                 if(is_dec){
+//                     get_vars(m_var, max_index_in_vars, max_index_out_vars, num_in_vars, num_out_vars);
+//                     assert(!is_constr_visited && "Constrains declares before variable declaration in vnnlib property file");
+//                 }
+//                 else{
+//                     std::cmatch m_constr;
+//                     bool is_constr = regex_search(tp.c_str(), m_constr, reg_for_constr);
+//                     if(is_constr){
+//                         is_constr_visited = true;
+//                         if(!is_set_vec_size){
+//                             init_bound_vecs(max_index_in_vars, max_index_out_vars, inp_lb, inp_ub, out_lb, out_ub);
+//                             is_set_vec_size = true;
+//                         }
+//                         parse_constraints_vnnlib(m_constr, inp_lb, inp_ub, out_lb, out_ub);
+//                     }
+//                 }
 
-            }
-        }
-        std::cout<<"Num input vars: "<<num_in_vars<<" , max index input vars: "<<max_index_in_vars<<std::endl;
-        std::cout<<"Num out vars: "<<num_out_vars<<" , max index out vars: "<<max_index_out_vars<<std::endl;
-        std::cout<<"Input bounds: "<<std::endl;
-        for(size_t i=0; i<inp_lb.size(); i++){
-            std::cout<<"lb: "<<inp_lb[i]<<", ub: "<<inp_ub[i]<<std::endl;
-        }
-        std::cout<<"Output bounds: "<<std::endl;
-        for(size_t i=0; i<out_lb.size(); i++){
-            std::cout<<"lb: "<<out_lb[i]<<", ub: "<<out_ub[i]<<std::endl;
-        }
-        Configuration_deeppoly::input_dim = num_in_vars;
-        verinn_lib->input_dims = num_in_vars;
-        verinn_lib->output_dims = num_out_vars;
-        verinn_lib->inp_lb = inp_lb;
-        verinn_lib->inp_ub = inp_ub;
-        verinn_lib->out_lb = out_lb;
-        verinn_lib->out_ub = out_ub;
-    }
-    else{
-        assert(0 && "vnnlib file could not open");
-    }
+//             }
+//         }
+//         std::cout<<"Num input vars: "<<num_in_vars<<" , max index input vars: "<<max_index_in_vars<<std::endl;
+//         std::cout<<"Num out vars: "<<num_out_vars<<" , max index out vars: "<<max_index_out_vars<<std::endl;
+//         std::cout<<"Input bounds: "<<std::endl;
+//         for(size_t i=0; i<inp_lb.size(); i++){
+//             std::cout<<"lb: "<<inp_lb[i]<<", ub: "<<inp_ub[i]<<std::endl;
+//         }
+//         std::cout<<"Output bounds: "<<std::endl;
+//         for(size_t i=0; i<out_lb.size(); i++){
+//             std::cout<<"lb: "<<out_lb[i]<<", ub: "<<out_ub[i]<<std::endl;
+//         }
+//         Configuration_deeppoly::input_dim = num_in_vars;
+//         verinn_lib->input_dims = num_in_vars;
+//         verinn_lib->output_dims = num_out_vars;
+//         verinn_lib->inp_lb = inp_lb;
+//         verinn_lib->inp_ub = inp_ub;
+//         verinn_lib->out_lb = out_lb;
+//         verinn_lib->out_ub = out_ub;
+//     }
+//     else{
+//         assert(0 && "vnnlib file could not open");
+//     }
 
-    return verinn_lib;
-}
+//     return verinn_lib;
+// }
 
 void init_bound_vecs(size_t max_inp_index, size_t max_out_index, std::vector<double>& inp_lb, std::vector<double>& inp_ub, std::vector<double>& out_lb, std::vector<double>& out_ub){
     inp_lb.reserve(max_inp_index+1);
@@ -295,26 +296,26 @@ void init_bound_vecs(size_t max_inp_index, size_t max_out_index, std::vector<dou
     
 }
 
-void get_vars(std::cmatch& m_var, size_t& max_index_in_vars, size_t& max_index_out_vars, size_t& num_in_vars, size_t& num_out_vars){
-    std::string var_name = m_var[1].str();
-    if(var_name[0] == 'X'){
-        size_t var_index = std::stoul(m_var[2]);
-        if(max_index_in_vars < var_index){
-            max_index_in_vars = var_index;
-        }
-        num_in_vars += 1;
-    }
-    else if(var_name[0] == 'Y'){
-        size_t var_index = std::stoul(m_var[2]);
-        if(max_index_out_vars < var_index){
-            max_index_out_vars = var_index;
-        }
-        num_out_vars += 1;
-    }
-    else{
-         assert(0 && "Unknown variable in vnnlib property file");
-    } 
-}
+// void get_vars(std::cmatch& m_var, size_t& max_index_in_vars, size_t& max_index_out_vars, size_t& num_in_vars, size_t& num_out_vars){
+//     std::string var_name = m_var[1].str();
+//     if(var_name[0] == 'X'){
+//         size_t var_index = std::stoul(m_var[2]);
+//         if(max_index_in_vars < var_index){
+//             max_index_in_vars = var_index;
+//         }
+//         num_in_vars += 1;
+//     }
+//     else if(var_name[0] == 'Y'){
+//         size_t var_index = std::stoul(m_var[2]);
+//         if(max_index_out_vars < var_index){
+//             max_index_out_vars = var_index;
+//         }
+//         num_out_vars += 1;
+//     }
+//     else{
+//          assert(0 && "Unknown variable in vnnlib property file");
+//     } 
+// }
 
 void parse_constraints_vnnlib(std::cmatch& m_var, std::vector<double>& in_lb, std::vector<double>& in_ub, std::vector<double>& out_lb, std::vector<double>& out_ub){
     

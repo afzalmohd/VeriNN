@@ -153,8 +153,8 @@ void create_input_property_vnnlib(Network_t* net){
     VnnLib_t* vnnlib = net->vnn_lib;
     for(size_t i=0; i<net->input_dim; i++){
         Neuron_t* nt = net->input_layer->neurons[i];
-        nt->lb = vnnlib->inp_lb[i];
-        nt->ub = vnnlib->inp_ub[i];
+        // nt->lb = vnnlib->inp_lb[i];
+        // nt->ub = vnnlib->inp_ub[i];
     }
 }
 

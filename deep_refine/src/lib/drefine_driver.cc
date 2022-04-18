@@ -2,6 +2,7 @@
 #include "../../deeppoly/deeppoly_driver.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
 #include "../../deeppoly/helper.hh"
+#include "../../deeppoly/vnnlib.hh"
 #include "drefine_driver.hh"
 #include "pullback.hh"
 #include "decision_making.hh"
@@ -20,9 +21,9 @@ int run_refine_poly(int num_args, char* params[]){
 
     if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         VnnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
-        Network_t* net = deeppoly_initialize_network();
-        net->vnn_lib = verinn_lib;
-        run_drefine_vnnlib(net);
+        // Network_t* net = deeppoly_initialize_network();
+        // net->vnn_lib = verinn_lib;
+        // run_drefine_vnnlib(net);
         return 1;
     }
     Network_t* net = deeppoly_initialize_network();
