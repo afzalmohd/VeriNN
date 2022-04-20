@@ -6,6 +6,7 @@
 VnnLib_t* parse_vnnlib_file(std::string& file_path){
     VnnLib_t* vnn_lib = new VnnLib_t();
     Vnnlib_post_cond_t* prp = new Vnnlib_post_cond_t();
+    vnn_lib->out_prp = prp;
     std::fstream vnn_file;
     vnn_file.open(file_path, std::ios::in);
     Parse_vnnlib_prp_t* parse_vnnlib_obj = new Parse_vnnlib_prp_t();
@@ -54,7 +55,6 @@ VnnLib_t* parse_vnnlib_file(std::string& file_path){
         std::cout<<file_path<<std::endl;
         assert(0 && "something wrong with vnnlib file path");
     }
-
     
     if(vnn_lib->direct_assert_prps.size() > 0 && vnn_lib->out_prp->comp_prp.size() > 0){
         assert(0 && "Define output properties in two ways");
@@ -62,6 +62,7 @@ VnnLib_t* parse_vnnlib_file(std::string& file_path){
     if(vnn_lib->direct_assert_prps.size() > 0){
         vnn_lib->out_prp->type = "conj";
         vnn_lib->out_prp->basic_prp = vnn_lib->direct_assert_prps;
+        vnn_lib->direct_assert_prps.clear();
     }
 
     return vnn_lib;
@@ -123,6 +124,9 @@ void Parse_vnnlib_prp_t::get_direct_constraints(VnnLib_t* vnn_obj, std::string& 
                 basic_prp->rhs = rhs;
                 vnn_obj->direct_assert_prps.push_back(basic_prp);
             }
+            else{
+                std::cout<<op<<" "<<lhs<<" "<<rhs<<std::endl;
+            }
         }
     }
     else{
@@ -170,7 +174,7 @@ void set_basic_pre_cond(VnnLib_t* vnn_obj, std::string lhs, std::string rhs, std
        
     }
     else{
-        size_t index = get_var_index(lhs, false);
+        size_t index = get_var_index(lhs, true);
         Basic_pre_cond_t* pre_cond = vnn_obj->pre_cond_vec.back();
         if(op == ">=" || op == ">"){
             pre_cond->inp_lb[index] = std::stod(rhs);
@@ -201,7 +205,7 @@ void Parse_vnnlib_prp_t::extract_prp_conj(VnnLib_t* vnn_lib, Vnnlib_post_cond_t*
         if(!b){
             break;
         }
-        std::cout<<m[0]<<std::endl;
+        //std::cout<<m[0]<<std::endl;
         std::string op = m[1].str();
         std::string lhs = m[2].str();
         std::string rhs = m[3].str();
@@ -250,18 +254,19 @@ void Parse_vnnlib_prp_t::extract_prp_comb(VnnLib_t* vnnlib, Vnnlib_post_cond_t* 
         std::string or_str = "(or";
         if(b){
             std::string match_str = m[0].str();
-            std::cout<<match_str<<std::endl;
+            //std::cout<<match_str<<std::endl;
             while (1){   
                 b = std::regex_search(match_str.c_str(), m, std::regex(this->conj_str));
                 if(!b){
                     break;
                 }
-                std::cout<< m[0]<<std::endl;
+                //std::cout<< m[0]<<std::endl;
                 std::string m_str = m[0].str();
                 bool is_input_cond = m_str.find("X_") != std::string::npos;
                 bool is_output_cond = m_str.find("Y_") != std::string::npos;
                 if(is_input_cond && !is_output_cond){
                     Basic_pre_cond_t* pre_cond_basic = new Basic_pre_cond_t();
+                    init_bound_vecs(vnnlib->input_dims, pre_cond_basic->inp_lb, pre_cond_basic->inp_ub);
                     vnnlib->pre_cond_vec.push_back(pre_cond_basic);
                     extract_prp_conj(vnnlib, prp, m_str, this->rel_str_tokenize);  
                 }
@@ -292,6 +297,7 @@ void Parse_vnnlib_prp_t::extract_prp_comb(VnnLib_t* vnnlib, Vnnlib_post_cond_t* 
                         bool is_output_cond = tp.find("Y_") != std::string::npos;
                         if(is_input_cond && !is_output_cond){
                             Basic_pre_cond_t* pre_cond_basic = new Basic_pre_cond_t();
+                            init_bound_vecs(vnnlib->input_dims, pre_cond_basic->inp_lb, pre_cond_basic->inp_ub);
                             vnnlib->pre_cond_vec.push_back(pre_cond_basic);
                             extract_prp_conj(vnnlib, prp, tp, this->rel_str_tokenize);  
                         }
@@ -325,6 +331,7 @@ void Parse_vnnlib_prp_t::extract_prp_comb(VnnLib_t* vnnlib, Vnnlib_post_cond_t* 
             bool is_output_cond = line_str.find("Y_") != std::string::npos;
             if(is_input_cond && !is_output_cond){
                 Basic_pre_cond_t* pre_cond_basic = new Basic_pre_cond_t();
+                init_bound_vecs(vnnlib->input_dims, pre_cond_basic->inp_lb, pre_cond_basic->inp_ub);
                 vnnlib->pre_cond_vec.push_back(pre_cond_basic);
                 extract_prp_conj(vnnlib, prp, line_str, this->rel_str_tokenize); 
             }
@@ -382,4 +389,53 @@ bool is_number(std::string& s){
     char plus = '+';
     while (it != s.end() && (std::isdigit(*it) || *it == minus || *it == dot || *it == plus)) ++it;
     return !s.empty() && it == s.end();
+}
+
+void print_post_cond(Vnnlib_post_cond_t* post_cond, std::string ident){
+    if(post_cond->type == "disj"){
+        std::cout<<ident<<"or"<<std::endl;
+        ident = ident+" ";
+        for(Basic_post_cond_t* cond : post_cond->basic_prp){
+            print_basic_post_cond(cond, ident);
+        }
+        for(Vnnlib_post_cond_t* comp_cond:post_cond->comp_prp){
+            print_post_cond(comp_cond, ident);
+        }
+    }
+    else if(post_cond->type == "conj"){
+        std::cout<<ident<<"and"<<std::endl;
+        ident = ident+" ";
+        for(Basic_post_cond_t* cond : post_cond->basic_prp){
+            print_basic_post_cond(cond, ident);
+        }
+        for(Vnnlib_post_cond_t* comp_cond:post_cond->comp_prp){
+            print_post_cond(comp_cond, ident);
+        }
+    }
+    else{
+        std::cout<<post_cond->type<<std::endl;
+        assert(0 && "unknown property type");
+    }
+}
+
+void print_basic_post_cond(Basic_post_cond_t* cond, std::string ident){
+    std::cout<<ident<<"("<<cond->lhs<<" "<<cond->op<<" "<<cond->rhs<<")"<<std::endl;
+}
+
+void print_pre_cond(std::vector<Basic_pre_cond_t*>& pre_cond_vec, std::string ident){
+    if(pre_cond_vec.size() > 1){
+        std::cout<<ident<<"or"<<std::endl;
+        ident += " ";
+    }
+    for(Basic_pre_cond_t* pre_cond : pre_cond_vec){
+        std::cout<<ident<<"and"<<std::endl;
+        print_pre_cond_basic(pre_cond, ident);
+    }
+}
+
+void print_pre_cond_basic(Basic_pre_cond_t* pre_cond, std::string ident){
+    ident += " ";
+    for(size_t i=0; i<pre_cond->inp_lb.size(); i++){
+        std::cout<<ident<<"("<<pre_cond->inp_lb[i]<<" <= X_"<<i<<" <= "<<pre_cond->inp_ub[i]<<")"<<std::endl;
+    }
 }

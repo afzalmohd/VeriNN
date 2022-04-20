@@ -624,7 +624,7 @@ bool is_image_verified(Network_t* net){
     GRBModel model = create_env_model_constr(net, var_vector);
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
-            if(!is_greater(net, net->actual_label, i)){
+            if(!is_greater(net, net->actual_label, i, true)){
                 if(Configuration_deeppoly::tool == "drefine"){
                     if(!verify_by_milp(net, model, var_vector, i, is_first)){
                         //return false;
@@ -647,7 +647,7 @@ bool is_image_verified(Network_t* net){
     return is_verified;
 }
 
-bool is_greater(Network_t* net, size_t index1, size_t index2){
+bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_greater){
     //return true, if value at index1 is higher than value at index2
     assert(index1 >= 0 && index1 < net->output_dim && "index1 out of bound");
     assert(index2 >= 0 && index2 < net->output_dim && "index2 out of bound");
@@ -660,26 +660,41 @@ bool is_greater(Network_t* net, size_t index1, size_t index2){
     pred_layer->layer_index = out_layer->layer_index;
     pred_layer->is_activation = out_layer->is_activation;
     pred_layer->layer_type = out_layer->layer_type;
-    if(-nt1->lb > nt2->ub){
-        return true;
+    if(is_stricly_greater){
+        if(-nt1->lb > nt2->ub){
+            return true;
+        }
     }
     else{
-        Neuron_t* nt = new Neuron_t();
-        nt->lb = INFINITY;
-        nt->lexpr_b = new Expr_t();
-        nt->lexpr_b->cst_inf = 0.0;
-        nt->lexpr_b->cst_sup = 0.0;
-        nt->lexpr_b->size=2;
-        nt->lexpr_b->coeff_inf = {-1.0,1.0};
-        nt->lexpr_b->coeff_sup = {1.0, -1.0};
-        update_pred_layer_link(net,pred_layer);
-        update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
-        //std::cout<<index1<<", "<<index2<<", lb: "<<-nt->lb<<std::endl;
+        if(-nt1->lb >= nt2->ub){
+            return true;
+        }
+    }
+    
+
+    Neuron_t* nt = new Neuron_t();
+    nt->lb = INFINITY;
+    nt->lexpr_b = new Expr_t();
+    nt->lexpr_b->cst_inf = 0.0;
+    nt->lexpr_b->cst_sup = 0.0;
+    nt->lexpr_b->size=2;
+    nt->lexpr_b->coeff_inf = {-1.0,1.0};
+    nt->lexpr_b->coeff_sup = {1.0, -1.0};
+    update_pred_layer_link(net,pred_layer);
+    update_neuron_lexpr_bound_back_substitution(net, pred_layer, nt);
+    //std::cout<<index1<<", "<<index2<<", lb: "<<-nt->lb<<std::endl;
+    if(is_stricly_greater){
         if(nt->lb < 0){ //lower bound is completely positive
             return true;
         }
-        std::cout<<"Deeppoly error with ("<<index1<<", "<<index2<<") :"<<nt->lb<<std::endl;
     }
+    else{
+        if(nt->lb <= 0){ 
+            return true;
+        }
+    }
+    
+    std::cout<<"Deeppoly error with ("<<index1<<", "<<index2<<") :"<<nt->lb<<std::endl;
 
     return false;
 }
@@ -704,5 +719,132 @@ bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>
     }
 
     return true;
+}
+
+bool is_verified_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
+    bool is_verified = true;
+    for(Basic_post_cond_t* basic_cond : conj_cond->basic_prp){
+        if(basic_cond->type == "rel"){
+            is_verified = is_rel_property_verified(net, basic_cond);
+            if(!is_verified){
+                break;
+                //return false;//call milp solver
+            }
+        }
+        else if(basic_cond->type == "basic"){
+            is_verified = is_basic_property_verified(net, basic_cond);
+            if(!is_verified){
+                break;
+                //return false;//call milp solver
+            }
+        }
+        else{
+            std::cout<<basic_cond->lhs<<" "<<basic_cond->op<<" "<<basic_cond->rhs<<std::endl;
+        }
+    }
+    if(!is_verified){
+        //call milp solver
+    }
+    return true;
+}
+
+bool is_rel_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
+    std::string lhs = basic_cond->lhs;
+    std::string op = basic_cond->op;
+    std::string rhs = basic_cond->rhs;
+    bool is_upper = false;
+    bool is_strict_cond = false;
+    size_t index_1 = get_var_index(lhs, false);
+    size_t index_2 = get_var_index(rhs, false);
+    if(op == "<" || op == ">"){
+        is_strict_cond = true;
+    }
+    if(op == "<=" || op == "<"){
+        is_upper = true;
+    }
+    bool is_verified;
+    if(is_upper){
+        is_verified = is_greater(net, index_1, index_2, is_strict_cond);
+    }
+    else{
+        is_verified = is_greater(net, index_2, index_1, is_strict_cond);
+    }
+
+    return is_verified;
+}
+
+bool is_basic_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
+    std::string lhs = basic_cond->lhs;
+    std::string op = basic_cond->op;
+    std::string rhs = basic_cond->rhs;
+    std::string bound_str = "";
+    std::string var_str;
+    bool is_upper;
+    bool is_strict_cond = false;
+    if(op == "<" || op == ">"){
+        is_strict_cond = true;
+    }
+
+    if(is_number(lhs)){
+        bound_str = lhs;
+        var_str = rhs;
+        if(op == "<=" || op == "<"){
+           is_upper = false;
+        }
+        else{
+            is_upper = true;
+        }
+    }
+    else if(is_number(rhs)){
+        bound_str = rhs;
+        var_str = lhs;
+        if(op == "<=" || op == "<"){
+            is_upper = true;
+        }
+        else{
+            is_upper = false;
+        }
+    }
+    else{
+        std::cout<<lhs<<" "<<op<<" "<<rhs<<std::endl;
+        assert(0 && "non basic property");
+        return false;
+    }
+
+    double bound = std::stod(bound_str);
+    size_t index = get_var_index(var_str, false);
+    bool is_verified = verify_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
+    return is_verified;
+}
+
+bool verify_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
+    Layer_t* layer = net->layer_vec.back();
+    Neuron_t* nt = layer->neurons[nt_index];
+    if(is_upper){
+        if(is_strict_cond){
+            if(nt->ub < bound){
+                return true;
+            }
+        }
+        else{
+           if(nt->ub <= bound){
+                return true;
+            } 
+        }
+    }
+    else{
+        double lb = -nt->lb;
+        if(is_strict_cond){
+            if(lb > bound){
+                return true;
+            }
+        }
+        else{
+            if(lb >= bound){
+                return true;
+            }
+        }
+    }
+    return false;
 }
 

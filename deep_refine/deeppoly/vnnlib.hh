@@ -77,5 +77,9 @@ size_t get_var_index(std::string var_str, bool is_input_var);
 void set_basic_pre_cond(VnnLib_t* vnn_obj, std::string lhs, std::string rhs, std::string op, bool is_lhs_num);
 void set_basic_post_cond(VnnLib_t* vnn_obj, std::string lhs, std::string rhs, std::string op);
 void set_post_cond_comb(Basic_post_cond_t* prp, std::string lhs, std::string rhs, std::string op);
+void print_post_cond(Vnnlib_post_cond_t* post_cond, std::string ident);
+void print_basic_post_cond(Basic_post_cond_t* cond, std::string ident);
+void print_pre_cond(std::vector<Basic_pre_cond_t*>& pre_cond_vec, std::string ident);
+void print_pre_cond_basic(Basic_pre_cond_t* pre_cond, std::string ident);
 
 #endif

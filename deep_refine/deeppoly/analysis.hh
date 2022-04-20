@@ -27,6 +27,11 @@ void create_input_layer_expr(Network_t* net);
 double compute_lb_from_expr(Layer_t* pred_layer, Expr_t* expr);
 double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr);
 bool is_image_verified(Network_t* net);
-bool is_greater(Network_t* net, size_t index1, size_t index2);
+bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_greater);
 bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector);
+bool is_verified_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond);
+bool is_rel_property_verified(Network_t* net, Basic_post_cond_t* basic_cond);
+bool is_basic_property_verified(Network_t* net, Basic_post_cond_t* basic_cond);
+bool verify_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond);
+
 #endif

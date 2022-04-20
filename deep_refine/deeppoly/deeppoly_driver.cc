@@ -70,5 +70,9 @@ void reset_backprop_vals(Network_t* net){
 
 VnnLib_t* parse_vnnlib(std::string& file_path){
     VnnLib_t* verinn_lib =  parse_vnnlib_file(file_path);
+    std::cout<<"Pre condition........."<<std::endl;
+    print_pre_cond(verinn_lib->pre_cond_vec, "");
+    std::cout<<"Post condition........."<<std::endl;
+    print_post_cond(verinn_lib->out_prp, "");
     return verinn_lib;
 }
