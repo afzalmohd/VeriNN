@@ -721,34 +721,57 @@ bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>
     return true;
 }
 
-bool is_verified_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
-    bool is_verified = true;
+bool is_sat_property_main(Network_t* net, Vnnlib_post_cond_t* prop){
+    bool is_sat = false;
+    if(prop->type == "disj"){
+        for(Vnnlib_post_cond_t* prp : prop->comp_prp){
+            is_sat = is_sat_property_conj(net, prp);
+            if(is_sat){
+                return true;
+            }
+        }
+    }
+    else if(prop->type == "conj"){
+        is_sat = is_sat_property_conj(net, prop);
+        return is_sat;
+    }
+    else{
+        std::cout<<"Prop type: "<<prop->type<<std::endl;
+        assert(0 && "Unknwon property type");
+    }
+
+    return is_sat;
+}
+
+bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
+    bool is_sat = true;
     for(Basic_post_cond_t* basic_cond : conj_cond->basic_prp){
         if(basic_cond->type == "rel"){
-            is_verified = is_rel_property_verified(net, basic_cond);
-            if(!is_verified){
+            is_sat = is_sat_rel_property(net, basic_cond);
+            if(!is_sat){
                 break;
                 //return false;//call milp solver
             }
         }
         else if(basic_cond->type == "basic"){
-            is_verified = is_basic_property_verified(net, basic_cond);
-            if(!is_verified){
+            is_sat = is_sat_basic_property(net, basic_cond);
+            if(!is_sat){
                 break;
                 //return false;//call milp solver
             }
         }
         else{
             std::cout<<basic_cond->lhs<<" "<<basic_cond->op<<" "<<basic_cond->rhs<<std::endl;
+            assert(0 && "Wrong property type");
         }
     }
-    if(!is_verified){
+    if(!is_sat){
         //call milp solver
     }
     return true;
 }
 
-bool is_rel_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
+bool is_sat_rel_property(Network_t* net, Basic_post_cond_t* basic_cond){
     std::string lhs = basic_cond->lhs;
     std::string op = basic_cond->op;
     std::string rhs = basic_cond->rhs;
@@ -762,18 +785,18 @@ bool is_rel_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
     if(op == "<=" || op == "<"){
         is_upper = true;
     }
-    bool is_verified;
+    bool is_sat;
     if(is_upper){
-        is_verified = is_greater(net, index_1, index_2, is_strict_cond);
+        is_sat = is_greater(net, index_1, index_2, is_strict_cond);
     }
     else{
-        is_verified = is_greater(net, index_2, index_1, is_strict_cond);
+        is_sat = is_greater(net, index_2, index_1, is_strict_cond);
     }
 
-    return is_verified;
+    return is_sat;
 }
 
-bool is_basic_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
+bool is_sat_basic_property(Network_t* net, Basic_post_cond_t* basic_cond){
     std::string lhs = basic_cond->lhs;
     std::string op = basic_cond->op;
     std::string rhs = basic_cond->rhs;
@@ -813,11 +836,11 @@ bool is_basic_property_verified(Network_t* net, Basic_post_cond_t* basic_cond){
 
     double bound = std::stod(bound_str);
     size_t index = get_var_index(var_str, false);
-    bool is_verified = verify_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
-    return is_verified;
+    bool is_sat = is_sat_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
+    return is_sat;
 }
 
-bool verify_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
+bool is_sat_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
     Layer_t* layer = net->layer_vec.back();
     Neuron_t* nt = layer->neurons[nt_index];
     if(is_upper){
