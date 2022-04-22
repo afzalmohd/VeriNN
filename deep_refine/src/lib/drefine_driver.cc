@@ -21,9 +21,9 @@ int run_refine_poly(int num_args, char* params[]){
 
     if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         VnnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
-        // Network_t* net = deeppoly_initialize_network();
-        // net->vnn_lib = verinn_lib;
-        // run_drefine_vnnlib(net);
+        Network_t* net = deeppoly_initialize_network();
+        net->vnn_lib = verinn_lib;
+        run_drefine_vnnlib(net);
         return 1;
     }
     Network_t* net = deeppoly_initialize_network();
@@ -479,7 +479,18 @@ void denormalize_image(Network_t* net){
 }
 
 bool run_drefine_vnnlib(Network_t* net){
-    create_input_property_vnnlib(net);
+    VnnLib_t* vnn_lib = net->vnn_lib;
+    for(Basic_pre_cond_t* pre_cond : vnn_lib->pre_cond_vec){
+        create_input_property_vnnlib(net, pre_cond);
+        bool is_verified = run_deeppoly(net);
+        if(is_verified){
+            return true;
+        }
+        else{
+            //call milp
+        }
+    }
+    
     
     return false;
 }

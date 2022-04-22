@@ -4,6 +4,7 @@
 #include "optimizer.hh"
 #include "deeppoly_configuration.hh"
 #include<thread>
+#include<unordered_set>
 
 bool forward_analysis(Network_t* net){
     bool is_verified = false;
@@ -37,7 +38,13 @@ bool forward_analysis(Network_t* net){
             }
         }
     }
-    is_verified = is_image_verified(net);
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        bool is_sat = is_sat_property_main(net);
+        is_verified = !is_sat;
+    }
+    else{
+        is_verified = is_image_verified(net);
+    }
     return is_verified;
 }
 
@@ -721,43 +728,170 @@ bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>
     return true;
 }
 
-bool is_sat_property_main(Network_t* net, Vnnlib_post_cond_t* prop){
+bool is_sat_property_main(Network_t* net){
+    VnnLib_t* vnn_lib = net->vnn_lib;
+    Vnnlib_post_cond_t* prop = vnn_lib->out_prp;
     bool is_sat = false;
+    std::vector<GRBVar> var_vector;
+    GRBModel model = create_env_model_constr(net, var_vector);
     if(prop->type == "disj"){
+        bool is_first = true;
         for(Vnnlib_post_cond_t* prp : prop->comp_prp){
-            is_sat = is_sat_property_conj(net, prp);
-            if(is_sat){
-                return true;
+            std::vector<Vnnlib_post_cond_t*> verified_prp = prop->verified_sub_prp;
+            if(std::find(verified_prp.begin(), verified_prp.end(), prp) == verified_prp.end()){ // if prp not in verified_prp
+                bool is_sat_sub = is_sat_property_conj(net, prp);
+                if(is_sat_sub){
+                    bool is_sat_milp = is_sat_with_milp(net, model, var_vector, prp, is_first);
+                    if(is_sat_milp){
+                        is_first = false;
+                        is_sat = true;
+                    }
+                    else{
+                        prop->verified_sub_prp.push_back(prp);
+                    }
+                }
+                else{
+                    prop->verified_sub_prp.push_back(prp);
+                }
             }
         }
     }
     else if(prop->type == "conj"){
-        is_sat = is_sat_property_conj(net, prop);
-        return is_sat;
+        bool is_sat_sub = is_sat_property_conj(net, prop);
+        if(is_sat_sub){
+            bool is_sat_milp = is_sat_with_milp(net, model, var_vector, prop, true);
+            if(is_sat_milp){
+                return true;
+            }
+        }
     }
     else{
         std::cout<<"Prop type: "<<prop->type<<std::endl;
-        assert(0 && "Unknwon property type");
+        assert(0 && "Unknown property type");
     }
 
     return is_sat;
 }
 
-bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
-    bool is_sat = true;
+bool is_sat_with_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, Vnnlib_post_cond_t* conj_cond, bool is_first){
+    std::vector<GRBConstr> constr_vec;
+    std::unordered_set<size_t> indexes_in_prp;
     for(Basic_post_cond_t* basic_cond : conj_cond->basic_prp){
         if(basic_cond->type == "rel"){
-            is_sat = is_sat_rel_property(net, basic_cond);
-            if(!is_sat){
-                break;
-                //return false;//call milp solver
+            set_rel_cond_constr(net, model, constr_vec, var_vector, basic_cond);
+        }
+        else if(basic_cond->type == "basic"){
+            set_basic_cond_constr(net, model, constr_vec, var_vector, basic_cond);
+        }
+        else{
+            assert(0 && "Invalid format of conj property");
+        }
+    }
+    model.optimize();
+    int status = model.get(GRB_IntAttr_Status);
+    if(status == GRB_OPTIMAL){
+        if(is_first){
+            Layer_t* layer = net->layer_vec.back();
+            for(size_t val : indexes_in_prp){
+                Neuron_t* nt = layer->neurons[val];
+                nt->is_back_prop_active = true;
+                size_t grb_var_index = get_gurobi_var_index(layer, val);
+                nt->back_prop_lb = var_vector[grb_var_index].get(GRB_DoubleAttr_X);
+                nt->back_prop_ub = nt->back_prop_lb;
+            }
+            update_sat_vals(net, var_vector);
+        }
+        remove_constr_grb_model(model, constr_vec);
+        return true;
+    }
+    else if(status == GRB_INFEASIBLE){
+        remove_constr_grb_model(model, constr_vec);
+        return false;
+    }
+    else{
+        std::cout<<"Gurobi output: "<<status<<std::endl;
+        assert(0 && "Unknown gurobi output");
+    }
+    return true;
+}
+
+void remove_constr_grb_model(GRBModel& model, std::vector<GRBConstr>& constr_vec){
+    for(GRBConstr con : constr_vec){
+        model.remove(con);
+    }
+    constr_vec.clear();
+}
+
+void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond){
+    Layer_t* layer = net->layer_vec.back();
+    std::string op = basic_cond->op;
+    if(is_number(basic_cond->lhs)){
+        size_t index = get_var_index(basic_cond->rhs, false);
+        double bound = std::stod(basic_cond->lhs);
+        size_t grb_var_index  = get_gurobi_var_index(layer, index);
+        GRBLinExpr grb_expr = var_vector[grb_var_index] - bound;
+        if(op == "<=" || op == "<"){
+            GRBConstr con = model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
+            constr_vec.push_back(con);
+        }
+        else{
+            GRBConstr con = model.addConstr(grb_expr, GRB_LESS_EQUAL, 0);
+            constr_vec.push_back(con);
+        }
+    }
+    else if(is_number(basic_cond->rhs)){
+        size_t index = get_var_index(basic_cond->lhs, false);
+        double bound = std::stod(basic_cond->rhs);
+        size_t grb_var_index  = get_gurobi_var_index(layer, index);
+        GRBLinExpr grb_expr = var_vector[grb_var_index] - bound;
+        if(op == "<=" || op == "<"){
+            GRBConstr con = model.addConstr(grb_expr, GRB_LESS_EQUAL, 0);
+            constr_vec.push_back(con);
+        }
+        else{
+            GRBConstr con = model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
+            constr_vec.push_back(con);
+        }
+    }
+    else{
+        assert(0 && "basic condition in wrong format");
+    }
+}
+
+void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond){
+    Layer_t* layer = net->layer_vec.back();
+    std::string op = basic_cond->op;
+    size_t lhs_index = get_var_index(basic_cond->lhs, false);
+    size_t rhs_index = get_var_index(basic_cond->rhs, false);
+    size_t lhs_grb_var_index = get_gurobi_var_index(layer, lhs_index);
+    size_t rhs_grb_var_index = get_gurobi_var_index(layer, rhs_index);
+    GRBLinExpr grb_expr = var_vector[lhs_grb_var_index] - var_vector[rhs_grb_var_index];
+    if(op == "<=" || op == "<"){
+        GRBConstr con = model.addConstr(grb_expr, GRB_LESS_EQUAL, 0);
+        constr_vec.push_back(con);
+    }
+    else if(op == ">=" || op == ">"){
+        GRBConstr con = model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
+        constr_vec.push_back(con);
+    }
+    else{
+        assert(0 && "basic condition in wrong format");
+    }
+}
+
+bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
+    bool is_verified = true;
+    for(Basic_post_cond_t* basic_cond : conj_cond->basic_prp){
+        if(basic_cond->type == "rel"){
+            is_verified = is_verified_neg_rel_property(net, basic_cond);
+            if(is_verified){
+                return false;
             }
         }
         else if(basic_cond->type == "basic"){
-            is_sat = is_sat_basic_property(net, basic_cond);
-            if(!is_sat){
-                break;
-                //return false;//call milp solver
+            is_verified = is_verified_neg_basic_property(net, basic_cond);
+            if(is_verified){
+                return false;
             }
         }
         else{
@@ -765,16 +899,14 @@ bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond){
             assert(0 && "Wrong property type");
         }
     }
-    if(!is_sat){
-        //call milp solver
-    }
     return true;
 }
 
-bool is_sat_rel_property(Network_t* net, Basic_post_cond_t* basic_cond){
+bool is_verified_neg_rel_property(Network_t* net, Basic_post_cond_t* basic_cond){
     std::string lhs = basic_cond->lhs;
     std::string op = basic_cond->op;
     std::string rhs = basic_cond->rhs;
+    op = get_neg_op(op);
     bool is_upper = false;
     bool is_strict_cond = false;
     size_t index_1 = get_var_index(lhs, false);
@@ -796,37 +928,29 @@ bool is_sat_rel_property(Network_t* net, Basic_post_cond_t* basic_cond){
     return is_sat;
 }
 
-bool is_sat_basic_property(Network_t* net, Basic_post_cond_t* basic_cond){
+bool is_verified_neg_basic_property(Network_t* net, Basic_post_cond_t* basic_cond){
     std::string lhs = basic_cond->lhs;
     std::string op = basic_cond->op;
     std::string rhs = basic_cond->rhs;
+    op = get_neg_op(op);
     std::string bound_str = "";
     std::string var_str;
-    bool is_upper;
+    bool is_upper = false;;
     bool is_strict_cond = false;
     if(op == "<" || op == ">"){
         is_strict_cond = true;
+    }
+    if(op == "<=" || op == "<"){
+        is_upper = true;
     }
 
     if(is_number(lhs)){
         bound_str = lhs;
         var_str = rhs;
-        if(op == "<=" || op == "<"){
-           is_upper = false;
-        }
-        else{
-            is_upper = true;
-        }
     }
     else if(is_number(rhs)){
         bound_str = rhs;
         var_str = lhs;
-        if(op == "<=" || op == "<"){
-            is_upper = true;
-        }
-        else{
-            is_upper = false;
-        }
     }
     else{
         std::cout<<lhs<<" "<<op<<" "<<rhs<<std::endl;
@@ -836,11 +960,11 @@ bool is_sat_basic_property(Network_t* net, Basic_post_cond_t* basic_cond){
 
     double bound = std::stod(bound_str);
     size_t index = get_var_index(var_str, false);
-    bool is_sat = is_sat_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
+    bool is_sat = is_verified_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
     return is_sat;
 }
 
-bool is_sat_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
+bool is_verified_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
     Layer_t* layer = net->layer_vec.back();
     Neuron_t* nt = layer->neurons[nt_index];
     if(is_upper){
@@ -869,5 +993,135 @@ bool is_sat_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool 
         }
     }
     return false;
+}
+
+std::string get_neg_op(std::string op){
+    if(op == "<="){
+        return ">";
+    }
+    else if(op == ">="){
+        return "<";
+    }
+    else if(op == "<"){
+        return ">=";
+    }
+    else if(op == ">"){
+        return "<=";
+    }
+    else{
+        assert(0 && "wrong operator");
+    }
+    return "";
+}
+
+bool is_prop_sat_vnnlib(Network_t* net, Vnnlib_post_cond_t* prop){
+    bool is_sat;
+    if(prop->type == "disj"){
+        for(Vnnlib_post_cond_t* prp : prop->comp_prp){
+            is_sat = is_prop_sat_vnnlib_conj(net, prp);
+            if(is_sat){
+                return true;
+            }
+        }
+    }
+    else if(prop->type == "conj"){
+        is_sat = is_prop_sat_vnnlib_conj(net, prop);
+        return is_sat;
+    }
+    else{
+        assert(0 && "invalid type of main property");
+    }
+    return false;
+}
+
+bool is_prop_sat_vnnlib_conj(Network_t* net, Vnnlib_post_cond_t* prop){
+    bool is_sat;
+    if(prop->type == "conj"){
+        for(Basic_post_cond_t* cond : prop->basic_prp){
+            if(cond->type == "basic"){
+                is_sat = is_basic_prop_sat(net, cond);
+                if(!is_sat){
+                    return false;
+                }
+            }
+            else if(cond->type == "rel"){
+                is_sat = is_rel_prop_sat(net, cond);
+                if(!is_sat){
+                    return false;
+                }
+            }
+            else{
+                assert(0 && "Invalid property type");
+            }
+        }
+    }
+    return true;
+}
+
+bool is_basic_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond){
+    Layer_t* last_layer = net->layer_vec.back();
+    if(is_number(basic_cond->lhs)){
+        size_t index = get_var_index(basic_cond->rhs, false);
+        std::string op = basic_cond->op;
+        double bound = std::stod(basic_cond->lhs);
+        double nt_val = last_layer->res[index];
+        if(op == "<"){
+            return bound < nt_val;
+        }
+        else if(op == "<="){
+            return bound <= nt_val;
+        }
+        else if(op == ">"){
+            return bound > nt_val;
+        }
+        else if(op == ">="){
+            return bound >= nt_val;
+        }
+    }
+    else if(is_number(basic_cond->rhs)){
+        size_t index = get_var_index(basic_cond->lhs, false);
+        std::string op = basic_cond->op;
+        double bound = std::stod(basic_cond->rhs);
+        double nt_val = last_layer->res[index];
+        if(op == "<"){
+            return nt_val < bound;
+        }
+        else if(op == "<="){
+            return nt_val <= bound;
+        }
+        else if(op == ">"){
+            return nt_val > bound;
+        }
+        else if(op == ">="){
+            return nt_val >= bound;
+        }
+    }
+    
+    assert(0 && "Invalid property");
+    return true;
+}
+
+bool is_rel_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond){
+    Layer_t* last_layer = net->layer_vec.back();
+    assert(basic_cond->type == "rel" && "Invalid property");
+    size_t lhs_index = get_var_index(basic_cond->lhs, false);
+    size_t rhs_index = get_var_index(basic_cond->rhs, false);
+    std::string op = basic_cond->op;
+    double lhs_val = last_layer->res[lhs_index];
+    double rhs_val = last_layer->res[rhs_index];
+    if(op == "<"){
+        return lhs_val < rhs_val;
+    }
+    else if(op == "<="){
+        return lhs_val <= rhs_val;
+    }
+    else if(op == ">"){
+        return lhs_val > rhs_val;
+    }
+    else if(op == ">="){
+        return lhs_val >= rhs_val;
+    }
+
+    assert(0 && "Invalid property operator");
 }
 

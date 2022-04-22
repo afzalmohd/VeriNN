@@ -21,6 +21,6 @@ void create_marked_layer_splitting_constraints(Layer_t* layer);
 void copy_vector_with_negative_vals(std::vector<double> &vec1, std::vector<double> &vec2);
 std::vector<double> get_neuron_incomming_weigts(Neuron_t* nt, Layer_t* layer);
 double get_neuron_bias(Neuron_t* nt, Layer_t* layer);
-void create_input_property_vnnlib(Network_t* net);
+void create_input_property_vnnlib(Network_t* net, Basic_pre_cond_t* pre_cond);
 //Constr_t* declare_constr_t();
 #endif
