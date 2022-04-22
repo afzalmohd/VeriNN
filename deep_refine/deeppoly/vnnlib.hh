@@ -21,17 +21,12 @@ class Basic_pre_cond_t{
 
 };
 
-// class Vnnlib_pre_cond_t{
-//     public:
-//         std::string type;
-//         std::vector<Basic_pre_cond_t*> comp_pre_conds;
-// };
-
 class Vnnlib_post_cond_t{
     public:
         std::string type; //basic/rel/conj/disj
         std::vector<Basic_post_cond_t*> basic_prp;
         std::vector<Vnnlib_post_cond_t*> comp_prp;
+        std::vector<Vnnlib_post_cond_t*> verified_sub_prp;
 };
 
 class VnnLib_t{
