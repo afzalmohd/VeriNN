@@ -73,6 +73,7 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
         std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
         std::cout<<str<<std::endl;
         write_to_file(Configuration_deeppoly::result_file, str);
+        return 1;
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
@@ -125,10 +126,11 @@ std::string get_image_str(std::string& image_path, size_t image_index){
     return "";
 }
 
-void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+int run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
     bool is_ce, is_verified = false;
     size_t loop_counter = 1;
     size_t upper_iter_limit = PULL_BACK_WITH_MILP_LIMIT;
+    int status;
     while (true){
         is_ce = pull_back_full(net);
         if(is_ce){
@@ -137,9 +139,11 @@ void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::
                 std::cout<<"Found counter example!!"<<std::endl;
                 print_failed_string(net, image_index, loop_counter, start_time);
                 is_ce = true;
+                status = Failed;
             }
             else{
                 print_unknown_string(net, image_index, loop_counter, start_time);
+                status = Unknown;
             }
             break;
         }
@@ -147,18 +151,22 @@ void run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::
             is_verified = is_image_verified_by_milp(net);
             if(is_verified){
                 print_verified_string(net, image_index, loop_counter, start_time);
+                status = Verified;
                 break;
             }
         }
         loop_counter++;
         if(loop_counter >= upper_iter_limit){
             print_unknown_string(net, image_index, loop_counter, start_time);
+            status = Unknown;
             break;
         }
     }
+    return status;
 }
 
-void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+    int status;
     bool is_ce = pull_back_full(net);
     size_t counter = 1;
     if(is_ce){
@@ -167,9 +175,11 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
             std::cout<<"Found counter example!!"<<std::endl;
             print_failed_string(net, image_index, counter, start_time);
             is_ce = true;
+            status = Failed;
         }
         else{
             print_unknown_string(net, image_index, counter, start_time);
+            status = Unknown;
         }
     }
     else{
@@ -194,9 +204,11 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
                         std::cout<<"Found counter example!!"<<std::endl;
                         print_failed_string(net, image_index, counter, start_time);
                         is_ce = true;
+                        status = Failed;
                     }
                     else{
                         print_unknown_string(net, image_index, counter, start_time);
+                        status = Unknown;
                     }
                     break;
                 }
@@ -208,15 +220,20 @@ void run_path_split_with_pullback(Network_t* net, size_t image_index, std::chron
         }
         if(!is_path_available){
             print_verified_string(net, image_index, counter, start_time);
+            status = Verified;
         }
         else if(!is_ce){
             print_unknown_string(net, image_index, counter, start_time);
+            status = Unknown;
         }
     }
+
+    return status;
 }
 
-void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
     //net->verified_out_dims.clear();
+    int status;
     net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
     size_t loop_counter = 0;
@@ -229,9 +246,11 @@ void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chr
             if(is_real_ce){
                 std::cout<<"Found counter example!!"<<std::endl;
                 print_failed_string(net, image_index, loop_counter, start_time);
+                status = Failed;
             }
             else{
                 print_unknown_string(net, image_index, loop_counter, start_time);
+                status = Unknown;
             }
             is_bound_exceeded = false;
             break;
@@ -241,6 +260,7 @@ void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chr
             if(is_image_verified){
                 print_verified_string(net, image_index, loop_counter, start_time);
                 is_bound_exceeded = false;
+                status = Verified;
                 break;
             }
         }
@@ -248,8 +268,9 @@ void run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chr
     }
     if(is_bound_exceeded){
         print_unknown_string(net, image_index, loop_counter, start_time);
+        status = Unknown;
     }
-
+    return status;
 }
 
 void create_ce_and_run_nn(Network_t* net){
@@ -478,20 +499,65 @@ void denormalize_image(Network_t* net){
     }
 }
 
-bool run_drefine_vnnlib(Network_t* net){
+int run_drefine_vnnlib(Network_t* net){
     VnnLib_t* vnn_lib = net->vnn_lib;
+    int status;
+    size_t loop_counter;
+    auto start_time =  std::chrono::high_resolution_clock::now();
     for(Basic_pre_cond_t* pre_cond : vnn_lib->pre_cond_vec){
+        vnn_lib->out_prp->verified_sub_prp.clear();
         create_input_property_vnnlib(net, pre_cond);
         bool is_verified = run_deeppoly(net);
-        if(is_verified){
-            return true;
-        }
-        else{
-            //call milp
+        if(!is_verified){
+            std::tuple<int, size_t> ret_val = run_milp_refine_with_milp_mark_vnnlib(net);
+            int ret = std::get<0>(ret_val);
+            loop_counter = std::get<1>(ret_val);
+            if(ret == Failed || ret == Unknown){
+                status = ret;
+                break;
+            }
         }
     }
-    
-    
-    return false;
+    if(status == Failed){
+        print_failed_string(net, 0, loop_counter, start_time);
+    }
+    else if(status == Unknown){
+        print_unknown_string(net, 0, loop_counter, start_time);
+    }
+    else{
+        print_verified_string(net, 0, loop_counter, start_time);
+        status = Verified;
+    }
+    return status;
+}
+
+std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
+    int status;
+    size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+    size_t loop_counter = 0;
+    bool is_bound_exceeded = true;
+    while(loop_counter < loop_upper_bound){
+        bool is_ce = run_milp_mark_with_milp_refine(net);
+        std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
+        if(is_ce){
+            is_bound_exceeded = false;
+            status = Failed;
+            break;
+        }
+        else{
+            bool is_verified = is_prp_verified_by_milp(net);
+            if(is_verified){
+                is_bound_exceeded = false;
+                status = Verified;
+                break;
+            }
+        }
+        loop_counter++;
+    }
+    if(is_bound_exceeded){
+        status = Unknown;
+    }
+    std::tuple<int, size_t> tup1(status, loop_counter);
+    return tup1;
 }
 

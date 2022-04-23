@@ -3,6 +3,7 @@
 #include "pullback.hh"
 #include "../../deeppoly/optimizer.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
+#include "../../deeppoly/analysis.hh"
 
 
 bool run_milp_mark_with_milp_refine(Network_t* net){
@@ -166,6 +167,10 @@ void create_relu_constr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& va
 bool is_sat_val_ce(Network_t* net){
     create_satvals_to_image(net->input_layer);
     net->forward_propgate_network(0, net->input_layer->res);
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        bool is_sat = is_prop_sat_vnnlib(net);
+        return is_sat;
+    }
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
     if(net->actual_label != net->pred_label){

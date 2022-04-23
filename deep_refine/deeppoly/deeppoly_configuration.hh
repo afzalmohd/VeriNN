@@ -17,6 +17,8 @@
 #define PULL_BACK_WITH_PATH_SPLIT 5000
 #define NUM_GUROBI_THREAD 2
 
+enum drefine_status {Failed, Verified, Unknown};
+
 
 
 namespace po = boost::program_options;

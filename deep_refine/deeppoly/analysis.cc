@@ -728,6 +728,36 @@ bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>
     return true;
 }
 
+bool is_sat_prop_main_pure_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec){
+    VnnLib_t* vnn_lib = net->vnn_lib;
+    Vnnlib_post_cond_t* prop = vnn_lib->out_prp;
+    bool is_sat = false;
+    if(prop->type == "disj"){
+        bool is_first = true;
+        for(Vnnlib_post_cond_t* prp : prop->comp_prp){
+            std::vector<Vnnlib_post_cond_t*> verified_prp = prop->verified_sub_prp;
+            if(std::find(verified_prp.begin(), verified_prp.end(), prp) == verified_prp.end()){
+                bool is_sat_milp = is_sat_with_milp(net, model, var_vec, prp, is_first);
+                if(is_sat_milp){
+                    is_first = false;
+                    is_sat = true;
+                }
+                else{
+                    prop->verified_sub_prp.push_back(prp);
+                }
+            }
+        }
+    }
+    else if(prop->type == "conj"){
+        bool is_sat_milp = is_sat_with_milp(net, model, var_vec, prop, true);
+        if(is_sat_milp){
+            return true;
+        }
+    }
+
+    return is_sat;
+}
+
 bool is_sat_property_main(Network_t* net){
     VnnLib_t* vnn_lib = net->vnn_lib;
     Vnnlib_post_cond_t* prop = vnn_lib->out_prp;
@@ -1014,8 +1044,10 @@ std::string get_neg_op(std::string op){
     return "";
 }
 
-bool is_prop_sat_vnnlib(Network_t* net, Vnnlib_post_cond_t* prop){
+bool is_prop_sat_vnnlib(Network_t* net){
     bool is_sat;
+    VnnLib_t* vnn_lib = net->vnn_lib;
+    Vnnlib_post_cond_t* prop = vnn_lib->out_prp;
     if(prop->type == "disj"){
         for(Vnnlib_post_cond_t* prp : prop->comp_prp){
             is_sat = is_prop_sat_vnnlib_conj(net, prp);

@@ -7,6 +7,31 @@ bool is_image_verified_by_milp(Network_t* net){
     reset_backprop_vals(net);
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
+    create_milp_mark_milp_refine_constr(net, model, var_vector);
+    for(size_t i=0; i<net->output_dim; i++){
+        if(i != net->actual_label){
+            bool is_already_verified = false;
+            for(size_t val : net->verified_out_dims){
+                if(val == i){
+                    is_already_verified = true;
+                }
+            }
+            if(!is_already_verified){
+                if(!verify_by_milp(net, model, var_vector, i, true)){
+                    net->counter_class_dim = i;
+                    return false;
+                }
+                else{
+                    net->verified_out_dims.push_back(i);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+void create_milp_mark_milp_refine_constr(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
     creating_vars_milp(net, model, var_vector);
     size_t var_counter = net->input_layer->dims;
     for(auto layer : net->layer_vec){
@@ -18,33 +43,6 @@ bool is_image_verified_by_milp(Network_t* net){
         }
         var_counter += layer->dims;
     }
-
-    for(size_t i=0; i<net->output_dim; i++){
-        if(i != net->actual_label){
-            bool is_already_verified = false;
-            for(size_t val : net->verified_out_dims){
-                if(val == i){
-                    is_already_verified = true;
-                }
-            }
-            if(!is_already_verified){
-                //if(!is_greater(net, net->actual_label, i)){
-                    if(!verify_by_milp(net, model, var_vector, i, true)){
-                        net->counter_class_dim = i;
-                        return false;
-                    }
-                    else{
-                        net->verified_out_dims.push_back(i);
-                    }
-                // }
-                // else{
-                //     net->verified_out_dims.push_back(i);
-                // }
-            }
-        }
-    }
-
-    return true;
 }
 
 void creating_vars_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
@@ -123,5 +121,14 @@ void create_milp_constr_FC_without_marked(Layer_t* layer, GRBModel& model, std::
         grb_expr += -1*var_vector[var_counter+nt->neuron_index];
         model.addConstr(grb_expr, GRB_EQUAL, 0);
     }
+}
+
+bool is_prp_verified_by_milp(Network_t* net){
+    reset_backprop_vals(net);
+    GRBModel model = create_grb_env_and_model();
+    std::vector<GRBVar> var_vector;
+    create_milp_mark_milp_refine_constr(net, model, var_vector);
+    bool is_sat = is_sat_prop_main_pure_milp(net, model, var_vector);
+    return is_sat;
 }
 

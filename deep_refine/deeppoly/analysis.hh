@@ -34,12 +34,13 @@ bool is_sat_with_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_
 void remove_constr_grb_model(GRBModel& model, std::vector<GRBConstr>& constr_vec);
 void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond);
 void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond);
+bool is_sat_prop_main_pure_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec);
 bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond);
 bool is_verified_neg_rel_property(Network_t* net, Basic_post_cond_t* basic_cond);
 bool is_verified_neg_basic_property(Network_t* net, Basic_post_cond_t* basic_cond);
 bool is_verified_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond);
 std::string get_neg_op(std::string op);
-bool is_prop_sat_vnnlib(Network_t* net, Vnnlib_post_cond_t* prop);
+bool is_prop_sat_vnnlib(Network_t* net);
 bool is_prop_sat_vnnlib_conj(Network_t* net, Vnnlib_post_cond_t* prop);
 bool is_basic_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond);
 bool is_rel_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond);
