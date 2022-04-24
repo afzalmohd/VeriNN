@@ -23,8 +23,8 @@ int run_refine_poly(int num_args, char* params[]){
         VnnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
         Network_t* net = deeppoly_initialize_network();
         net->vnn_lib = verinn_lib;
-        run_drefine_vnnlib(net);
-        return 1;
+        int status = run_drefine_vnnlib(net);
+        return status;
     }
     Network_t* net = deeppoly_initialize_network();
     set_stds_means(net);
@@ -501,10 +501,13 @@ void denormalize_image(Network_t* net){
 
 int run_drefine_vnnlib(Network_t* net){
     VnnLib_t* vnn_lib = net->vnn_lib;
-    int status;
-    size_t loop_counter;
+    int status = Verified;
+    size_t loop_counter=0;
+    bool is_verified_by_deeppoly = false;
+    bool is_verified_by_drefine = false;
     auto start_time =  std::chrono::high_resolution_clock::now();
     for(Basic_pre_cond_t* pre_cond : vnn_lib->pre_cond_vec){
+        is_verified_by_deeppoly = false;
         vnn_lib->out_prp->verified_sub_prp.clear();
         create_input_property_vnnlib(net, pre_cond);
         bool is_verified = run_deeppoly(net);
@@ -516,6 +519,12 @@ int run_drefine_vnnlib(Network_t* net){
                 status = ret;
                 break;
             }
+            else{
+                is_verified_by_drefine = true;
+            }
+        }
+        else if(!is_verified_by_drefine){
+            is_verified_by_deeppoly = true;
         }
     }
     if(status == Failed){
@@ -525,7 +534,18 @@ int run_drefine_vnnlib(Network_t* net){
         print_unknown_string(net, 0, loop_counter, start_time);
     }
     else{
-        print_verified_string(net, 0, loop_counter, start_time);
+        if(is_verified_by_deeppoly){
+            size_t image_index = 0;
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+            std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
+            std::cout<<str<<std::endl;
+            write_to_file(Configuration_deeppoly::result_file, str);
+        }
+        else{
+            print_verified_string(net, 0, loop_counter, start_time);
+        }
         status = Verified;
     }
     return status;
@@ -534,7 +554,7 @@ int run_drefine_vnnlib(Network_t* net){
 std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
     int status;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
-    size_t loop_counter = 0;
+    size_t loop_counter = 1;
     bool is_bound_exceeded = true;
     while(loop_counter < loop_upper_bound){
         bool is_ce = run_milp_mark_with_milp_refine(net);

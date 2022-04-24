@@ -42,9 +42,9 @@ def convert(input_file, output_file):
             file.write(str(bias.tolist()))
         
 
-parent_path = '/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine/benchmarks/networks'
-onnx_dir =  parent_path+'/onnx/cifar10'
-tf_dir = parent_path+'/tf/cifar10'
+parent_path = '/home/u1411251/Documents/Phd/tools/networks'
+onnx_dir =  parent_path+'/onnx/acasxu'
+tf_dir = parent_path+'/tf/acasxu'
 
 for file in os.listdir(onnx_dir):
     #t1 = str(file).split('.')

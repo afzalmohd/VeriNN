@@ -152,7 +152,7 @@ double get_neuron_bias(Neuron_t* nt, Layer_t* layer){
 void create_input_property_vnnlib(Network_t* net, Basic_pre_cond_t* pre_cond){
     for(size_t i=0; i<net->input_dim; i++){
         Neuron_t* nt = net->input_layer->neurons[i];
-        nt->lb = pre_cond->inp_lb[i];
+        nt->lb = -pre_cond->inp_lb[i];
         nt->ub = pre_cond->inp_ub[i];
     }
 }

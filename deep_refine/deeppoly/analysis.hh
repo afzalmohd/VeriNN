@@ -2,6 +2,7 @@
 #define _DEEPPOLY_ANALYSIS_H_
 #include "network.hh"
 #include "gurobi_c++.h"
+#include<unordered_set>
 bool forward_analysis(Network_t* net);
 bool milp_based_deeppoly(Network_t* net, Layer_t* marked_layer);
 bool forward_layer_milp(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
@@ -32,8 +33,8 @@ bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>
 bool is_sat_property_main(Network_t* net);
 bool is_sat_with_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, Vnnlib_post_cond_t* conj_cond, bool is_first);
 void remove_constr_grb_model(GRBModel& model, std::vector<GRBConstr>& constr_vec);
-void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond);
-void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond);
+void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, std::unordered_set<size_t>& indexes_in_prp, Basic_post_cond_t* basic_cond);
+void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, std::unordered_set<size_t>& indexes_in_prp, Basic_post_cond_t* basic_cond);
 bool is_sat_prop_main_pure_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec);
 bool is_sat_property_conj(Network_t* net, Vnnlib_post_cond_t* conj_cond);
 bool is_verified_neg_rel_property(Network_t* net, Basic_post_cond_t* basic_cond);

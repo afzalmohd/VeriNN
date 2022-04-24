@@ -808,10 +808,10 @@ bool is_sat_with_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_
     std::unordered_set<size_t> indexes_in_prp;
     for(Basic_post_cond_t* basic_cond : conj_cond->basic_prp){
         if(basic_cond->type == "rel"){
-            set_rel_cond_constr(net, model, constr_vec, var_vector, basic_cond);
+            set_rel_cond_constr(net, model, constr_vec, var_vector, indexes_in_prp, basic_cond);
         }
         else if(basic_cond->type == "basic"){
-            set_basic_cond_constr(net, model, constr_vec, var_vector, basic_cond);
+            set_basic_cond_constr(net, model, constr_vec, var_vector, indexes_in_prp, basic_cond);
         }
         else{
             assert(0 && "Invalid format of conj property");
@@ -849,14 +849,16 @@ void remove_constr_grb_model(GRBModel& model, std::vector<GRBConstr>& constr_vec
     for(GRBConstr con : constr_vec){
         model.remove(con);
     }
+    model.update();
     constr_vec.clear();
 }
 
-void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond){
+void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, std::unordered_set<size_t>& indexes_in_prp, Basic_post_cond_t* basic_cond){
     Layer_t* layer = net->layer_vec.back();
     std::string op = basic_cond->op;
     if(is_number(basic_cond->lhs)){
         size_t index = get_var_index(basic_cond->rhs, false);
+        indexes_in_prp.insert(index);
         double bound = std::stod(basic_cond->lhs);
         size_t grb_var_index  = get_gurobi_var_index(layer, index);
         GRBLinExpr grb_expr = var_vector[grb_var_index] - bound;
@@ -871,6 +873,7 @@ void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConst
     }
     else if(is_number(basic_cond->rhs)){
         size_t index = get_var_index(basic_cond->lhs, false);
+        indexes_in_prp.insert(index);
         double bound = std::stod(basic_cond->rhs);
         size_t grb_var_index  = get_gurobi_var_index(layer, index);
         GRBLinExpr grb_expr = var_vector[grb_var_index] - bound;
@@ -888,11 +891,13 @@ void set_basic_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConst
     }
 }
 
-void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, Basic_post_cond_t* basic_cond){
+void set_rel_cond_constr(Network_t* net, GRBModel& model, std::vector<GRBConstr>& constr_vec, std::vector<GRBVar>& var_vector, std::unordered_set<size_t>& indexes_in_prp, Basic_post_cond_t* basic_cond){
     Layer_t* layer = net->layer_vec.back();
     std::string op = basic_cond->op;
     size_t lhs_index = get_var_index(basic_cond->lhs, false);
     size_t rhs_index = get_var_index(basic_cond->rhs, false);
+    indexes_in_prp.insert(lhs_index);
+    indexes_in_prp.insert(rhs_index);
     size_t lhs_grb_var_index = get_gurobi_var_index(layer, lhs_index);
     size_t rhs_grb_var_index = get_gurobi_var_index(layer, rhs_index);
     GRBLinExpr grb_expr = var_vector[lhs_grb_var_index] - var_vector[rhs_grb_var_index];
@@ -949,10 +954,10 @@ bool is_verified_neg_rel_property(Network_t* net, Basic_post_cond_t* basic_cond)
     }
     bool is_sat;
     if(is_upper){
-        is_sat = is_greater(net, index_1, index_2, is_strict_cond);
+        is_sat = is_greater(net, index_2, index_1, is_strict_cond);
     }
     else{
-        is_sat = is_greater(net, index_2, index_1, is_strict_cond);
+        is_sat = is_greater(net, index_1, index_2, is_strict_cond);
     }
 
     return is_sat;
@@ -990,8 +995,8 @@ bool is_verified_neg_basic_property(Network_t* net, Basic_post_cond_t* basic_con
 
     double bound = std::stod(bound_str);
     size_t index = get_var_index(var_str, false);
-    bool is_sat = is_verified_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
-    return is_sat;
+    bool is_verified = is_verified_single_nt_bound(net, index, bound, is_upper, is_strict_cond);
+    return is_verified;
 }
 
 bool is_verified_single_nt_bound(Network_t* net, size_t nt_index, double bound, bool is_upper, bool is_strict_cond){
@@ -1155,5 +1160,6 @@ bool is_rel_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond){
     }
 
     assert(0 && "Invalid property operator");
+    return false;
 }
 

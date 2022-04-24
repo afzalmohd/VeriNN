@@ -4,6 +4,14 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        // {
+        //     "name": "Python: Current File",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "program": "${file}",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": true
+        // },
         {
             "name": "g++ - Build and debug active file",
             "type": "cppdbg",
@@ -11,21 +19,23 @@
             "program": "${workspaceFolder}/my_drefine",
             "args": [
                 "--network",
-                "${workspaceFolder}/benchmarks/networks/cifar10/cifar_relu_4_100.tf",
+                "${workspaceFolder}/converter/test.tf",
                 "--dataset-file",
-                "${workspaceFolder}/benchmarks/dataset/cifar10/cifar10_test.csv",
+                "${workspaceFolder}/benchmarks/dataset/mnist/mnist_test.csv",
                 "--dataset",
-                "CIFAR10",
+                "ACASXU",
                 "--tool",
-                "deeppoly",
+                "drefine",
                 "--image-index",
-                "14"
+                "14",
+                "--vnnlib-prp-file",
+                "/home/u1411251/Documents/Phd/tools/vnncomp2021/benchmarks/acasxu/prop_6.vnnlib"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [
                 {
-                    "name":  "LD_LIBRARY_PATH",
+                    "name": "LD_LIBRARY_PATH",
                     // "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib:${workspaceFolder}/build/lapack-release/installed/lib:${workspaceFolder}/build/boost_1_78_0/installed/lib",
                     "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib"
                 }

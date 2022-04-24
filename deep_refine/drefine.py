@@ -9,16 +9,17 @@ Created on Mon Jul 26 09:09:35 2021
 import os
 from datetime import datetime
 
-NUMTEST = 30
+NUMTEST = 100
 epsilons = [0.03,0.04,0.05]
-epsilons = [0.05]
-NETWORK_FILE = "mnist_relu_6_100.tf"
+epsilons = [0.03]
+NETWORK_FILE = "ffnnRELU__PGDK_w_0.3_6_500.tf"
 IS_MILP_REFINE = 0
 IS_OPTIMIZATION_MARK = 0
 drefine_timeout = 1000
 DREFINEROOT = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine"
 OUTPATH = DREFINEROOT+"/outfiles"
-NETPATH = DREFINEROOT+"/benchmarks/networks/tf/"+NETWORK_FILE
+NETPATH = "/home/u1411251/Documents/Phd/tools/networks/tf/mnist/"+NETWORK_FILE
+NETPATH = "/home/u1411251/Documents/Phd/tools/networks/my_converter/mnist/"+NETWORK_FILE
 DATASETFILE = DREFINEROOT+"/benchmarks/dataset/mnist/mnist_test.csv"
 SCRIPT_OUT = "script_out.txt"
 dataset = "mnist"
@@ -43,8 +44,8 @@ def write_to_file(image_index, epsilon):
 for epsilon in epsilons:
     RESULT_FILE = OUTPATH+"/"+NETWORK_FILE[:-3]+"_"+APPROACH+"_"+str(epsilon)+".txt"
     for i in range(1,NUMTEST+1):
-        write_to_file(i, epsilon)
-        command = "timeout -k 2s "+str(drefine_timeout)+" ./drefine --network "+NETPATH+" --epsilon "+str(epsilon)+" --dataset-file "+DATASETFILE+" --result-file "+RESULT_FILE+" --is-milp-refine "+str(IS_MILP_REFINE)+" --is-optimization-mark "+str(IS_OPTIMIZATION_MARK)+" --image-index "+str(i)                                     
+        #write_to_file(i, epsilon)
+        command = "timeout -k 2s "+str(drefine_timeout)+" ./drefine --network "+NETPATH+" --epsilon "+str(epsilon)+" --dataset-file "+DATASETFILE+" --result-file "+RESULT_FILE+" --is-milp-refine "+str(IS_MILP_REFINE)+" --is-optimization-mark "+str(IS_OPTIMIZATION_MARK)+" --image-index "+str(i)+" --tool deeppoly --is-parallel 1"                                   
         print(command)
         os.system(command)
 
