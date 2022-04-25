@@ -325,7 +325,11 @@ void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+    if(base_prp_name == ""){
+        base_prp_name = "dummy";
+    }
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -334,7 +338,11 @@ void print_verified_string(Network_t* net, size_t image_index, size_t loop_count
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+    if(base_prp_name == ""){
+        base_prp_name = "dummy";
+    }
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -343,7 +351,11 @@ void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counte
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+    if(base_prp_name == ""){
+        base_prp_name = "dummy";
+    }
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
@@ -539,7 +551,8 @@ int run_drefine_vnnlib(Network_t* net){
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
             std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
+            std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
             std::cout<<str<<std::endl;
             write_to_file(Configuration_deeppoly::result_file, str);
         }
