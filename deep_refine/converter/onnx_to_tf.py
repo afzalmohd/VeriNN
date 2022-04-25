@@ -43,8 +43,8 @@ def convert(input_file, output_file):
         
 
 parent_path = '/home/u1411251/Documents/Phd/tools/networks'
-onnx_dir =  parent_path+'/onnx/acasxu'
-tf_dir = parent_path+'/tf/acasxu'
+onnx_dir =  parent_path+'/onnx/mnist'
+tf_dir = parent_path+'/tf/alt/mnist'
 
 for file in os.listdir(onnx_dir):
     #t1 = str(file).split('.')
