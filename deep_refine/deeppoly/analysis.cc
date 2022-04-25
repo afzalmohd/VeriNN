@@ -1163,3 +1163,10 @@ bool is_rel_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond){
     return false;
 }
 
+void print_xt_array(xt::xarray<double> x_arr, size_t size){
+    for(size_t i=0; i< size; i++){
+        std::cout<<x_arr[i]<<" ";
+    }
+    std::cout<<std::endl;
+}
+

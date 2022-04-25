@@ -172,6 +172,9 @@ void mark_layer_and_neurons(Layer_t* layer){
 }
 
 double round_off(double num, size_t prec){
+    if(num == 0){
+        return num;
+    }
     double mult = pow(10.0f, float(prec));
     double val = mult*num + 0.5;
     double res = round(val) / mult;

@@ -63,7 +63,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             double sat_val = var.get(GRB_DoubleAttr_X);
             sat_val = round_off(sat_val, 4);
             double res = start_layer->res[i];
-            res = round_off(res, 4);
+            res = round_off(res, 5);
             if(sat_val != res){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
                     pred_nt->is_marked = true;
@@ -166,9 +166,18 @@ void create_relu_constr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& va
 
 bool is_sat_val_ce(Network_t* net){
     create_satvals_to_image(net->input_layer);
+    //std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
     net->forward_propgate_network(0, net->input_layer->res);
     if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         bool is_sat = is_prop_sat_vnnlib(net);
+        // if(is_sat){
+        //     std::cout<<"input values"<<std::endl;
+        //     print_xt_array(net->input_layer->res, net->input_dim);
+        //     std::cout<<"Check...."<<std::endl;
+        //     std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
+        //     std::cout<<"output values"<<std::endl;
+        //     print_xt_array(net->layer_vec.back()->res, net->output_dim);
+        // }
         return is_sat;
     }
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
@@ -181,10 +190,14 @@ bool is_sat_val_ce(Network_t* net){
 }
 
 void create_satvals_to_image(Layer_t* layer){
+    std::vector<double> vec;
+    vec.reserve(layer->dims);
     for(size_t i=0; i<layer->dims; i++){
         Neuron_t* nt = layer->neurons[i];
-        layer->res[i] = nt->sat_val;
+        vec.push_back(nt->sat_val);
     }
+    std::vector<size_t> shape = {layer->dims};
+    layer->res = xt::adapt(vec,shape);
 }
 
 void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
