@@ -61,7 +61,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
             GRBVar var = var_vector[var_counter+i];
             double sat_val = var.get(GRB_DoubleAttr_X);
-            sat_val = round_off(sat_val, 4);
+            sat_val = round_off(sat_val, 5);
             double res = start_layer->res[i];
             res = round_off(res, 5);
             if(sat_val != res){
