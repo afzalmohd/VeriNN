@@ -1,9 +1,14 @@
 #include "parser.hh"
 #include "deeppoly_configuration.hh"
 #include<fstream>
-
+#include<iostream>
+#include<string>
 
 void init_network(Network_t* net, std::string &filepath){
+    if(filepath.substr(filepath.find_last_of(".") + 1) != "tf"){
+        std::cout<<"Please provide tf format of network file"<<std::endl;
+        assert(0);
+    }
     std::fstream newfile;
     newfile.open(filepath, std::ios::in);
     if(newfile.is_open()){
@@ -51,6 +56,9 @@ void init_network(Network_t* net, std::string &filepath){
         net->input_dim = net->input_layer->dims;
         net->output_dim = net->layer_vec.back()->dims;
         pred_layer_linking(net);
+    }
+    else{
+        assert(0 && "Wrong network file path");
     }
 }
 
