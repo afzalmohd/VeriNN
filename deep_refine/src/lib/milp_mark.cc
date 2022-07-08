@@ -4,6 +4,7 @@
 #include "../../deeppoly/optimizer.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
 #include "../../deeppoly/analysis.hh"
+#include <cstdlib>
 
 
 bool run_milp_mark_with_milp_refine(Network_t* net){
@@ -61,16 +62,13 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
             GRBVar var = var_vector[var_counter+i];
             double sat_val = var.get(GRB_DoubleAttr_X);
-            sat_val = round_off(sat_val, 5);
             double res = start_layer->res[i];
-            res = round_off(res, 5);
-            if(sat_val != res){
+            double diff = abs(sat_val - res);
+            if(diff > DIFF_TOLERANCE){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
                     pred_nt->is_marked = true;
                     is_marked = true;
                     std::cout<<pred_nt->neuron_index<<", ";
-                    //std::cout<<"Values: "<<sat_val<<" , "<<res<<" , "<<start_layer->pred_layer->res[i]<<std::endl;
-                    //std::cout<<pred_nt->neuron_index<<std::endl;
                 }
             }
         }

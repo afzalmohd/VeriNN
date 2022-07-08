@@ -129,6 +129,6 @@ bool is_prp_verified_by_milp(Network_t* net){
     std::vector<GRBVar> var_vector;
     create_milp_mark_milp_refine_constr(net, model, var_vector);
     bool is_sat = is_sat_prop_main_pure_milp(net, model, var_vector);
-    return is_sat;
+    return !is_sat;
 }
 

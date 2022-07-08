@@ -750,9 +750,7 @@ bool is_sat_prop_main_pure_milp(Network_t* net, GRBModel& model, std::vector<GRB
     }
     else if(prop->type == "conj"){
         bool is_sat_milp = is_sat_with_milp(net, model, var_vec, prop, true);
-        if(is_sat_milp){
-            return true;
-        }
+        return is_sat_milp;
     }
 
     return is_sat;
