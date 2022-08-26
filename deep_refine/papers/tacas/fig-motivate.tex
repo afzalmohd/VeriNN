@@ -1,0 +1,93 @@
+\newcommand{\vertic}[1]{ {\scriptsize $\texttt{#1}$} }
+
+\begin{figure*}[t]
+  % \centering
+  \begin{minipage}{0.4\linewidth}
+    \scriptsize
+    $\texttt{connected}$\\
+    $\texttt{connected,password}$\\
+    $\texttt{connected,login\_incorrect,auth\_fail}$\\
+    $\texttt{disconnected}$\\
+    $\texttt{connected}$\\
+    $\texttt{connected,password}$\\
+    $\texttt{connected,login\_incorrect,auth\_fail}$\\
+    $\texttt{disconnected}$\\
+    $\texttt{connected}$\\
+    $\texttt{...}$\\
+    % $\texttt{connected, password}$\\
+    $\texttt{connected,login\_incorrect,auth\_fail}$\\
+    $\texttt{disconnected}$\\
+    $\texttt{connected,password}$\\
+    $\texttt{connected,logged\_in}$\\
+    $\texttt{connected,logged\_in}$\\
+    $\texttt{disconnected}$
+    \vspace{-4mm}
+  \begin{center} \normalsize(a) \end{center}
+\end{minipage}
+\begin{minipage}{0.54\linewidth}
+  \center
+  \scriptsize
+  \begin{tabular}[t]{c c}\hline
+    Formula & Value \\\hline
+    $\globally\: \texttt{disconnected}$ & 0 \\
+    $\globally \:\texttt{auth\_fail}\:\Leftrightarrow\: (\texttt{connected}\: \land\:\texttt{login\_incorrect})$ & 0.146\\
+    $\finally\: \texttt{disconnected}$ & 0.044\\
+    $\globally\: \finally\: \texttt{disconnected}$ & 0.173\\
+    % $\globally\:\globally\: \texttt{connected} \:\until\: \texttt{disconnected}$ & 1.24\\\
+    % $\globally\: \texttt{connected} \:\until\: \texttt{disconnected}$ & 1.56\\\hline
+  \end{tabular}
+  \\\begin{center} \normalsize(b) \end{center}
+\end{minipage}\\
+\vspace{3ex}
+\begin{minipage}[t]{\linewidth}
+  \center
+  % \begin{tabular}[t]{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\hline
+  %   & \vertic{connected} & \vertic{connected,password} & \vertic{connected,login\_incorrect,auth\_fail} & \vertic{disconnected} & \vertic{connected} & \vertic{connected,password} & \vertic{connected,login\_incorrect,auth\_fail} & \vertic{disconnected} & ...\\\hline
+  %   $\texttt{disconnected}$ &&&&&&&&&&&&&&& \\\hline
+  %   $ \finally \texttt{disconnected}$ &&&&&&&&&&&&&&& \\\hline
+  %   $\globally \finally \texttt{disconnected}$ & & - & -  & - & - & - & - & - & - & - & - & - & - & - & - \\\hline     
+  % \end{tabular}
+    \begin{tabular}[t]{l@{\hspace{-8mm}}c@{\hspace{-8mm}}c@{\;\;}c@{\;\;}c}\hline 
+      Position & & $\texttt{disconnected}$ & $ \finally \:\texttt{disconnected}$ & $\globally \:\finally\: \texttt{disconnected}$ \\ \hline
+      1& \vertic{connected}  & 0& 0.044& 0.173      \\
+      2&\vertic{connected,password} & 0& 0.12& - \\
+      3& \vertic{connected,login\_incorrect,auth\_fail}  & 0& 0.33& - \\
+      4& \vertic{disconnected}  & 1& 0.90& - \\
+      5& \vertic{connected}  & 0& 0.044& - \\
+      6& \vertic{connected,password}  & 0& 0.12& - \\
+      7& \vertic{connected,login\_incorrect,auth\_fail}  & 0& 0.33& - \\
+      8& \vertic{disconnected}  & 1& 0.90& - \\
+      & ...  & ... & ... & - \\ \hline
+    \end{tabular}
+    \vspace{-3mm}
+  \\\begin{center} \normalsize(c)
+  \vspace{-7mm}
+  \end{center}
+\end{minipage}
+%\captionsetup{}
+% \includegraphics[width=\textwidth]{fig/exampletrace.pdf}
+   \caption{(a) A simplified trace of a FTP server. (b) Some candidate LTL formulae and their values over the trace.
+  (c) An illustration in computing values for $\globally\: \finally\: \texttt{disconnected}$. - in a cell represents value is not relevant for our computation. 
+  % Example inputs to and outputs from $\ourtool$ 
+  %       (Left) Input log, with two possible inputs (Right) LTL formulas satisfied by given trace, 
+  %       pertaining to input pattern
+      }
+
+      \label{fig:exampletrace}
+      % \vspace{-8mm}
+\end{figure*}
+
+
+
+
+% G S
+% G (connected U disconnected)
+% G auth_fail ↔ (connected ∧ login_incorrect)
+% G auth_fail ↔ S
+
+%--------------------- DO NOT ERASE BELOW THIS LINE --------------------------
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

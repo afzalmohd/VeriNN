@@ -1,0 +1,9 @@
+G (connected U disconnected),1.55504712
+G G(connected U disconnected),1.361599972
+G (F disconnected),1.12770156
+G (login_incorrect -> auth_fail),0.79671882
+G (auth_fail -> F (disconnected)),0.790776912
+G (password -> X(logged_in + auth_fail)),0.717009734
+G (connected + disconnected),0.6987696
+G (login_incorrect <-> auth_fail),0.495779833
+G (connected),0
