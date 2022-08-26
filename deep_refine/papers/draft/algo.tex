@@ -10,6 +10,35 @@ $x$ is non-negative otherwise return the value 0.
 A neural network is a function $N$ which takes an input of $m$ dimensions and gives an output of $n$ dimensions.
 $N$ can be represented as a composition of functions $f_l o f_{l-1} ... o f_1$, where each function $f_i$ represents the linear combinations followed by an activation function. 
 
+Let $\reals$ be the set of real numbers.
+Let $x_{\alpha}$ are unbounded set of real variables, where
+$\alpha$ is arbitrary index for variables.
+
+\begin{df}
+  $Linexpr = \{ w_0 + \sum_{i \in IndexSet} w_i x_i | w_i \in \reals \text{ and IndexSet is a finite set of indexes} \}$.
+  % Let $w_i \in \reals$.
+  % $w_0 + \sum w_i x_i \in Linexpr$.
+\end{df}
+
+\begin{df}
+  $N = (Neurons, Edges, Layers, Input, Output )$.
+  $N.neurons$?
+  $n_{ij}$
+  $x_{ij}$ One thing names
+  $v_{ij}$ One thing values
+\end{df}
+
+
+\begin{df}
+  For neuron $x \in N.neurons$,
+  an abstract constraint $A(x) = (lb,ub, lexpr, uexpr)$ is a tuple, where
+  $lb \in \reals$ is lower bound on the value of $x$,
+  $ub \in \reals$ is the upper bound on the value of  $x$,
+  $lexpr \in LinExpr$ is the expression for the lower bound, and
+  $uexpr \in LinExpr$ is the expression for the upper bound.
+  % For a neural network $N$, an abstract constraints $A : N.neurons \mapsto \reals \times \reals \times Expr \times Expr $
+\end{df}
+
 Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
 The goal is to find an input $\overline{x_0}$, such that the predicates $P(\overline{x_0})$ and $Q(N(\overline{x_0}))$ holds. 
 The predicate $Q$ usually is the negation of the desired property. The triple $\langle N, P, Q \rangle$ is our verification query. 
