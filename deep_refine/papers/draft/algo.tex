@@ -137,34 +137,35 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \begin{algorithmic}[1]
    \State Run neural network on $\overrightarrow{x}$.
    \State \textbf{return} $\overrightarrow{x}$ as counter example if it's output violate the $Q$. 
-   \For{currLayer in [outputLayer ... inputLayer]}
-      \If{currLayer is affine layer}
+   \For{$i=k$ to $1$}
+      \If{$l_i$ is affine layer}
         \State layerConstraints = []
-        \For{nt in currLayer.neurons}
-          \State nt.constr = (nt.affineExpr == nt.satval)
-          \State layerConstrains.append(nt.constr)
+        \For{$j=0$ to $l_i.size$}
+          \State $constr_{i,j}$ = $(A(x_{i,j},lexpr)$ == $satval_{i,j}$) \Comment{lexpr=rexpr for affine layer}
+          \State layerConstrains.append($constr_{i,j}$)
         \EndFor
-        \For{nt in currLayer.prevLayer.neurons}
-          \State layerConstrains.append(nt.bounds)
-        \EndFor
-        \State isSat = checkSat(layerConstrains)
+        % \For{$j=0$ to $l_{i-1}.size$}\Comment{m is size of layer $l_{i-1}$}
+        %   \State layerConstrains.append$(A(x_{i,j}, lb))$
+        %   \State layerConstrains.append$(A(x_{i,j}, ub))$
+        % \EndFor
+        \State isSat = checkSat(And(layerConstrains)) \Comment{And of all constraints}
         \If{isSat}
           \State assign sat values to previous layers neurons
         \Else
-          \State markedNeurons = \{nt | nt $\in$ currLayer.neurons $\land$ nt.constr $\in$ unsatCore\}
+          \State markedNeurons = \{$x_{i,j}$ | $constr_{i,j}$ $\in$ unsatCore\}
           \State \textbf{return } markedNeurons
         \EndIf
       \Else \Comment{Relu layer}
-        \For{nt in currLayer.neurons}
-          \If{nt.satval > 0}
-            \State prevNt.satval = nt.satval  \Comment{prevNt is input node of nt in prevLayer}
+        \For{$j=0$ to $l_i.size$}
+          \If{$satval_{i,j} > 0$}
+            \State $satval_{i-1,j} = satval_{i,j}$
           \Else
-            \State prevNt.lb $\leq$ prevNt.satval $\leq$ 0 \Comment{lb,ub are bounds}
+            \State $A(x_{i-1,j},lb) \leq satval_{i-1,j} \leq$ 0 \Comment{lb,ub are bounds}
           \EndIf
         \EndFor
       \EndIf
    \EndFor
-    \State ce = \{nt.satval | nt $\in$ inputLayer.neurons\} \Comment{If pullbacked upto input layer}
+    \State ce = \{$satval_{0,i}$ | $i=0$ to $l_{0}.size$ \} \Comment{If pullbacked upto input layer}
     \State \textbf{return} ce
   \end{algorithmic}
   \caption{A pullback approach to get mark neurons or counter example}
@@ -179,20 +180,32 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \begin{algorithmic}[1]
     \State Run neural network on $\overrightarrow{x}$.
     \State \textbf{return} $\overrightarrow{x}$ as counter example if it's output violate the $Q$. 
-    \State Let us say layer.nt.val is the value evaluated on $\overrightarrow{x}$ for each layer and each neuron nt. 
-    \For{currLayer in [firstLayer ... outputLayer]} \Comment{inputLayer excluded}
-      \If{currLayer is affine layer}
-        \State execute currLayer.prevLayer.vals on currLayer \Comment{simple matrix muliplication}
+    \State Let us say $\overrightarrow{val_{i}}$ is the value evaluated on $\overrightarrow{x}$ on layer $l_i$. 
+    \For{$i=1$ to $k$} \Comment{inputLayer excluded}
+      \If{$l_i$ is affine layer}
+        \State $\overrightarrow{val_i} = W_i * \overrightarrow{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
       \Else
-        \State constraints = A[currLayer ... outputLayer] \Comment{Abstract constraints from currLayer to outputLayers}
-        \State constraints.add(currLayer.prevLayer.vars == currLayer.prevLayer.vals)
-        \State constrains.add(outputLayer.vars == outputLayer.vals)
-        \State softConstraints = for each nt $\in$ currLayer.neurons (nt.vars == nt.vals)
-        \State maximize the number of neurons of layer which satisfy the softConstraints. 
-        \If{all neurons of the currLayer satisfy the softConstraints}
+        \State constraints = []
+        \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
+          \For{$j=0$ to $l_t.size$}
+            \State constrains.add($A(var_{t,j},lexpr) \leq var_{t,j}\leq A(var_{t,j},uexpr)$)
+          \EndFor
+        \EndFor
+        \For{$j=0$ to $l_{i-1}.size$}\Comment{Previous layer}
+          \State constrains.add($var_{i-1,j} == val_{i-1,j}$)
+        \EndFor
+        \For{$j=0$ to $l_k.size$}\Comment{Output layer}
+          \State constrains.add($var_{k,j} == val_{k,j}$)
+        \EndFor
+        softConstraints = []
+        \For{$j=0$ to $l_i.size$}\Comment{Current layer}
+          \State softConstraints.add($var_{i,j} == val_{i,j}$)
+        \EndFor
+        \State maximize the softConstraints with satisfying the constrains. 
+        \If{all the softConstraints satisfied}
           \State \textbf{continue}
         \Else
-          \State markedNeurons = all neurons of currLayer which does not satisfy the softConstraints. 
+          \State markedNeurons = all neurons of layer $l_i$ which does not satisfy the softConstraints. 
           \State \textbf{return} markedNeurons
         \EndIf 
       \EndIf
