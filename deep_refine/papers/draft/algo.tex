@@ -14,18 +14,37 @@ Let $\reals$ be the set of real numbers.
 Let $x_{\alpha}$ are unbounded set of real variables, where
 $\alpha$ is arbitrary index for variables.
 
+
 \begin{df}
-  $Linexpr = \{ w_0 + \sum_{i \in IndexSet} w_i x_i | w_i \in \reals \text{ and IndexSet is a finite set of indexes} \}$.
-  % Let $w_i \in \reals$.
-  % $w_0 + \sum w_i x_i \in Linexpr$.
+  $Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \land x_i \text{ is a real variable} \}$.
 \end{df}
 
 \begin{df}
+  $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, ==, \geq\}\}$
+\end{df}
+
+\begin{itemize}
+  \item $n_{ij}$ represents the $j^{th}$ neuron of $i^{th}$ layer. 
+  \item $x_{ij}$ is a real variable for neuron $n_{ij}$
+  \item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector. 
+  \item $val_{ij}$ represents the $j^{th}$ value of value vector $\boldsymbol{val_{i}}$
+  \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
+\end{itemize}
+
+\begin{df}
   $N = (Neurons, Edges, Layers, Input, Output )$.
-  $N.neurons$?
-  $n_{ij}$
-  $x_{ij}$ One thing names
-  $v_{ij}$ One thing values
+  \begin{itemize}
+    \item $N.neurons$ represents the neurons in neural network $N$.
+    \item $N.Layers$ represents the layers in network $N$.
+    \item $l_i \in N.Layers$ represents the $i^{th}$ layer in network $N$. 
+    \item $l_i.size$ represents the number of neurons in layer $l_i$. 
+    \item $n_{ij} \in N.Neurons$ represents the $j^{th}$ neuron of $i^{th}$ layer.
+    \item $x_{ij}$ is a real variable for neuron $n_{ij}$
+    \item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector.
+    \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
+    \item For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
+    \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
+  \end{itemize}
 \end{df}
 
 
@@ -62,8 +81,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
   \textbf{Output: } UNSAT or SAT
   \begin{algorithmic}[1]
-    \State Build abstract constrains and bounds on each neuron using deeppoly.
-    \State $A$ is a set of all abstract constraints and bounds. 
+    \State $A = deeppoly(N,P,Q)$\Comment{deeppoly generate the abstract constraints}
     \State markedNeurons = \{\}
     \While{True}
       \State isVerified or spuriousCEX = isVerified($\langle N,P,Q \rangle$ , A, markedNeurons)
@@ -97,7 +115,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
         \If{$n_{i,j} \in $ markedNeurons}
           \State constr.add(exactConstr($n_{i,j}$)) 
         \Else
-          \State constr.add($A(n_{i,j},lexpr) \leq x_{i,j} \leq A(n_{i,j},uexpr)$)
+          \State constr.add($A(n_{i,j}).lexpr \leq x_{i,j} \leq A(n_{i,j}).uexpr$)
         \EndIf
       \EndFor
     \EndFor
@@ -124,7 +142,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
         \State constr = \{\}
         \For{$i=1$ to $k$}
           \For{$j=0$ to $l_i.size$}
-            \State constr.add($A'(n_{i,j},lexpr) \leq x_{i,j} \leq A'(n_{i,j},uexpr)$)
+            \State constr.add($A'(n_{i,j}).lexpr \leq x_{i,j} \leq A'(n_{i,j}).uexpr$)
           \EndFor
         \EndFor
         \State $constr = constr ~ \union ~ P ~ \union ~ \neg Q$ 
@@ -144,43 +162,37 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
 
 \begin{algorithm}[t]
   \textbf{Name: } getMarkedNeurons1 \\
-  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\overrightarrow{x}$ and $\overrightarrow{y}$ on input and output layers respectively\\
+  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
   \textbf{Output: } marked neurons or real counter example. 
   \begin{algorithmic}[1]
-   \State Run neural network on $\overrightarrow{x}$.
-   \State \textbf{return} $\overrightarrow{x}$ as counter example if it's output violate the $Q$. 
+    \State $\boldsymbol{y'} = N(\boldsymbol{x})$
+    \State \textbf{return} $\boldsymbol{x}$ if $\boldsymbol{y} \nvDash Q$. 
    \For{$j=0$ to $l_k.size$}
-    \State $var_{k,j} = \overrightarrow{y}_j$
+    \State $satval_{kj} = \boldsymbol{y}_j$
    \EndFor
    \For{$i=k$ to $1$}
       \If{$l_i$ is affine layer}
         \State layerConstraints = \{\}
         \For{$j=0$ to $l_i.size$}
-          \State $constr_{i,j}$ = $(A(x_{i,j},lexpr)$ == $var_{i,j}$) \Comment{lexpr=rexpr for affine layer}
-          \State layerConstrains.add($constr_{i,j}$)
+          \If{$satval_{i+1,j} > 0$}
+            \State $constr_{ij}$ = $(A(n_{ij}).lexpr$ == $satval_{i+1,j}$) \Comment{lexpr=rexpr for affine}
+          \Else
+            \State $constr_{ij}$ = $(A(n_{ij}).lb \leq A(n_{ij}).lexpr \leq 0$)
+          \EndIf
+          \State layerConstrains.add($constr_{ij}$)
         \EndFor
         % \For{$j=0$ to $l_{i-1}.size$}\Comment{m is size of layer $l_{i-1}$}
         %   \State layerConstrains.add$(A(x_{i,j}, lb))$
         %   \State layerConstrains.add$(A(x_{i,j}, ub))$
         % \EndFor
         \State isSat = checkSat(layerConstrains) \Comment{And of all constraints}
-        \If{isSat}
-          \State assign sat values to previous layers neurons
-        \Else
-          \State markedNeurons = \{$x_{i,j}$ | $0 \leq j\leq l_i.size \land constr_{i,j}$ $\in$ unsatCore\}
+        \If{not isSat}
+          \State markedNeurons = \{$n_{i,j}$ | $0 \leq j\leq l_i.size \land constr_{i,j}$ $\in$ unsatCore\}
           \State \textbf{return } markedNeurons
         \EndIf
-      \Else \Comment{Relu layer}
-        \For{$j=0$ to $l_i.size$}
-          \If{$var_{i,j} > 0$}
-            \State $var_{i-1,j} = var_{i,j}$
-          \Else
-            \State $A(x_{i-1,j},lb) \leq var_{i-1,j} \leq$ 0 \Comment{lb,ub are bounds}
-          \EndIf
-        \EndFor
       \EndIf
    \EndFor
-    \State ce = \{$var_{0,i}$ | $i=0$ to $l_{0}.size$ \} \Comment{If pullbacked upto input layer}
+    \State ce = \{$satval_{0i}$ | $i=0$ to $l_{0}.size$ \} \Comment{If pullbacked upto input layer}
     \State \textbf{return} ce
   \end{algorithmic}
   \caption{A pullback approach to get mark neurons or counter example}
@@ -190,31 +202,31 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
 
 \begin{algorithm}[t]
   \textbf{Name: } getMarkedNeurons2 \\
-  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\overrightarrow{x}$ and $\overrightarrow{y}$ on input and output layers respectively\\
+  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
   \textbf{Output: } marked neurons or real counter example. 
   \begin{algorithmic}[1]
-    \State Run neural network on $\overrightarrow{x}$.
-    \State \textbf{return} $\overrightarrow{x}$ as counter example if it's output violate the $Q$. 
-    \State Let us say $\overrightarrow{val_{i}}$ is the value evaluated on $\overrightarrow{x}$ on layer $l_i$. 
+    \State $\boldsymbol{y'} = N(\boldsymbol{x})$
+    \State \textbf{return} $\boldsymbol{x}$ if $\boldsymbol{y} \nvDash Q$. 
+    \State Let us say $\boldsymbol{val_{i}}$ is the value vector of $l_i$, when $\boldsymbol{x}$ executed on network $N$. 
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
       \If{$l_i$ is affine layer}
-        \State $\overrightarrow{val_i} = W_i * \overrightarrow{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
-      \Else
+        \State $\boldsymbol{val_i} = W_i * \boldsymbol{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
+      \Else \Comment{Relu layer}
         \State constraints = \{\}
         \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
           \For{$j=0$ to $l_t.size$}
-            \State constrains.add($A(var_{t,j},lexpr) \leq var_{t,j}\leq A(var_{t,j},uexpr)$)
+            \State constrains.add($A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr$)
           \EndFor
         \EndFor
         \For{$j=0$ to $l_{i-1}.size$}\Comment{Previous layer}
-          \State constrains.add($var_{i-1,j} == val_{i-1,j}$)
+          \State constrains.add($x_{i-1,j} == val_{i-1,j}$)
         \EndFor
         \For{$j=0$ to $l_k.size$}\Comment{Output layer}
-          \State constrains.add($var_{k,j} == val_{k,j}$)
+          \State constrains.add($x_{kj} == y_{j}$)
         \EndFor
         softConstraints = \{\}
         \For{$j=0$ to $l_i.size$}\Comment{Current layer}
-          \State softConstraints.add($var_{i,j} == val_{i,j}$)
+          \State softConstraints.add($x_{ij} == val_{ij}$)
         \EndFor
         \State maximize the softConstraints with satisfying the constrains. 
         \If{all the softConstraints satisfied}
