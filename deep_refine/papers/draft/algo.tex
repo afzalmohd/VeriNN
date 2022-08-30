@@ -23,18 +23,10 @@ $\alpha$ is arbitrary index for variables.
   $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, ==, \geq\}\}$
 \end{df}
 
-\begin{itemize}
-  \item $n_{ij}$ represents the $j^{th}$ neuron of $i^{th}$ layer. 
-  \item $x_{ij}$ is a real variable for neuron $n_{ij}$
-  \item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector. 
-  \item $val_{ij}$ represents the $j^{th}$ value of value vector $\boldsymbol{val_{i}}$
-  \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
-\end{itemize}
-
 \begin{df}
   $N = (Neurons, Edges, Layers, Input, Output )$.
   \begin{itemize}
-    \item $N.neurons$ represents the neurons in neural network $N$.
+    \item $N.Neurons$ represents the neurons in neural network $N$.
     \item $N.Layers$ represents the layers in network $N$.
     \item $l_i \in N.Layers$ represents the $i^{th}$ layer in network $N$. 
     \item $l_i.size$ represents the number of neurons in layer $l_i$. 
@@ -45,6 +37,15 @@ $\alpha$ is arbitrary index for variables.
     \item For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
     \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
   \end{itemize}
+\end{df}
+
+\begin{df}
+  A vector $\boldsymbol{x} \in \reals^m$ is a counter example(cex) if $N(\boldsymbol{x}) \models Q$.  
+\end{df}
+
+\begin{df}
+  A vector $\boldsymbol{x} \in \reals^m$ is an spurious counter example(spuriousCEX) if it satisfy all the abstract constraints
+  with predicates $P$ and $Q$, but $N(\boldsymbol{x}) \nvDash Q$. 
 \end{df}
 
 
@@ -119,7 +120,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
         \EndIf
       \EndFor
     \EndFor
-    \State $constr = constr ~ \union ~ P ~ \union ~ \neg Q$
+    \State $constr = constr ~ \union ~ P ~ \union ~ Q$
     \State isSat = checkSat(constr)
     \If{isSat is True}
       \State \textbf{return} spurious counter example
@@ -145,7 +146,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
             \State constr.add($A'(n_{i,j}).lexpr \leq x_{i,j} \leq A'(n_{i,j}).uexpr$)
           \EndFor
         \EndFor
-        \State $constr = constr ~ \union ~ P ~ \union ~ \neg Q$ 
+        \State $constr = constr ~ \union ~ P ~ \union ~ Q$ 
         \State isSat = checkSat(constr)
         \If{isSat}
           \State \textbf{return} spurious counter example
@@ -165,8 +166,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
   \textbf{Output: } marked neurons or real counter example. 
   \begin{algorithmic}[1]
-    \State $\boldsymbol{y'} = N(\boldsymbol{x})$
-    \State \textbf{return} $\boldsymbol{x}$ if $\boldsymbol{y} \nvDash Q$. 
+    \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models Q$. 
    \For{$j=0$ to $l_k.size$}
     \State $satval_{kj} = \boldsymbol{y}_j$
    \EndFor
@@ -205,9 +205,8 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
   \textbf{Output: } marked neurons or real counter example. 
   \begin{algorithmic}[1]
-    \State $\boldsymbol{y'} = N(\boldsymbol{x})$
-    \State \textbf{return} $\boldsymbol{x}$ if $\boldsymbol{y} \nvDash Q$. 
-    \State Let us say $\boldsymbol{val_{i}}$ is the value vector of $l_i$, when $\boldsymbol{x}$ executed on network $N$. 
+    \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models Q$. 
+    \State Let us say $\boldsymbol{val_{i}}$ is the value vector at layer $l_i$, when $\boldsymbol{x}$ executed on network $N$. 
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
       \If{$l_i$ is affine layer}
         \State $\boldsymbol{val_i} = W_i * \boldsymbol{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
