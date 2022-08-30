@@ -1,14 +1,6 @@
 %\clearpage
-A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers. 
-Layer $l_0$ and $l_k$ represent the input and output layers respectively and all the other layers are hidden layers.
-Each layer $l_i$ is a collection of nodes. A node $v_{i,j}$ represents the $j^{th}$ node in the layer $i$. 
-Let us say a vector $\overline{V_i} = [v_{i,0}, v_{i,1}, ... v_{i,m}]$ represents the values of each node in the layer $i$, where $m$ is the number of nodes in the same layer. 
-Each layer's values are computed using the weighted sum of the previous layer's values($W_i * V_{i-1} + B_i$) followed by an activation function
-\relu{}. A function $y = max(0,x)$ is a \relu{} function which takes an arguments $x$ as input and return the same value $x$ as output if 
-$x$ is non-negative otherwise return the value 0. 
 
-A neural network is a function $N$ which takes an input of $m$ dimensions and gives an output of $n$ dimensions.
-$N$ can be represented as a composition of functions $f_l o f_{l-1} ... o f_1$, where each function $f_i$ represents the linear combinations followed by an activation function. 
+For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
 
 Let $\reals$ be the set of real numbers.
 Let $x_{\alpha}$ are unbounded set of real variables, where
@@ -20,24 +12,56 @@ $\alpha$ is arbitrary index for variables.
 \end{df}
 
 \begin{df}
-  $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, ==, \geq\}\}$
+  $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$
 \end{df}
 
+% l_{in}, l_{out}
 \begin{df}
-  $N = (Neurons, Edges, Layers, Input, Output )$.
+  A neural network $N = (Neurons, Layers, Edges, W, LayerType)$ is a tuple, where
   \begin{itemize}
-    \item $N.Neurons$ represents the neurons in neural network $N$.
-    \item $N.Layers$ represents the layers in network $N$.
-    \item $l_i \in N.Layers$ represents the $i^{th}$ layer in network $N$. 
-    \item $l_i.size$ represents the number of neurons in layer $l_i$. 
-    \item $n_{ij} \in N.Neurons$ represents the $j^{th}$ neuron of $i^{th}$ layer.
-    \item $x_{ij}$ is a real variable for neuron $n_{ij}$
-    \item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector.
-    \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
-    \item For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
-    \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
+    \item $Neurons$ is the set of neurons in $N$,
+    \item $Layers = \{l_0,...,l_k\}$ is an indexed partition of $Neurons$,
+    % \item $l_i \in Layers$ represents the $i^{th}$ layer in network $N$. 
+    % \item $|l_i|$ represents the number of neurons in layer $l_i$. 
+    % \item 
+    \item $ Edges \subseteq \Union_{i=1}^{k} l_{i-1} \times l_{i}$
+    \item $W : Edges \mapsto \reals$
+    \item $B : Neurons \mapsto \reals$
+    \item $LayerType : Layers \mapsto \{\mathtt{Affine}, \mathtt{Relu}\}$
   \end{itemize}
 \end{df}
+A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers.
+We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively.
+We call all the other layers {\em hidden layers}.
+Let $n_{i,j}$ represent the $j^{th}$ neuron in the layer $l_i$.\todo{Define: $W_i$ and $B_i$ (which are matrices)}
+
+% We write $v_{ij} \in l_i$ to denote the $j^{th}$ neuron of layer $l_i$.
+% We call $l_0$ as input layer and $l_k$ as the output layer.
+% Each layer $l_i$ is a collection of nodes.
+
+Let us say a vector $\overline{V_i} = [v_{i,0}, v_{i,1}, ... v_{i,m}]$ represents the values of each node in the layer $i$, where $m$ is the number of nodes in the same layer. 
+Each layer's values are computed using the weighted sum of the previous layer's values($W_i * V_{i-1} + B_i$) followed by an activation function
+\relu{}. A function $y = max(0,x)$ is a \relu{} function which takes an arguments $x$ as input and return the same value $x$ as output if 
+$x$ is non-negative otherwise return the value 0. 
+
+A neural network is a function $N$ which takes an input of $m$ dimensions and gives an output of $n$ dimensions.
+$N$ can be represented as a composition of functions $f_l o f_{l-1} ... o f_1$, where each function $f_i$ represents the linear combinations followed by an activation function. 
+
+
+
+
+We will use the following convention in writing our algorithms.
+\begin{itemize}
+\item $x_{ij}$ is a real variable for neuron $n_{ij}$
+\item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector.
+\item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
+% \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
+\end{itemize}
+
+Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
+The goal is to find an input $\overline{x_0}$, such that the predicates $P(\overline{x_0})$ and $Q(N(\overline{x_0}))$ holds. 
+The predicate $Q$ usually is the negation of the desired property. The triple $\langle N, P, Q \rangle$ is our verification query. 
+
 
 \begin{df}
   A vector $\boldsymbol{x} \in \reals^m$ is a counter example(cex) if $N(\boldsymbol{x}) \models Q$.  
@@ -59,9 +83,6 @@ $\alpha$ is arbitrary index for variables.
   % For a neural network $N$, an abstract constraints $A : N.neurons \mapsto \reals \times \reals \times Expr \times Expr $
 \end{df}
 
-Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
-The goal is to find an input $\overline{x_0}$, such that the predicates $P(\overline{x_0})$ and $Q(N(\overline{x_0}))$ holds. 
-The predicate $Q$ usually is the negation of the desired property. The triple $\langle N, P, Q \rangle$ is our verification query. 
 
 The algorithm~\ref{algo:main} represents the high level flow of our approach. Which is a counter example guided abstract refinement(CEGAR) based approach. 
 At the first line in algorithm~\ref{algo:main}, we generate all the abstract constraints by \deeppoly{}. These abstract constrains
