@@ -1,0 +1,60 @@
+For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
+
+Let $\reals$ be the set of real numbers.
+Let $x_{\alpha}$ are unbounded set of real variables, where
+$\alpha$ is arbitrary index for variables.
+
+\begin{df}
+    $Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \land x_i \text{ is a real variable} \}$.
+\end{df}
+  
+\begin{df}
+    $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$
+\end{df}
+
+% l_{in}, l_{out}
+\begin{df}
+    A neural network $N = (Neurons, Layers, Edges, W, B, LayerType)$ is a tuple, where
+    \begin{itemize}
+        \item $Neurons$ is the set of neurons in $N$,
+        \item $Layers = \{l_0,...,l_k\}$ is an indexed partition of $Neurons$,
+        % \item $l_i \in Layers$ represents the $i^{th}$ layer in network $N$. 
+        % \item $|l_i|$ represents the number of neurons in layer $l_i$. 
+        % \item 
+        \item $ Edges \subseteq \Union_{i=1}^{k} l_{i-1} \times l_{i}$
+        \item $W : Edges \mapsto \reals$
+        \item $B : Neurons \mapsto \reals$
+        \item $LayerType : Layers \mapsto \{\mathtt{Affine}, \mathtt{Relu}\}$
+    \end{itemize}
+\end{df}
+
+A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers.
+We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively.
+We call all the other layers {\em hidden layers}.
+Let $n_{i,j}$ represent the $j^{th}$ neuron in the layer $l_i$.
+\begin{df}
+    A matrix $W_i$ represents the weight matrix for layer $l_i$. The size of the matrix $W_i$ is $|l_i|\times |l_{i-1}|$. 
+    The entry $W_i[t_1, t_2] = W(e)$, where $e = (n_{i-1,t_2}, n_{it_1}) \in Edges$.  
+\end{df}
+
+\begin{df}
+    A matrix $B_i$ represents the bias matrix for layer $l_i$. The size of $B_i$ is $|l_i|\times 1$. 
+    The entry $B_i[t,0] = B(n_{it})$, where $n_{it} \in Neurons$. 
+\end{df}
+
+% We write $v_{ij} \in l_i$ to denote the $j^{th}$ neuron of layer $l_i$.
+% We call $l_0$ as input layer and $l_k$ as the output layer.
+% Each layer $l_i$ is a collection of nodes.
+
+Let us say a vector $\overline{V_i} = [v_{i,0}, v_{i,1}, ... v_{i,m}]$ represents the values of each node 
+in the layer $i$, where $m$ is the number of nodes in the same layer. 
+Each layer's values are computed using the weighted sum of the previous layer's values($W_i * V_{i-1} + B_i$) 
+followed by an activation function \relu{}. A function $y = max(0,x)$ is a \relu{} function which 
+takes an arguments $x$ as input and return the same value $x$ as output if $x$ is non-negative otherwise 
+return the value 0. 
+
+A neural network is a function $N$ which takes an input of $m$ dimensions and gives an output of $n$ dimensions.
+$N$ can be represented as a composition of functions $f_k o f_{l-1} ... o f_1$, where each function $f_i$ 
+represents the linear combinations followed by an activation function. 
+
+

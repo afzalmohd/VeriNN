@@ -1,66 +1,13 @@
 %\clearpage
 
-For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
-
-Let $\reals$ be the set of real numbers.
-Let $x_{\alpha}$ are unbounded set of real variables, where
-$\alpha$ is arbitrary index for variables.
-
-
-\begin{df}
-  $Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \land x_i \text{ is a real variable} \}$.
-\end{df}
-
-\begin{df}
-  $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$
-\end{df}
-
-% l_{in}, l_{out}
-\begin{df}
-  A neural network $N = (Neurons, Layers, Edges, W, LayerType)$ is a tuple, where
-  \begin{itemize}
-    \item $Neurons$ is the set of neurons in $N$,
-    \item $Layers = \{l_0,...,l_k\}$ is an indexed partition of $Neurons$,
-    % \item $l_i \in Layers$ represents the $i^{th}$ layer in network $N$. 
-    % \item $|l_i|$ represents the number of neurons in layer $l_i$. 
-    % \item 
-    \item $ Edges \subseteq \Union_{i=1}^{k} l_{i-1} \times l_{i}$
-    \item $W : Edges \mapsto \reals$
-    \item $B : Neurons \mapsto \reals$
-    \item $LayerType : Layers \mapsto \{\mathtt{Affine}, \mathtt{Relu}\}$
-  \end{itemize}
-\end{df}
-A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers.
-We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively.
-We call all the other layers {\em hidden layers}.
-Let $n_{i,j}$ represent the $j^{th}$ neuron in the layer $l_i$.\todo{Define: $W_i$ and $B_i$ (which are matrices)}
-
-% We write $v_{ij} \in l_i$ to denote the $j^{th}$ neuron of layer $l_i$.
-% We call $l_0$ as input layer and $l_k$ as the output layer.
-% Each layer $l_i$ is a collection of nodes.
-
-Let us say a vector $\overline{V_i} = [v_{i,0}, v_{i,1}, ... v_{i,m}]$ represents the values of each node in the layer $i$, where $m$ is the number of nodes in the same layer. 
-Each layer's values are computed using the weighted sum of the previous layer's values($W_i * V_{i-1} + B_i$) followed by an activation function
-\relu{}. A function $y = max(0,x)$ is a \relu{} function which takes an arguments $x$ as input and return the same value $x$ as output if 
-$x$ is non-negative otherwise return the value 0. 
-
-A neural network is a function $N$ which takes an input of $m$ dimensions and gives an output of $n$ dimensions.
-$N$ can be represented as a composition of functions $f_l o f_{l-1} ... o f_1$, where each function $f_i$ represents the linear combinations followed by an activation function. 
-
-
-
 
 We will use the following convention in writing our algorithms.
 \begin{itemize}
 \item $x_{ij}$ is a real variable for neuron $n_{ij}$
-\item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector.
+\item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector. And $val_{ij}$ represents the value of $n_{ij}$. 
 \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
 % \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
 \end{itemize}
-
-Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
-The goal is to find an input $\overline{x_0}$, such that the predicates $P(\overline{x_0})$ and $Q(N(\overline{x_0}))$ holds. 
-The predicate $Q$ usually is the negation of the desired property. The triple $\langle N, P, Q \rangle$ is our verification query. 
 
 
 \begin{df}
@@ -82,6 +29,11 @@ The predicate $Q$ usually is the negation of the desired property. The triple $\
   $uexpr \in LinExpr$ is the expression for the upper bound.
   % For a neural network $N$, an abstract constraints $A : N.neurons \mapsto \reals \times \reals \times Expr \times Expr $
 \end{df}
+
+Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
+The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
+$Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
+The triple $\langle N, P, Q \rangle$ is our verification query. \todo{How to formalize $P$ and $Q$}
 
 
 The algorithm~\ref{algo:main} represents the high level flow of our approach. Which is a counter example guided abstract refinement(CEGAR) based approach. 
@@ -133,7 +85,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \begin{algorithmic}[1]
     \State constr = \{\}
     \For{$i=1$ to $k$}
-      \For{$j=0$ to $l_i.size$}
+      \For{$j=0$ to $|l_i|$}
         \If{$n_{i,j} \in $ markedNeurons}
           \State constr.add(exactConstr($n_{i,j}$)) 
         \Else
@@ -163,7 +115,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
       \If{not verified by deeppoly}
         \State constr = \{\}
         \For{$i=1$ to $k$}
-          \For{$j=0$ to $l_i.size$}
+          \For{$j=0$ to $|l_i|$}
             \State constr.add($A'(n_{i,j}).lexpr \leq x_{i,j} \leq A'(n_{i,j}).uexpr$)
           \EndFor
         \EndFor
@@ -188,13 +140,13 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Output: } marked neurons or real counter example. 
   \begin{algorithmic}[1]
     \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models Q$. 
-   \For{$j=0$ to $l_k.size$}
+   \For{$j=0$ to $|l_k|$}
     \State $satval_{kj} = \boldsymbol{y}_j$
    \EndFor
    \For{$i=k$ to $1$}
       \If{$l_i$ is affine layer}
         \State layerConstraints = \{\}
-        \For{$j=0$ to $l_i.size$}
+        \For{$j=0$ to $|l_i|$}
           \If{$satval_{i+1,j} > 0$}
             \State $constr_{ij}$ = $(A(n_{ij}).lexpr$ == $satval_{i+1,j}$) \Comment{lexpr=rexpr for affine}
           \Else
@@ -208,12 +160,12 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
         % \EndFor
         \State isSat = checkSat(layerConstrains) \Comment{And of all constraints}
         \If{not isSat}
-          \State markedNeurons = \{$n_{i,j}$ | $0 \leq j\leq l_i.size \land constr_{i,j}$ $\in$ unsatCore\}
+          \State markedNeurons = \{$n_{i,j}$ | $0 \leq j\leq |l_i| \land constr_{i,j}$ $\in$ unsatCore\}
           \State \textbf{return } markedNeurons
         \EndIf
       \EndIf
    \EndFor
-    \State ce = \{$satval_{0i}$ | $i=0$ to $l_{0}.size$ \} \Comment{If pullbacked upto input layer}
+    \State ce = \{$satval_{0i}$ | $i=0$ to $|l_0|$ \} \Comment{If pullbacked upto input layer}
     \State \textbf{return} ce
   \end{algorithmic}
   \caption{A pullback approach to get mark neurons or counter example}
@@ -234,18 +186,18 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
       \Else \Comment{Relu layer}
         \State constraints = \{\}
         \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
-          \For{$j=0$ to $l_t.size$}
+          \For{$j=0$ to $|l_t|$}
             \State constrains.add($A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr$)
           \EndFor
         \EndFor
-        \For{$j=0$ to $l_{i-1}.size$}\Comment{Previous layer}
+        \For{$j=0$ to $|l_{i-1}|$}\Comment{Previous layer}
           \State constrains.add($x_{i-1,j} == val_{i-1,j}$)
         \EndFor
-        \For{$j=0$ to $l_k.size$}\Comment{Output layer}
+        \For{$j=0$ to $|l_k|$}\Comment{Output layer}
           \State constrains.add($x_{kj} == y_{j}$)
         \EndFor
         softConstraints = \{\}
-        \For{$j=0$ to $l_i.size$}\Comment{Current layer}
+        \For{$j=0$ to $|l_i|$}\Comment{Current layer}
           \State softConstraints.add($x_{ij} == val_{ij}$)
         \EndFor
         \State maximize the softConstraints with satisfying the constrains. 
