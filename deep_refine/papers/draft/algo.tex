@@ -35,6 +35,10 @@ The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\bold
 $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
 The triple $\langle N, P, Q \rangle$ is our verification query. \todo{How to formalize $P$ and $Q$}
 
+\begin{df}
+  A predicate on input layer is $P = \bigtimes_{i=0}^{m}[A(n_{0i}).lb, A(n_{0i}).ub]$. 
+\end{df}
+
 
 The algorithm~\ref{algo:main} represents the high level flow of our approach. Which is a counter example guided abstract refinement(CEGAR) based approach. 
 At the first line in algorithm~\ref{algo:main}, we generate all the abstract constraints by \deeppoly{}. These abstract constrains
