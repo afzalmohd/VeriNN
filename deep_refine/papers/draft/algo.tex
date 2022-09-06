@@ -3,8 +3,7 @@
 
 We will use the following convention in writing our algorithms.
 \begin{itemize}
-\item $x_{ij}$ is a real variable for neuron $n_{ij}$.\todo{Define $x_0$}
-\item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector. And $val_{ij}$ represents the value of $n_{ij}$. 
+\item $x_{ij}$ is a real variable for neuron $n_{ij}$.
 \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
 % \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
 \end{itemize}
@@ -30,17 +29,22 @@ We will use the following convention in writing our algorithms.
   % For a neural network $N$, an abstract constraints $A : N.neurons \mapsto \reals \times \reals \times Expr \times Expr $
 \end{df}
 
-Let us say $P$ and $Q$ are the predicates on the input and output space respectively. 
+Let us say $P$ is a predicate on input layer's variables $P = \bigtimes_{i=0}^{m}[lb_i, ub_i]$, where $m$ is 
+the number of neurons in input layer and $lb_i$ is a lower bound for $n_{0i}$ and $ub_i$ is a upper bounds
+for neuron $n_{0i}$.
+And $Q$ is boolean combination of $Linconstr$ on output layer. 
 The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
 The triple $\langle N, P, Q \rangle$ is our verification query. \todo{How to formalize $P$ and $Q$}
 
 
-Let $P$ be a predicate over variables $x_0$.
+% Let $P$ be a predicate over variables $x_0$.
 
-\begin{df}
-  A predicate on input layer is $P = \bigtimes_{i=0}^{m}[A(n_{0i}).lb, A(n_{0i}).ub]$. 
-\end{df}
+% \begin{df}
+%   A predicate on input layer is $P = \bigtimes_{i=0}^{m}[lb_i, ub_i]$, where $m$ is the number of neurons 
+%   in input layer and $lb_i, ub_i$ are the lower and upper bounds for each neuron $n_{0i}$.   
+% \end{df}
+
 
 
 The algorithm~\ref{algo:main} represents the high level flow of our approach. Which is a counter example guided abstract refinement(CEGAR) based approach. 
