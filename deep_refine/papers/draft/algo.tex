@@ -3,7 +3,7 @@
 
 We will use the following convention in writing our algorithms.
 \begin{itemize}
-\item $x_{ij}$ is a real variable for neuron $n_{ij}$
+\item $x_{ij}$ is a real variable for neuron $n_{ij}$.\todo{Define $x_0$}
 \item $\boldsymbol{val_{i}}$ is a value vector at $i^{th}$ layer, if neural network execute on some input vector. And $val_{ij}$ represents the value of $n_{ij}$. 
 \item $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
 % \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
@@ -34,6 +34,9 @@ Let us say $P$ and $Q$ are the predicates on the input and output space respecti
 The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
 The triple $\langle N, P, Q \rangle$ is our verification query. \todo{How to formalize $P$ and $Q$}
+
+
+Let $P$ be a predicate over variables $x_0$.
 
 \begin{df}
   A predicate on input layer is $P = \bigtimes_{i=0}^{m}[A(n_{0i}).lb, A(n_{0i}).ub]$. 
@@ -87,17 +90,17 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons $\subseteq ~ N.neurons$ \\
   \textbf{Output: } verified or spurious counter example. 
   \begin{algorithmic}[1]
-    \State constr = \{\}
+    \State constr = $true$
     \For{$i=1$ to $k$}
       \For{$j=0$ to $|l_i|$}
         \If{$n_{i,j} \in $ markedNeurons}
-          \State constr.add(exactConstr($n_{i,j}$)) 
+          \State constr := $constr \land exactConstr(n_{i,j})$ 
         \Else
-          \State constr.add($A(n_{i,j}).lexpr \leq x_{i,j} \leq A(n_{i,j}).uexpr$)
+          \State constr := $constr \land A(n_{i,j}).lexpr \leq x_{i,j} \leq A(n_{i,j}).uexpr$
         \EndIf
       \EndFor
     \EndFor
-    \State $constr = constr ~ \union ~ P ~ \union ~ Q$
+    \State $constr := constr \land P \land Q$
     \State isSat = checkSat(constr)
     \If{isSat is True}
       \State \textbf{return} spurious counter example
