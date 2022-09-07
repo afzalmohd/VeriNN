@@ -10,7 +10,7 @@ if $\boldsymbol{v} \models P$, $N(\boldsymbol{v}) \models Q$.
 We assume $P$ of the form
 % Let us say $P$ is a predicate on input layer's variables
 $\Land_{i=1}^{|l_0|}lb_i \leq x_{0i} \leq ub_i$, where $lb_i$ and $ub_i$ are lower and upper bounds for neuron $n_{0i}$ respectively.\todo{Why do we expect this form}
-A input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter example(cex) if $N(\boldsymbol{v}) \models \lnot Q$.  
+An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter example(cex) if $N(\boldsymbol{v}) \models \lnot Q$.  
 
 % The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 % $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
@@ -43,6 +43,17 @@ $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an opt
   % For a neural network $N$, an abstract constraints $A : N.neurons \mapsto \reals \times \reals \times Expr \times Expr $
 \end{df}
 
+Let us say $lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$ is a 
+conjunction of upper and lower constrains of each neurons of layer $l_i$.
+The $lexpr$ and $uexpr$ for any neuron of a layer contains variables only from the previous layer's neurons, 
+hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
+
+\begin{df}
+  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
+  abstract execution of abstract constrain $A$ if 
+  $\boldsymbol{v_0} \models lc_0 \Land_{i=1}^{k} ((\boldsymbol{v_{i-1}} \land \boldsymbol{v_i}) \models lc_i)$.  
+\end{df}
+
 
 \begin{df}
   An abstract execution $\boldsymbol{v_0,...,v_k}$ is
@@ -51,7 +62,7 @@ $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an opt
 
 \begin{df}
   An abstract counterexample $\boldsymbol{v_0,...,v_k}$ is a
-  spurious counter example(spuriousCEX) if $\boldsymbol{v_0}$  and is not a counterexample.
+  spurious counter example(spuriousCEX) if $\boldsymbol{v_0}$ is not a counterexample.
   % satisfy all the abstract constraints
   % with predicates $P$ and $Q$, but $N(\boldsymbol{x}) \nvDash Q$. 
 \end{df}
@@ -116,17 +127,17 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons $\subseteq ~ N.neurons$ \\
   \textbf{Output: } verified or spurious counter example. 
   \begin{algorithmic}[1]
-    \State constr = $true$
+    \State $constr := true$
     \For{$i=1$ to $k$}
-      \For{$j=0$ to $|l_i|$}
+      \For{$j=1$ to $|l_i|$}
         \If{$n_{i,j} \in $ markedNeurons}
-          \State constr := $constr \land exactConstr(n_{i,j})$ 
+          \State $constr := constr \land exactConstr(n_{i,j})$ 
         \Else
-          \State constr := $constr \land A(n_{i,j}).lexpr \leq x_{i,j} \leq A(n_{i,j}).uexpr$
+          \State $constr := constr \land A(n_{i,j}).lexpr \leq x_{i,j} \leq A(n_{i,j}).uexpr$
         \EndIf
       \EndFor
     \EndFor
-    \State $constr := constr \land P \land Q$
+    \State $constr := constr \land P \land \neg Q$
     \State isSat = checkSat(constr)
     \If{isSat is True}
       \State \textbf{return} spurious counter example
@@ -146,13 +157,13 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
     \For{all combination in $2^{markedNeurons}$}
       \State $A'$ = run deeppoly
       \If{not verified by deeppoly}
-        \State constr = \{\}
+        \State $constr := true$
         \For{$i=1$ to $k$}
-          \For{$j=0$ to $|l_i|$}
-            \State constr.add($A'(n_{i,j}).lexpr \leq x_{i,j} \leq A'(n_{i,j}).uexpr$)
+          \For{$j=1$ to $|l_i|$}
+            \State $constr := constr \land A'(n_{i,j}).lexpr \leq x_{i,j} \leq A'(n_{i,j}).uexpr$
           \EndFor
         \EndFor
-        \State $constr = constr ~ \union ~ P ~ \union ~ Q$ 
+        \State $constr := constr  \land P \land \neg Q$ 
         \State isSat = checkSat(constr)
         \If{isSat}
           \State \textbf{return} spurious counter example
@@ -178,27 +189,23 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
    \EndFor
    \For{$i=k$ to $1$}
       \If{$l_i$ is affine layer}
-        \State layerConstraints = \{\}
-        \For{$j=0$ to $|l_i|$}
+        \State $layerConstraints := true$
+        \For{$j=1$ to $|l_i|$}
           \If{$satval_{i+1,j} > 0$}
             \State $constr_{ij}$ = $(A(n_{ij}).lexpr$ == $satval_{i+1,j}$) \Comment{lexpr=rexpr for affine}
           \Else
             \State $constr_{ij}$ = $(A(n_{ij}).lb \leq A(n_{ij}).lexpr \leq 0$)
           \EndIf
-          \State layerConstrains.add($constr_{ij}$)
+          \State $layerConstrains := layerConstrains \land constr_{ij}$
         \EndFor
-        % \For{$j=0$ to $l_{i-1}.size$}\Comment{m is size of layer $l_{i-1}$}
-        %   \State layerConstrains.add$(A(x_{i,j}, lb))$
-        %   \State layerConstrains.add$(A(x_{i,j}, ub))$
-        % \EndFor
-        \State isSat = checkSat(layerConstrains) \Comment{And of all constraints}
+        \State isSat = checkSat(layerConstrains)
         \If{not isSat}
-          \State markedNeurons = \{$n_{i,j}$ | $0 \leq j\leq |l_i| \land constr_{i,j}$ $\in$ unsatCore\}
+          \State markedNeurons = \{$n_{i,j}$ | $1 \leq j\leq |l_i| \land constr_{i,j}$ $\in$ unsatCore\}
           \State \textbf{return } markedNeurons
         \EndIf
       \EndIf
    \EndFor
-    \State ce = \{$satval_{0i}$ | $i=0$ to $|l_0|$ \} \Comment{If pullbacked upto input layer}
+    \State ce = \{$satval_{0i}$ | $i=1$ to $|l_0|$ \} \Comment{If pullbacked upto input layer}
     \State \textbf{return} ce
   \end{algorithmic}
   \caption{A pullback approach to get mark neurons or counter example}
@@ -217,20 +224,20 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
       \If{$l_i$ is affine layer}
         \State $\boldsymbol{val_i} = W_i * \boldsymbol{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
       \Else \Comment{Relu layer}
-        \State constraints = \{\}
+        \State $constrs := true$
         \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
-          \For{$j=0$ to $|l_t|$}
-            \State constrains.add($A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr$)
+          \For{$j=1$ to $|l_t|$}
+            \State $constr := constr \land (A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr)$
           \EndFor
         \EndFor
-        \For{$j=0$ to $|l_{i-1}|$}\Comment{Previous layer}
-          \State constrains.add($x_{i-1,j} == val_{i-1,j}$)
+        \For{$j=1$ to $|l_{i-1}|$}\Comment{Previous layer}
+          \State $constr := constr \land (x_{(i-1)j} == val_{(i-1)j})$
         \EndFor
-        \For{$j=0$ to $|l_k|$}\Comment{Output layer}
-          \State constrains.add($x_{kj} == y_{j}$)
+        \For{$j=1$ to $|l_k|$}\Comment{Output layer}
+          \State $constr := constr \land (x_{kj} == y_{j})$
         \EndFor
         softConstraints = \{\}
-        \For{$j=0$ to $|l_i|$}\Comment{Current layer}
+        \For{$j=1$ to $|l_i|$}\Comment{Current layer}
           \State softConstraints.add($x_{ij} == val_{ij}$)
         \EndFor
         \State maximize the softConstraints with satisfying the constrains. 
