@@ -50,14 +50,10 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
 
 \begin{df}
   A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
-  abstract execution of abstract constrain $A$ if 
-  $\boldsymbol{v_0} \models lc_0 \Land_{i=1}^{k} ((\boldsymbol{v_{i-1}} \land \boldsymbol{v_i}) \models lc_i)$.  
-\end{df}
-
-
-\begin{df}
-  An abstract execution $\boldsymbol{v_0,...,v_k}$ is
-  an abstract counter example(cex) if $\boldsymbol{v_k} \models \lnot Q$
+  {\em abstract execution} of abstract constraint $A$ if 
+  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
+ Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
+  an {\em abstract counter example(cex)} if $\boldsymbol{v_k} \models \lnot Q$
 \end{df}
 
 \begin{df}
