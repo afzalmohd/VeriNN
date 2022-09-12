@@ -35,7 +35,8 @@ same value $x$ as output if $x$ is non-negative otherwise return the value 0.
 A neural network can be visualize as a function $N$ which takes an input of $m$ dimensions and gives an 
 output of $n$ dimensions. $N$ can be represented as a composition of functions $f_k o f_{l-1} ... o f_1$,
 where each function $f_i$ represents either the linear combinations of previous layer's
-output or an activation function. 
+output or an activation function. Let us say $n_{ij} \in N.Neurons$ represents 
+the $i^{th}$ neuron of layer $l_j$, and $x_{ij}$ is a real variable for $n_{ij}$. 
 
 % For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
 
@@ -116,6 +117,25 @@ The abstract constraint $A$ generates as follow:
                         by back substituting the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer. 
             \end{enumerate} 
 \end{itemize}
+
+The constraints for an affine neuron are exact because it is just an affine transformation of input neurons. 
+The constraints for a relu neuron is also exact if relu is either in active or passive phase. 
+The constrains for relu is over-approximated if the behavior of relu is uncertain, although the exact 
+constraints for this case exist, but with the cost of efficiency. The equation ~\ref{eq:reluexact} shows the exact constraints
+for a relu neurons when its behavior is uncertain. Let us say the relu neuron is $x_{ij} = max(0,x_{(i-1)j})$. 
+
+\begin{align}
+    \label{eq:reluexact}
+    \begin{split}
+        x_{ij} &\leq x_{(i-1)j} - l*(1-a) \\
+        x_{ij} &\geq x_{(i-1)j} \\
+        x_{ij} &\leq u*a \\
+        x_{ij} &\geq 0 \\
+        a &\in \{0,1\} \\ 
+        \text{where }l = A(x_{(i-1)j}).lb &\text{ and }u = A(x_{(i-1)j}).ub \\
+    \end{split}
+\end{align}
+
 
 
 

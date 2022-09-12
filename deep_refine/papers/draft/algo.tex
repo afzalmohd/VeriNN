@@ -1,5 +1,4 @@
 %\clearpage
-Let us say $n_{ij} \in N.Neurons$ represents the $i^{th}$ neuron of layer $l_j$, and $x_{ij}$ is a real variable for $n_{ij}$. 
 A {\em predicate} is a Boolean combination of $Linconstr$.
 Let $P$ and $Q$ be a predicate over input and output layers respectively.
 A verification query is a triple $\langle N, P, Q \rangle$.
@@ -112,7 +111,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \textbf{Output: } verified or spurious counter example. 
   \begin{algorithmic}[1]
     \State $constr := P \land (\Land_{i=1}^k lc_i)\land \neg Q$
-    \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$
+    \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
     % \For{$i=1$ to $k$}
     %   \For{$j=1$ to $|l_i|$}
     %     \If{$n_{i,j} \in $ markedNeurons}
