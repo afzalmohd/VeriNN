@@ -41,7 +41,8 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
   {\em abstract execution} of abstract constraint $A$ if 
   $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
  Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
-  an {\em spurious counter example(spuriousCEX)} if $\boldsymbol{v_k} \models \lnot Q$
+ an {\em spurious counter example(spuriousCEX)} if $\boldsymbol{v_k} \models \lnot Q$
+ and $N(\boldsymbol{v_0}) \models Q$.
 \end{df}
 
 % \begin{df}
