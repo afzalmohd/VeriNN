@@ -40,8 +40,7 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
   {\em abstract execution} of abstract constraint $A$ if 
   $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
  Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
- an {\em spurious counter example(spuriousCEX)} if $\boldsymbol{v_k} \models \lnot Q$
- and $N(\boldsymbol{v_0}) \models Q$.
+ an {\em abstract counter example(abstractCEX)} if $\boldsymbol{v_k} \models \lnot Q$.
 \end{df}
 
 % \begin{df}
@@ -86,11 +85,11 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
     \State $A := deeppoly(N,P,Q)$\Comment{deeppoly generate the abstract constraints}
     \State markedNeurons = \{\}
     \While{True}
-      \State isVerified or spuriousCEX = isVerified($\langle N,P,Q \rangle$ , A, markedNeurons)
+      \State isVerified or abstractCEX = isVerified($\langle N,P,Q \rangle$ , A, markedNeurons)
       \If{isVerified is True}
         \State \textbf{return} UNSAT
       \Else
-        \If{spuriousCEX is a cex of $\langle N,P,Q \rangle$}
+        \If{abstractCEX is a cex of $\langle N,P,Q \rangle$}
           \State \textbf{return} cex
         \Else
           \State marked, cex = getMarkedNeurons($\langle N,P,Q \rangle$ , A, markedNeurons)
@@ -109,7 +108,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
 \begin{algorithm}[t]
   \textbf{Name: } isVerified1 \\
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons $\subseteq ~ N.neurons$ \\
-  \textbf{Output: } verified or spurious counter example. 
+  \textbf{Output: } verified abstractCEX. 
   \begin{algorithmic}[1]
     \State $constr := P \land (\Land_{i=1}^k lc_i)\land \neg Q$
     \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
@@ -125,7 +124,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
     % \State $constr := constr \land P \land \neg Q$
     \State isSat = checkSat(constr)
     \If{isSat}
-      \State \textbf{return} spuriousCEX
+      \State \textbf{return} abstractCEX
     \Else
       \State \textbf{return} verified
     \EndIf
@@ -137,7 +136,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
 \begin{algorithm}[t]
   \textbf{Name: } isVerified2 \\
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons \\
-  \textbf{Output: } verified or spurious counter example. 
+  \textbf{Output: } verified or  abstractCEX. 
   \begin{algorithmic}[1]
     \For{all combination in $2^{markedNeurons}$}
       \State $A'$ = run deeppoly
@@ -152,7 +151,7 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
       %   \State $constr := constr  \land P \land \neg Q$ 
         \State isSat = checkSat(constr)
         \If{isSat}
-          \State \textbf{return} spuriousCEX
+          \State \textbf{return} abstractCEX
         \EndIf
       %\EndIf
     \EndFor
