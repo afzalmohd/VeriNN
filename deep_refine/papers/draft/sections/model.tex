@@ -128,7 +128,8 @@ In \texttt{DeepPoly}, we compute the abstraction $A$ as follow:
 The constraints for an affine neuron are exact because it is just an affine transformation of input neurons. 
 The constraints for a relu neuron is also exact if relu is either in active or passive phase. 
 The constrains for relu is over-approximated if the behavior of relu is uncertain, although the exact 
-constraints for this case exist, but with the cost of efficiency. The equation ~\ref{eq:reluexact} shows the exact constraints
+constraints for this case exist, but with the cost of efficiency. 
+The equation ~\ref{eq:reluexact} shows the exact constraints
 for a relu neurons when its behavior is uncertain. Let us say the relu neuron is $x_{ij} = max(0,x_{(i-1)j})$. 
 
 \begin{align}
