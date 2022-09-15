@@ -37,6 +37,9 @@ output of $n$ dimensions. $N$ can be represented as a composition of functions $
 where each function $f_i$ represents either the linear combinations of previous layer's
 output or an activation function. Let us say $n_{ij} \in N.Neurons$ represents 
 the $i^{th}$ neuron of layer $l_j$, and $x_{ij}$ is a real variable for $n_{ij}$. 
+Without loss generality, we assume that the output layer is an affine(identity) layer, 
+since we can always append an affine layer in neural network. 
+and each hidden layer is followed by an activation function. 
 
 % For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
 

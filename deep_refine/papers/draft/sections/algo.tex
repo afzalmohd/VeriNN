@@ -43,40 +43,21 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
  an {\em abstract counter example(abstractCEX)} if $\boldsymbol{v_k} \models \lnot Q$.
 \end{df}
 
-% \begin{df}
-%   An abstract counterexample $\boldsymbol{v_0,...,v_k}$ is a
-%   spurious counter example(spuriousCEX) if $\boldsymbol{v_0}$ is not a counterexample.
-%   % satisfy all the abstract constraints
-%   % with predicates $P$ and $Q$, but $N(\boldsymbol{x}) \nvDash Q$. 
-% \end{df}
 
 
+\texttt{DeepPoly} is a sound and incomplete technique, because it do over-approximation analysis. 
+If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise the result of it is unknown. 
+We overcome this limitation of \deeppoly{} by using a cegar based technique, which is a complete technique and rely on \deeppoly{}. 
+The algorithm~\ref{algo:main} represents the high level flow of our approach.
+At the first line algorithm generates all the abstract constraints by using \deeppoly{}. 
+These abstract constrains are the lower and upper constraints as well as the lower and upper bounds 
+of each neurons in the neural network. The algorithm \ref{algo:verif1} and \ref{algo:verif2} verify the query, 
+and return either the verification successful or abstractCEX. If these algorithms return verification successful then we report verified,
+otherwise analyze the abstractCEX by algorithms \ref{algo:refine1}, \ref{algo:refine2} and return the causes of spuriousness (markedNeurons). 
+The algorithms \ref{algo:verif1} and \ref{algo:verif2} exploits the markedNeurons to verify the property. 
 
-
-
-% Let $P$ be a predicate over variables $x_0$.
-
-% \begin{df}
-%   A predicate on input layer is $P = \bigtimes_{i=0}^{m}[lb_i, ub_i]$, where $m$ is the number of neurons 
-%   in input layer and $lb_i, ub_i$ are the lower and upper bounds for each neuron $n_{0i}$.   
-% \end{df}
-
-
-
-The algorithm~\ref{algo:main} represents the high level flow of our approach. Which is a counter example guided abstract refinement(CEGAR) based approach. 
-At the first line in algorithm~\ref{algo:main}, we generate all the abstract constraints by \deeppoly{}. These abstract constrains
-are the lower and upper constraints as well as the lower and upper bounds for each neurons in the neural network.
-The \emph{isVerified} function in algorithm~\ref{algo:main} calls either algorithm~\ref{algo:verif1} or algorithm~\ref{algo:verif2}. 
-Both the algorithms~\ref{algo:verif1} and \ref{algo:verif2} takes \markednewrons{} as input. The \markednewrons{} 
-is a subset of the neurons of the neural network. The \markednewrons{} represents the set of the culprit neurons. 
-Algorithm~\ref{algo:verif1} replace the abstract constraints of \markednewrons{} by exact constraints and check for the 
-property by \milp{} solver. If \milp{} solver return \sat{} then we return satisfying assignments as a spurious counter example, 
-otherwise return verified. Algorithm~\ref{algo:verif2} split each neuron of \markednewrons{} into two sub cases. Suppose the 
-neuron $x\in [lb,ub]$ belongs to \markednewrons{}, then first case is when $x \in [lb,0]$ and the second case is when $x \in [0,ub]$.   
-After splitting neurons into two cases \deeppoly{} run for both cases separately. In algorithm \ref{algo:verif2}, \deeppoly{}
-run exponential number of times in the the size of the \markednewrons{}. We return verified in algorithm~\ref{algo:verif2} if 
-verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to verify in any case then we return the spurious counter example. 
-
+Our approach contains two parts, the first part contains the approaches to find the markedNeurons. 
+The second part contains the verification approaches (utilizing the spurious information).
 
 \begin{algorithm}[t]
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
@@ -104,6 +85,151 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
   \caption{A CEGAR based approach of neural network verification}
   \label{algo:main}
 \end{algorithm}
+
+
+% In the later case we check by executing the counter example on the neural network. 
+% If it does not satisfy the property then it is true a counter example otherwise it is an spurious counter example. 
+% If the counter example reported by \texttt{DeepPoly} is an spurious counter example then we analyze it.  
+% We do refinement based analysis. We have two parts of our refinement process. 
+% In the first part we finds the culprit neurons. These neurons are adding the spurious information to generate the spurious counter example.
+% The second part is a verification part which is utilizing the culprit neurons in the verification of the query. 
+
+\subsection{Causes of spuriousness} 
+We have two approaches to find the causes of spuriousness (markedNeurons). 
+
+\subsubsection{Pullback approach: }
+
+Suppose the abstractCEX is $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$. 
+The core idea of this approach is to find a point $\boldsymbol{p_{k-1}}$ in the layer $l_{k-1}$. 
+The point $\boldsymbol{v_k}$ is guaranteed to be reachable from point $\boldsymbol{p_{k-1}}$ in concrete domain.
+Similarly, we find points $\boldsymbol{p_{k-3}}, \boldsymbol{p_{k-5}}, ... \boldsymbol{p_0}$, 
+such that $p_i$ always reachable from point $p_{i-2}$. 
+We find these points on each \relu{} layer and input layer only. 
+If we find the point $\boldsymbol{p_0}$ in input layer, it means $\boldsymbol{p_0}$ is a counter example, 
+because we can reach from $\boldsymbol{p_0}$ to $\boldsymbol{p_2}$, $\boldsymbol{p_2}$ to $\boldsymbol{p_4}$ 
+and so on upto $\boldsymbol{v_k}$. 
+If we get stuck in some layer $l_i$ i.e. fails to find point 
+$\boldsymbol{p_{i-2}}$. It means point $\boldsymbol{p_i}$ does not have its corresponding point $\boldsymbol{p_{i-2}}$, 
+which implies that point $\boldsymbol{p_i}$ is an spurious point generated by \relu{} layer $l_i$. 
+The algorithm \ref{algo:refine1} compute such points. At line number $2$, we equate the value of 
+each element of $\boldsymbol{v_k}$ to the corresponding neuron's affine expression($lexpr$ or $uexpr$), 
+and take the conjunction, and check satisfiability. Since the affine expression of each neuron in $l_k$ contains the 
+variable of layer $l_{i-1}$, so, the satisfying assignment is the point $p_{k-1}$. Similarly, we build the constraints
+for each hidden affine layer's neurons. For a neurons $n_{ij}$ of affine layer $l_i$, 
+if corresponding point's value $p_{i+1}(j)$ greater than $0$ then we equate the affine expression of $x_{ij}$ to $p_{i+1}(j)$,
+otherwise we set the lower and upper bound of the affine expression of $x_{ij}$ as $A(x_{ij}).lb$ and $0$ respectively. 
+Which is the replication of \relu{} function $x_{(i+1)j} = max(0, x_{ij})$. We construct such constraint 
+for each neuron of $li$, and build a formula by taking conjunction of each neuron's constraint, 
+and check satisfiability of this formula. If it is satisfiable then the point $\boldsymbol{p_{i-1}}$ found, 
+otherwise we get the $\mathtt{unsat}$ core. We collect all the neurons of $l_i$ whose constrains are 
+in $\mathtt{unsat}$ core, and return them as the markedNeurons.   
+
+\begin{algorithm}[t]
+  \textbf{Name: } pullback \\
+  \textbf{Input: } $\langle N,P,Q \rangle$, abstract constraints $A$ and spuriousCEX $=\boldsymbol{v_0}, \boldsymbol{v_1}, .., \boldsymbol{v_k}$ \\
+  \textbf{Output: } markedNeurons or cex. 
+  \begin{algorithmic}[1]
+   \State \textbf{return} $\boldsymbol{v_0}$ if $N(\boldsymbol{v_0}) \models \neg Q$. 
+   \State $constr := \Land_{j=1}^{|l_k|} (A(x_{kj}).lexpr = v_k(j))$
+   \State isSat = checkSat(constr)
+   \If{isSat} \Comment{must be true, last affine layer dont add spurious information}
+      \State $\boldsymbol{p_{k-1}} = \boldsymbol{satval_{k-1}}$ 
+   \EndIf
+   \For{$i=k-1$ to $1$}
+      \If{$l_i$ is affine layer}
+        \State $layerConstraints := true$
+        \For{$j=1$ to $|l_i|$}
+          \If{$p_{i+1}(j) > 0$}
+            \State $constr_{ij}$ := $(A(x_{ij}).lexpr = p_{i+1}(j)$) \Comment{lexpr=uexpr for affine}
+          \Else
+            \State $constr_{ij}$ := $(A(x_{ij}).lb \leq A(n_{ij}).lexpr \leq 0$)
+          \EndIf
+          \State $layerConstrains := layerConstrains \land constr_{ij}$
+        \EndFor
+        \State isSat = checkSat(layerConstrains)
+        \If{not isSat}
+          \State markedNeurons = \{$n_{i,j}$ | $1 \leq j\leq |l_i| \land constr_{i,j}$ $\in$ unsatCore\}
+          \State \textbf{return } markedNeurons
+        \Else
+          \State $\boldsymbol{p_{i-1}} = \boldsymbol{satval_{i-1}}$
+        \EndIf
+      % \Else \Comment{Relu layer}
+      %   \State $\boldsymbol{satval}_{i-1} := \boldsymbol{satval}_i$
+      \EndIf
+   \EndFor
+    %\State $\boldsymbol{cex}$ = $\boldsymbol{satval_0}$ \Comment{If pullbacked upto input layer}
+    \State \textbf{return} $\boldsymbol{p_0}$ \Comment{cex if pullbacked till input layer}
+  \end{algorithmic}
+  \caption{A pullback approach to get mark neurons or counter example}
+  \label{algo:refine1}
+\end{algorithm}
+
+\subsection{Optimization based approach: }
+
+todo
+
+\begin{algorithm}[t]
+  \textbf{Name: } getMarkedNeurons2 \\
+  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
+  \textbf{Output: } marked neurons or real counter example. 
+  \begin{algorithmic}[1]
+    \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models Q$. 
+    \State Let us say $\boldsymbol{val_{i}}$ is the value vector at layer $l_i$, when $\boldsymbol{x}$ executed on network $N$. 
+    \For{$i=1$ to $k$} \Comment{inputLayer excluded}
+      % \If{$l_i$ is affine layer}
+      %   \State $\boldsymbol{val_i} = W_i * \boldsymbol{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
+      % \Else \Comment{Relu layer}
+      \If{$l_i$ is \relu{} layer}
+        \State $constrs := \Land_{t=i}^k lc_t$
+        % \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
+        %   \For{$j=1$ to $|l_t|$}
+        %     \State $constr := constr \land (A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr)$
+        %   \EndFor
+        % \EndFor
+        \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val_{(i-1)j})$
+        % \For{$j=1$ to $|l_{i-1}|$}\Comment{Previous layer}
+        %   \State $constr := constr \land (x_{(i-1)j} = val_{(i-1)j})$
+        % \EndFor
+        \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = y_{j})$
+        % \For{$j=1$ to $|l_k|$}\Comment{Output layer}
+        %   \State $constr := constr \land (x_{kj} = y_{j})$
+        % \EndFor
+        \State $softConstraints := \cup_{j=1}^{|l_j|} (x_{ij} = val_{ij})$
+        % \For{$j=1$ to $|l_i|$}\Comment{Current layer}
+        %   \State softConstraints.add($x_{ij} = val_{ij}$)
+        % \EndFor
+        \State maximize the $softConstraints$ with satisfying the $constr$. 
+        \State $markedNeurons := \{n_{ij} | 1 \leq j \leq |l_i| \land x_{ij} \neq val_{ij}\}$ 
+        \If{$markedNeurons$ is empty}
+          \State \textbf{continue}
+        \Else
+          \State \textbf{return} markedNeurons
+        \EndIf 
+      \EndIf
+    \EndFor
+  \end{algorithmic}
+  \caption{An optimization based approach to get mark neurons or counter example}
+  \label{algo:refine2}
+\end{algorithm}
+
+
+
+
+
+
+\subsection{Utilizing of spurious information}
+
+The \emph{isVerified} function in algorithm~\ref{algo:main} calls either algorithm~\ref{algo:verif1} or algorithm~\ref{algo:verif2}. 
+Both the algorithms~\ref{algo:verif1} and \ref{algo:verif2} takes \markednewrons{} as input. 
+The \markednewrons{} represents the set of the culprit neurons. 
+Algorithm~\ref{algo:verif1} replace the abstract constraints of \markednewrons{} by exact constraints and check for the 
+property by \milp{} solver. If \milp{} solver return \sat{} then we return satisfying assignments as a abstractCEX, 
+otherwise return verified. Algorithm~\ref{algo:verif2} split each neuron of \markednewrons{} into two sub cases. Suppose the 
+neuron $x\in [lb,ub]$ belongs to \markednewrons{}, then first case is when $x \in [lb,0]$ and the second case is when $x \in [0,ub]$.   
+After splitting neurons into two cases \deeppoly{} run for both cases separately. In algorithm \ref{algo:verif2}, \deeppoly{}
+run exponential number of times in the the size of the \markednewrons{}. We return verified in algorithm~\ref{algo:verif2} if 
+verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to verify in any case then we return the abstractCEX. 
+
 
 \begin{algorithm}[t]
   \textbf{Name: } isVerified1 \\
@@ -163,87 +289,9 @@ verification query verified in all the \deeppoly{} runs. If \deeppoly{} fails to
 
 
 
-\begin{algorithm}[t]
-  \textbf{Name: } getMarkedNeurons1 \\
-  \textbf{Input: } $\langle N,P,Q \rangle$, abstract constraints $A$ and $\boldsymbol{x}, \boldsymbol{y} \in spuriousCEX$ satisfying assignments on input and output layers respectively\\
-  \textbf{Output: } marked neurons or real counter example. 
-  \begin{algorithmic}[1]
-    \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
-  %  \For{$j=0$ to $|l_k|$}
-  %   \State $satval_{kj} = \boldsymbol{y}_j$
-  %  \EndFor
-   \State $\boldsymbol{satval}_k = \boldsymbol{y}_j$
-   \For{$i=k$ to $1$}
-      \If{$l_i$ is affine layer}
-        \State $layerConstraints := true$
-        \For{$j=1$ to $|l_i|$}
-          \If{$satval_{i,j} > 0$}
-            \State $constr_{ij}$ := $(A(n_{ij}).lexpr$ = $satval_{i,j}$) \Comment{lexpr=uexpr for affine}
-          \Else
-            \State $constr_{ij}$ := $(A(n_{ij}).lb \leq A(n_{ij}).lexpr \leq 0$)
-          \EndIf
-          \State $layerConstrains := layerConstrains \land constr_{ij}$
-        \EndFor
-        \State isSat = checkSat(layerConstrains)
-        \If{not isSat}
-          \State markedNeurons = \{$n_{i,j}$ | $1 \leq j\leq |l_i| \land constr_{i,j}$ $\in$ unsatCore\}
-          \State \textbf{return } markedNeurons
-        \EndIf
-      \Else \Comment{Relu layer}
-        \State $\boldsymbol{satval}_{i-1} := \boldsymbol{satval}_i$
-      \EndIf
-   \EndFor
-    %\State $\boldsymbol{cex}$ = $\boldsymbol{satval_0}$ \Comment{If pullbacked upto input layer}
-    \State \textbf{return} $\boldsymbol{satval}_0$ \Comment{cex if pullbacked till input layer}
-  \end{algorithmic}
-  \caption{A pullback approach to get mark neurons or counter example}
-  \label{algo:refine1}
-\end{algorithm}
 
 
-\begin{algorithm}[t]
-  \textbf{Name: } getMarkedNeurons2 \\
-  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and satisfying assignments $\boldsymbol{x}$ and $\boldsymbol{y}$ on input and output layers respectively\\
-  \textbf{Output: } marked neurons or real counter example. 
-  \begin{algorithmic}[1]
-    \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models Q$. 
-    \State Let us say $\boldsymbol{val_{i}}$ is the value vector at layer $l_i$, when $\boldsymbol{x}$ executed on network $N$. 
-    \For{$i=1$ to $k$} \Comment{inputLayer excluded}
-      % \If{$l_i$ is affine layer}
-      %   \State $\boldsymbol{val_i} = W_i * \boldsymbol{val_{i-1}} + B_i$ \Comment{simple matrix muliplication}
-      % \Else \Comment{Relu layer}
-      \If{$l_i$ is \relu{} layer}
-        \State $constrs := \Land_{t=i}^k lc_t$
-        % \For{$t=i$ to $k$}\Comment{Each layer after $l_i$}
-        %   \For{$j=1$ to $|l_t|$}
-        %     \State $constr := constr \land (A(n_{tj}).lexpr \leq x_{tj}\leq A(n_{tj}).uexpr)$
-        %   \EndFor
-        % \EndFor
-        \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val_{(i-1)j})$
-        % \For{$j=1$ to $|l_{i-1}|$}\Comment{Previous layer}
-        %   \State $constr := constr \land (x_{(i-1)j} = val_{(i-1)j})$
-        % \EndFor
-        \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = y_{j})$
-        % \For{$j=1$ to $|l_k|$}\Comment{Output layer}
-        %   \State $constr := constr \land (x_{kj} = y_{j})$
-        % \EndFor
-        \State $softConstraints := \cup_{j=1}^{|l_j|} (x_{ij} = val_{ij})$
-        % \For{$j=1$ to $|l_i|$}\Comment{Current layer}
-        %   \State softConstraints.add($x_{ij} = val_{ij}$)
-        % \EndFor
-        \State maximize the $softConstraints$ with satisfying the $constr$. 
-        \State $markedNeurons := \{n_{ij} | 1 \leq j \leq |l_i| \land x_{ij} \neq val_{ij}\}$ 
-        \If{$markedNeurons$ is empty}
-          \State \textbf{continue}
-        \Else
-          \State \textbf{return} markedNeurons
-        \EndIf 
-      \EndIf
-    \EndFor
-  \end{algorithmic}
-  \caption{An optimization based approach to get mark neurons or counter example}
-  \label{algo:refine2}
-\end{algorithm}
+
 
 
 
