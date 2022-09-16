@@ -67,23 +67,13 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
     bool is_verified = run_deeppoly(net);
     Configuration_deeppoly::is_unmarked_deeppoly = false;
     if(is_verified){
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-        std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-        std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
-        std::cout<<str<<std::endl;
-        write_to_file(Configuration_deeppoly::result_file, str);
+        print_status_string(net, 1, "deeppoly", image_index, 0, start_time);
         return 1;
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
         if(Configuration_deeppoly::tool == "deeppoly"){
-            auto end_time = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-            std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",unknown,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
-            std::cout<<str<<std::endl;
-            write_to_file(Configuration_deeppoly::result_file, str);
+            print_status_string(net, 0, "deeppoly", image_index, 0, start_time);
             return 0;
         }
         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
@@ -137,12 +127,12 @@ int run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::c
             bool is_real_ce = is_real_ce_mnist_cifar10(net);
             if(is_real_ce){
                 std::cout<<"Found counter example!!"<<std::endl;
-                print_failed_string(net, image_index, loop_counter, start_time);
+                print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
                 is_ce = true;
                 status = Failed;
             }
-            else{
-                print_unknown_string(net, image_index, loop_counter, start_time);
+            else{ //status unknown
+                print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
                 status = Unknown;
             }
             break;
@@ -150,14 +140,14 @@ int run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::c
         else{
             is_verified = is_image_verified_by_milp(net);
             if(is_verified){
-                print_verified_string(net, image_index, loop_counter, start_time);
+                print_status_string(net, 1, "drefine", image_index, loop_counter, start_time);
                 status = Verified;
                 break;
             }
         }
         loop_counter++;
-        if(loop_counter >= upper_iter_limit){
-            print_unknown_string(net, image_index, loop_counter, start_time);
+        if(loop_counter >= upper_iter_limit){ //status unknown
+            print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
             status = Unknown;
             break;
         }
@@ -173,12 +163,12 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
         bool is_real_ce = is_real_ce_mnist_cifar10(net);
         if(is_real_ce){
             std::cout<<"Found counter example!!"<<std::endl;
-            print_failed_string(net, image_index, counter, start_time);
+            print_status_string(net, 0, "drefine", image_index, counter, start_time);
             is_ce = true;
             status = Failed;
         }
         else{
-            print_unknown_string(net, image_index, counter, start_time);
+           print_status_string(net, 2, "drefine", image_index, counter, start_time);
             status = Unknown;
         }
     }
@@ -202,12 +192,12 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
                     bool is_real_ce = is_real_ce_mnist_cifar10(net);
                     if(is_real_ce){
                         std::cout<<"Found counter example!!"<<std::endl;
-                        print_failed_string(net, image_index, counter, start_time);
+                        print_status_string(net, 0, "drefine", image_index, counter, start_time);
                         is_ce = true;
                         status = Failed;
                     }
                     else{
-                        print_unknown_string(net, image_index, counter, start_time);
+                        print_status_string(net, 2, "drefine", image_index, counter, start_time);
                         status = Unknown;
                     }
                     break;
@@ -219,11 +209,11 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
             }
         }
         if(!is_path_available){
-            print_verified_string(net, image_index, counter, start_time);
+            print_status_string(net, 1, "drefine", image_index, counter, start_time);
             status = Verified;
         }
         else if(!is_ce){
-            print_unknown_string(net, image_index, counter, start_time);
+            print_status_string(net, 2, "drefine", image_index, counter, start_time);
             status = Unknown;
         }
     }
@@ -245,11 +235,11 @@ int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chro
             bool is_real_ce = is_real_ce_mnist_cifar10(net);
             if(is_real_ce){
                 std::cout<<"Found counter example!!"<<std::endl;
-                print_failed_string(net, image_index, loop_counter, start_time);
+                print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
                 status = Failed;
             }
-            else{
-                print_unknown_string(net, image_index, loop_counter, start_time);
+            else{//unknown
+                print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
                 status = Unknown;
             }
             is_bound_exceeded = false;
@@ -258,7 +248,7 @@ int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chro
         else{
             bool is_image_verified = is_image_verified_by_milp(net);
             if(is_image_verified){
-                print_verified_string(net, image_index, loop_counter, start_time);
+                print_status_string(net, 1, "drefine", image_index, loop_counter, start_time);
                 is_bound_exceeded = false;
                 status = Verified;
                 break;
@@ -266,8 +256,8 @@ int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chro
         }
         loop_counter++;
     }
-    if(is_bound_exceeded){
-        print_unknown_string(net, image_index, loop_counter, start_time);
+    if(is_bound_exceeded){ //unknown
+        print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
         status = Unknown;
     }
     return status;
@@ -321,48 +311,87 @@ void write_to_file(std::string& file_path, std::string& s){
     }
 }
 
-void print_failed_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
+void print_status_string(Network_t* net, size_t tool_status, std::string tool_name, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
+    std::string status_string;
+    if(tool_status == 0){
+        status_string = "failed";
+    }
+    else if(tool_status == 1){
+        status_string = "verified";
+    }
+    else{
+        status_string = "unknown";
+    }
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+    size_t num_marked_nt = num_marked_neurons(net);
     if(base_prp_name == ""){
-        base_prp_name = "dummy";
+        base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",failed,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(loop_counter)+","+std::to_string(num_marked_nt)+","+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
     std::cout<<str<<std::endl;
 }
 
-void print_verified_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-    std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
-    if(base_prp_name == ""){
-        base_prp_name = "dummy";
-    }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",verified,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
-    write_to_file(Configuration_deeppoly::result_file, str);
-    std::cout<<str<<std::endl;
-}
+// void print_failed_string(Network_t* net, std::string tool_name, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
+//     auto end_time = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+//     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+//     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+//     size_t num_marked_nt = num_marked_neurons(net);
+//     if(base_prp_name == ""){
+//         base_prp_name = "null";
+//     }
+//     std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+",failed,"+tool_name+","+std::to_string(loop_counter)+","+std::to_string(num_marked_nt)+","+std::to_string(duration.count());
+//     write_to_file(Configuration_deeppoly::result_file, str);
+//     std::cout<<str<<std::endl;
+// }
 
-void print_unknown_string(Network_t* net, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-    std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-    std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
-    if(base_prp_name == ""){
-        base_prp_name = "dummy";
-    }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",unknown,drefine,refine_counts,"+std::to_string(loop_counter)+",time,"+std::to_string(duration.count());
-    write_to_file(Configuration_deeppoly::result_file, str);
-    std::cout<<str<<std::endl;
-}
+// void print_verified_string(Network_t* net, std::string tool_name, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
+//     auto end_time = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+//     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+//     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+//     size_t num_marked_nt = num_marked_neurons(net);
+//     if(base_prp_name == ""){
+//         base_prp_name = "null";
+//     }
+//     std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+",verified,"+tool_name+","+std::to_string(loop_counter)+","+std::to_string(num_marked_nt)+","+std::to_string(duration.count());
+//     write_to_file(Configuration_deeppoly::result_file, str);
+//     std::cout<<str<<std::endl;
+// }
+
+// void print_unknown_string(Network_t* net, std::string tool_name, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
+//     auto end_time = std::chrono::high_resolution_clock::now();
+//     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+//     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
+//     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
+//     size_t num_marked_nt = num_marked_neurons(net);
+//     if(base_prp_name == ""){
+//         base_prp_name = "null";
+//     }
+//     std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+",unknown,"+tool_name+","+std::to_string(loop_counter)+","+std::to_string(num_marked_nt)+","+std::to_string(duration.count());
+//     write_to_file(Configuration_deeppoly::result_file, str);
+//     std::cout<<str<<std::endl;
+// }
 
 std::string get_absolute_file_name_from_path(std::string & path){
     std::string base_net_name = path.substr(path.find_last_of("/")+1);
     return base_net_name;
+}
+
+size_t num_marked_neurons(Network_t* net){
+    size_t num_marked_neurons = 0;
+    for(Layer_t* layer : net->layer_vec){
+        for(Neuron_t* nt : layer->neurons){
+            if(nt->is_marked){
+                num_marked_neurons += 1;
+            }
+        }
+    }
+    return num_marked_neurons;
 }
 
 bool is_valid_dataset(){
@@ -540,24 +569,17 @@ int run_drefine_vnnlib(Network_t* net){
         }
     }
     if(status == Failed){
-        print_failed_string(net, 0, loop_counter, start_time);
+        print_status_string(net, 0, "drefine", 0, loop_counter, start_time);
     }
     else if(status == Unknown){
-        print_unknown_string(net, 0, loop_counter, start_time);
+        print_status_string(net, 2, "drefine", 0, loop_counter, start_time);
     }
     else{
         if(is_verified_by_deeppoly){
-            size_t image_index = 0;
-            auto end_time = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
-            std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-            std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
-            std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->pred_label)+",property,"+base_prp_name+",verified,deeppoly,refine_counts,0,time,"+std::to_string(duration.count());
-            std::cout<<str<<std::endl;
-            write_to_file(Configuration_deeppoly::result_file, str);
+            print_status_string(net, 1, "deeppoly", 0, loop_counter, start_time);
         }
         else{
-            print_verified_string(net, 0, loop_counter, start_time);
+            print_status_string(net, 1, "drefine", 0, loop_counter, start_time);
         }
         status = Verified;
     }
