@@ -53,10 +53,11 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     std::cout<<std::endl;
     if(net->actual_label != net->pred_label){
         std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
-        std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image,"+std::to_string(image_index)+",label,"+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",wrong_pred,network,refine_counts,0,time,0";
-        std::cout<<str<<std::endl;
+        std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->actual_label)+" "+std::to_string(net->pred_label)+",null,wrong_pred,network,0,0,0";
         write_to_file(Configuration_deeppoly::result_file, str);
+        std::cout<<str<<std::endl;
         return false;
+        
     }
     return true;
 }
