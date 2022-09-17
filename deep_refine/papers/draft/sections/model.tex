@@ -37,9 +37,10 @@ output of $n$ dimensions. $N$ can be represented as a composition of functions $
 where each function $f_i$ represents either the linear combinations of previous layer's
 output or an activation function. Let us say $n_{ij} \in N.Neurons$ represents 
 the $i^{th}$ neuron of layer $l_j$, and $x_{ij}$ is a real variable for $n_{ij}$. 
-Without loss generality, we assume that the output layer is an affine(identity) layer, 
-since we can always append an affine layer in neural network. 
-and each hidden layer is followed by an activation function. 
+Let us say $val_i^{x}$ represent the point on layer $l_i$ if neural network executes on input $x$. 
+Without loss of generality, we assume that the output layer is an affine layer, 
+since we can always append an identity affine layer in neural network, also the layers $l_1, l_3, l_5, ..., l_k$ 
+are the affine layers and $l_2, l_4, l_6, ..., l_{k-1}$ are the relu layers.  
 
 % For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
 
@@ -149,6 +150,20 @@ for a relu neurons when its behavior is uncertain. Let us say the relu neuron is
 
 
 \subsection{Solver}
+
+We are using Gurobi(v9.1)~\cite{gurobi} to optimize the query or to check the satisfiability. 
+The function \texttt{checkSAT} in algorithm \ref{algo:refine1}, \ref{algo:verif1} and \ref{algo:verif2} 
+take a boolean formula of constraints as input and return \texttt{SAT} or \texttt{UNSAT}. 
+In case of \texttt{UNSAT}, it return the \texttt{UnsatCore}. 
+The \texttt{UnsatCore} is a subset of constrains, which are still \texttt{UNSAT}, 
+but if a single constraint removed from \texttt{UnsatCore} then it become \texttt{SAT}.
+The function \texttt{maxsoftConstr} in algorithm \ref{algo:refine2} takes two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
+The \texttt{hardConstr} is a boolean formula of constraints, and \texttt{softConstrs} is a set of constrains. 
+The function \texttt{maxsoftConstr} satisfies the maximum number of constraints in \texttt{softConstrs} with satisfying the \texttt{hardConstr}. 
+The function \texttt{maxsoftConstr} return \texttt{SAT} with the set of constraints satisfied in \texttt{softConstr}, or return
+\texttt{UNSAT} if \texttt{hardConstr} fails to satisfy. We encoded the \texttt{maxsoftConstr} function as an optimization 
+query in gurobi. 
+
 
 
 %%% Local Variables:
