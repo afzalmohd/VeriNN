@@ -1,0 +1,59 @@
+We have implemented our approach in a prototype and compared it with the related 
+approaches refinepoly~\cite{refinepoly}, deepSRGR~\cite{deepsrgr} and deeppoly~\cite{deeppoly}. We also compare 
+our tool with state of the art tools $\alpha - \beta$-Crown~\cite{alphabetacrown} and oval~\cite{ovaltool}. 
+The $\alpha - \beta$-Crown tool has achieved the 1st and oval 3rd rank in
+2nd International Verification of Neural Networks Competition (VNN-COMP'21). 
+We use the MNIST \cite{mnistdataset} for our evaluation.    
+\subsection{Implementation}
+We have implemented our tool in \texttt{C++} programming language. Our approach relies on \deeppoly{}, so, 
+we also have implemented \deeppoly{} in \texttt{C++}. We are using \texttt{C++} interface of gurobi solver 
+to check the satisfiability or to solve an optimization query. 
+
+\subsection{Benchmarks}
+We are using the MNIST~\cite{mnistdataset} dataset to check the effectiveness of our tool. 
+We are using 11 different fully connected feedforward neural networks with \relu{} activation as shown in table~\ref{tb:nndetail}.
+These benchmarks are taken from the \deeppoly{}'s website~\cite{erantool}. The input and output dimensions of each network 
+are $784$ and $10$ respectively. Deep et al~\cite{deeppolyref} used projected gradient descent (PGD)~\cite{pgdref}
+and DiffAI~\cite{diffairef} for adversarial training. The table \ref{tb:nndetail} contains the defended network i.e.
+trained with adversarial training as well as undefended network. The last column of the table \ref{tb:nndetail}
+shows tools name by which the defended networks are trained.  
+
+The predicate $P$ on input layer is computed using the input image $\boldsymbol{im}$ and user defined parameter $\epsilon$. 
+We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create 
+$P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel
+should not exceed $0$ and $1$ respectively. The predicate $Q$ on output layer is created using the network's output.    
+Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$. 
+One query instance $\langle N,P,Q \rangle$ is created for one network, one image and one epsilon value. 
+In our evaluation we took $11$ different networks, 8 different epsilons and 100 different images. The 
+total number of instances are computed to $8800$. Whenever our tool found a counter example on $\langle N,P,Q \rangle$,
+it denormalize it into an image by rounding the float values, 
+and check for counter example by executing $N$ on denormalized image.
+If found counter example then tool reports it, otherwise tool reports unknown.
+
+
+
+\begin{table}
+    \centering
+    \begin{tabular}{c|c|c|c}
+        \hline
+        \textbf{Neural Network} & \textbf{\#hidden layers} & \textbf{\#activation units} & \textbf{Defensive training} \\
+        \hline
+        $3\times 50$ & 2 & 110 & None \\
+        $3\times 100$ & 2 & 210 & None  \\
+        $5\times 100$ & 4 & 410 & None  \\
+        $6\times 100$ & 5 & 510 & DiffAI \\
+        $9\times 100$ & 8 & 810 & None  \\
+        $6\times 200$ & 5 & 1010 & None  \\
+        $9\times 200$ & 8 & 1610 & None  \\
+        $6\times 500$ & 6 & 3000 & None  \\
+        $6\times 500$ & 6 & 3000 & PGD, $\epsilon = 0.1$ \\
+        $6\times 500$ & 6 & 3000 & PGD, $\epsilon = 0.3$ \\
+        $4\times 1024$ & 3 & 3072 & None  \\
+        \hline
+    \end{tabular}
+    \caption{Neural networks details}
+    \label{tb:nndetail}
+\end{table}
+
+\subsection{Results}
+\input{fig/drefine.tex}
