@@ -1,0 +1,64 @@
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={Number of benchmarks},
+            ylabel={log(time)},
+            width=13cm,
+            height=9cm,
+            xmin=0, xmax=7000,
+            ymin=0, ymax=25,
+            xtick={0,1000,2000,3000,4000,5000,6000,7000},
+            ytick={0,5,10,15,20,25},
+            legend pos=south east,
+            legend entries={drefine, deeppoly, deep\_SRGR, refinepoly, drefine\_verified, alpha\_beta, oval, drefine\_falsified},
+            ymajorgrids=true,
+            xmajorgrids=true,
+            grid style=dashed,
+        ]
+        \addplot[
+            color=blue
+        ] 
+        table {fig/drefine_data.txt};
+        
+        \addplot[
+            color=red
+        ] 
+        table {fig/deeppoly_data.txt};
+
+        \addplot[
+            color=orange
+        ] 
+        table {fig/deepsrgr_data.txt};
+
+        \addplot[
+            color=green
+        ] 
+        table {fig/refinepoly_data.txt};
+
+        \addplot[
+            color=violet
+        ]
+        table {fig/drefine_verified_data.txt};
+        
+        \addplot[
+            color=purple
+        ]
+        table {fig/alpha_beta_data.txt};
+
+        \addplot[
+            color=brown
+        ]
+        table {fig/oval_data.txt};
+
+        \addplot[
+            color=gray
+        ]
+        table {fig/drefine_falsified_data.txt};
+
+        \end{axis}
+
+    \end{tikzpicture}
+    \caption{Cactus plot with related techniques}
+    \label{res:milp_with_milp}
+\end{figure}

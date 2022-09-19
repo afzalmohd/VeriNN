@@ -1,5 +1,6 @@
 We have implemented our approach in a prototype and compared it with the related 
-approaches refinepoly~\cite{refinepoly}, deepSRGR~\cite{deepsrgr} and deeppoly~\cite{deeppoly}. We also compare 
+approaches refinepoly~\cite{refinepoly}, deepSRGR~\cite{deepsrgr} and deeppoly~\cite{deeppoly}. 
+The approaches refinepoly and deepSRGR do the refinement on deeppoly. We also compare 
 our tool with state of the art tools $\alpha - \beta$-Crown~\cite{alphabetacrown} and oval~\cite{ovaltool}. 
 The $\alpha - \beta$-Crown tool has achieved the 1st and oval 3rd rank in
 2nd International Verification of Neural Networks Competition (VNN-COMP'21). 
@@ -56,4 +57,25 @@ If found counter example then tool reports it, otherwise tool reports unknown.
 \end{table}
 
 \subsection{Results}
-\input{fig/drefine.tex}
+We conducted the experiments on machine with \texttt{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
+processor with CentOS Linux 7 operating system.   
+The approaches deeppoly, refinepoly and deepSRGR are the incomplete approaches and do the refinement on deeppoly. 
+Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
+Figure~\ref{res:milp_with_milp} shows the comparison with the help of cactus plot. Our approach performing well 
+in terms of verified number of instances as well as in terms of time in comparison to the above incomplete approaches. 
+We are also comparing with state of the arts to check the effectiveness of our approach globally.
+As shown in figure~\ref{res:milp_with_milp}, tools $\alpha - \beta-$Crown and oval are performing better then our approach. 
+
+
+\input{fig/data_plot.tex}
+
+
+Figure~\ref{res:ep:milp_with_milp} shows the comparison with respect to different epsilon values. 
+At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the 
+performance of tools can be seen clearly. Here also we are performing better than the approaches deeppoly, refinepoly and deepSRGR,
+while $\alpha - \beta -$Crown performing better than our approach. 
+
+Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
+the most related techniques refinepoly and deepSRGR. But the state of the arts are doing better than our approach. 
+
+\input{fig/ep_plot.tex}
