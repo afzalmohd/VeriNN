@@ -1,0 +1,36 @@
+Consider a neural network in figure~\ref{fig:motivating}, 
+which has one input, one hidden and one output layer. The hidden layer separated into two layers 
+\texttt{Affine} and \texttt{ReLU} layers, so total four layers shown in figure~\ref{fig:motivating}. 
+Every layer contains two neurons. The neuron $x_8$ has bias $0.2$ and all the other neurons has bias $0$. 
+Our goal is to verify for all possible input $x_1,x_2 \in [-1,1]$ the outputs $x_7 < x_8$ satisfy. 
+Our approach is top on \deeppoly{}~\ref{deeppoly}. \deeppoly{} maintains the one upper and one lower constraint
+as well as upper and lower bound for each neurons. For a neuron of affine layer the upper and lower constraint is 
+same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
+For an activation neuron the upper and lower expression is computed using triangle approximation~\cite{deeppoly}, 
+also briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 < x_8$, \deeppoly{} creates a 
+new expression $x_9 = x_7 - x_8$ and compute the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
+than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
+from the previous layer, the back substitute further from the previous layer. They keep back substitute 
+up to the input layer. The process of back substitution is shown in equation~\ref{eq:deeppoly}.
+The upper bound of $x_9$ is computed $1.8$ which is greater than $0$, hence, the \deeppoly{} fails to verify the property. 
+
+
+\begin{equation}
+    \begin{aligned}
+        x_9 \leq  &  x_7 - x_8 \\
+        x_9 \leq  & x_5 - x_6 - 0.2 \\
+        x_9 \leq  & 0.5x_3 + 1 - 0.2 \\
+        x_9 \leq  & 0.5(x_1+x_2) + 1 -0.2 \\
+        x_9 \leq  & 1.8
+    \end{aligned}
+\label{eq:deeppoly}
+\end{equation}
+
+
+
+\begin{figure}[!ht]
+	\centering
+	\scalebox{0.8}{\input{fig/nn1.tex}}
+	\caption{Hypothetical example of neural network}
+	\label{fig:motivating}
+\end{figure}
