@@ -150,13 +150,14 @@ for a relu neurons when its behavior is uncertain. Let us say the relu neuron is
 
 
 \subsection{Solver}
+\label{sec:solver}
 
 We are using Gurobi(v9.1)~\cite{gurobi} to optimize the query or to check the satisfiability. 
 The function \texttt{checkSAT} in algorithm \ref{algo:refine1}, \ref{algo:verif1} and \ref{algo:verif2} 
 take a boolean formula of constraints as input and return \texttt{SAT} or \texttt{UNSAT}. 
-In case of \texttt{UNSAT}, it return the \texttt{UnsatCore}. 
-The \texttt{UnsatCore} is a subset of constrains, which are still \texttt{UNSAT}, 
-but if a single constraint removed from \texttt{UnsatCore} then it become \texttt{SAT}.
+In case of \texttt{UNSAT}, it return the \unsatcore{}. 
+The \unsatcore{} is a subset of constrains, which are still \texttt{UNSAT}, 
+but if a single constraint removed from \unsatcore then it become \texttt{SAT}.
 The function \texttt{maxsoftConstr} in algorithm \ref{algo:refine2} takes two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
 The \texttt{hardConstr} is a boolean formula of constraints, and \texttt{softConstrs} is a set of constrains. 
 The function \texttt{maxsoftConstr} satisfies the maximum number of constraints in \texttt{softConstrs} with satisfying the \texttt{hardConstr}. 
