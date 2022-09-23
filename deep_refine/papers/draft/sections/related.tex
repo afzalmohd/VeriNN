@@ -1,31 +1,4 @@
- The papers closest to our work are  
-\cite{lemieux2015generalTexada} and \cite{ltlFMCAD18}.  The focus of
-\cite{ltlFMCAD18} is to produce the minimal formula which is consistent with a
-rational sample irrespective of the expressiveness, while
-\cite{lemieux2015generalTexada} requires a user defined input template of the
-LTL formula which they would like to satisfy.  Both work with infinite traces :
-\cite{ltlFMCAD18} takes rational traces in the form $uv^{\omega}$ where $u,v$
-are typically words of length $\sim 10$, while \cite{lemieux2015generalTexada}
-mines specifications from finite traces, and appends them with an infinite
-sequence of terminal events.  
- \cite{DBLP:conf/otm/AalstBD05t42} considers finite traces, and develops a LTL
-checker which takes an event log and a LTL property and verifies if the observed
-behaviour matches some bad behaviour. The papers
-\cite{989799t19,10.1007/3-540-46002-0_24t20} look at the application of
-monitoring the execution of Java programs, and check LTL formulae on finite
-traces of these programs.   
-In \cite{lo2012mining33}, the authors focus on mining quantified temporal rules
-which help in establishing data flow analysis between variables in a program,
-while in \cite{weimer2005mining46} software bugs are exposed  using a mining
-algorithm, especially for control flow paths. \cite{agrawal1998miningt9} looks
-at process mining in the context of workflow management. The tool PISA
-\cite{zur2000workflowt27} is developed to extract the performance matrix from
-workflow logs, while a declarative language  is developed to formulate
-workflow-log properties in \cite{6951474t5}. Tool Synoptic
-\cite{beschastnikh2011leveraging7} on the other hand, follows  a different
-approach and takes event logs and regular expressions as input and produces a
-model that satisfies a temporal invariant which has been mined from the trace.
-%Finally, many  recent works
-%\cite{beschastnikh2014inferring6,beschastnikh2011leveraging7,lo2009automatic32,walkinshaw2008inferring44,lemieux2015generalTexada},
-%rely on temporal properties to infer various types of properties from source
-%code, log files, and execution traces. 
+ The papers also do the refinement on \deeppoly{} are \cite{deepsrgr} and \cite{refinepoly}, although these papers
+ do not do the cegar based refinement. As per our knowledge elbohar et al~\cite{4class}, 
+ ~\cite{4class1} and ~\cite{4class2} do the cegar based refinement, but their abstraction technique reduces the network
+ size by merging the similar neurons with over-approximation.   
