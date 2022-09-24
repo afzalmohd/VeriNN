@@ -16,7 +16,18 @@
 \maketitle
 
 \begin{abstract}
-       In this paper, we present a counter example guided refinement(CEGAR) based verification of neural networks. 
+       Neural networks have achieved an important role in safety-
+       critical systems, e. g., autonomous vehicles, medical diagnosis, and speech
+       recognition. However, even the state of the arts network can easily be
+       fooled by carefully making small modifications in input. The researchers
+       found a need here to formally verify the desired properties of the neural net-
+       works. The neural network verification problem is an NP-hard problem.
+       Therefore, practical methods need to resolve the trade-off between scalability and precision. The state of the arts, which scales on the real-world
+       networks are based on the abstraction-based approach. These tools suffer
+       from imprecision. We are trying to remove imprecision by refining the
+       abstraction. The tool on which our method work is \deeppoly{}. Our experiments show that we are outperforming in comparison to the related
+       refinement techniques, also verifying the reasonable number of unique
+       benchmarks on which the state of the arts fails to verify. 
 \end{abstract}
 
 \section{Introduction}
