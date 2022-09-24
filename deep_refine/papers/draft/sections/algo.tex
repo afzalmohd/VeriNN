@@ -6,8 +6,9 @@ We need to prove that for each input $\boldsymbol{v}$,
 if $\boldsymbol{v} \models P$, $N(\boldsymbol{v}) \models Q$.
 We assume $P$ is of the form
 % Let us say $P$ is a predicate on input layer's variables
-$\Land_{i=1}^{|l_0|}lb_i \leq x_{0i} \leq ub_i$, where $lb_i$ and $ub_i$ are lower and upper bounds for neuron $n_{0i}$ respectively.\todo{Why do we expect this form}
-An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter example(cex) if $N(\boldsymbol{v}) \models \lnot Q$.  
+$\Land_{i=1}^{|l_0|}lb_i \leq x_{0i} \leq ub_i$, where $lb_i$ and $ub_i$ are lower and upper bounds respectively for a neuron $n_{0i}$.
+An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
+Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
 
 % The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 % $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
@@ -15,7 +16,7 @@ An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter example(cex) if
 %  \todo{How to formalize $P$ and $Q$}
 
 
-$satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query.
+
 
 % We will use the following convention in writing our algorithms.
 
@@ -47,9 +48,9 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
 
 \texttt{DeepPoly} is a sound and incomplete technique, because it do over-approximation analysis. 
 If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise the result of it is unknown. 
-We overcome this limitation of \deeppoly{} by using a cegar based technique, which is a complete technique and rely on \deeppoly{}. 
+We overcome this limitation by using a cegar based technique, which is a complete technique and rely on \deeppoly{}. 
 The algorithm~\ref{algo:main} represents the high level flow of our approach.
-At the first line algorithm generates all the abstract constraints by using \deeppoly{}. 
+The first line of the algorithm generates all the abstract constraints by using \deeppoly{}. 
 These abstract constrains are the lower and upper constraints as well as the lower and upper bounds 
 of each neurons in the neural network. The algorithm \ref{algo:verif1} and \ref{algo:verif2} verify the query, 
 and return either the verification successful or abstractCEX. If these algorithms return verification successful then we report verified,

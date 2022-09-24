@@ -1,6 +1,6 @@
 We have implemented our approach in a prototype and compared it with the related 
-approaches refinepoly~\cite{singh2019beyond}, deepSRGR~\cite{yang2021improving} and deeppoly~\cite{singh2019abstract}. 
-The approaches refinepoly and deepSRGR do the refinement on deeppoly. We also compare 
+approaches \texttt{refinepoly}~\cite{singh2019beyond}, \texttt{deepSRGR}~\cite{yang2021improving} and \deeppoly{}~\cite{singh2019abstract}. 
+The approaches  \texttt{refinepoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}. We also compare 
 our tool with state of the art tools $\alpha - \beta$-Crown~\cite{alphabetacrown} and oval~\cite{ovaltool}. 
 The $\alpha - \beta$-Crown tool has achieved the 1st and oval 3rd rank in
 2nd International Verification of Neural Networks Competition (VNN-COMP'21). 
@@ -15,19 +15,22 @@ We are using the MNIST~\cite{deng2012mnist} dataset to check the effectiveness o
 We are using 11 different fully connected feedforward neural networks with \relu{} activation as shown in table~\ref{tb:nndetail}.
 These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}. 
 The input and output dimensions of each network are $784$ and $10$ respectively. 
-Deep et al~\cite{singh2019abstract} used projected gradient descent (PGD)~\cite{dong2018boosting}
+Authors of \deeppoly{} paper used projected gradient descent (PGD)~\cite{dong2018boosting}
 and DiffAI~\cite{mirman2018differentiable} for adversarial training. The table \ref{tb:nndetail} contains the defended network i.e.
 trained with adversarial training as well as undefended network. The last column of the table \ref{tb:nndetail}
 shows tools name by which the defended networks are trained.  
 
-The predicate $P$ on input layer is computed using the input image $\boldsymbol{im}$ and user defined parameter $\epsilon$. 
+The predicate $P$ on input layer is created using the input image $\boldsymbol{im}$ and user defined parameter $\epsilon$. 
 We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create 
 $P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel
 should not exceed $0$ and $1$ respectively. The predicate $Q$ on output layer is created using the network's output.    
 Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$. 
 One query instance $\langle N,P,Q \rangle$ is created for one network, one image and one epsilon value. 
 In our evaluation we took $11$ different networks, 8 different epsilons and 100 different images. The 
-total number of instances are computed to $8800$. Whenever our tool found a counter example on $\langle N,P,Q \rangle$,
+total number of instances are computed to $8800$. However, there are 128 instances for which the network's predicted
+label differs from the images actual label. we avaoided such instances, so, there are total $8672$ benchmarks instances
+under consideration.   
+Whenever our tool found a counter example on $\langle N,P,Q \rangle$,
 it denormalize it into an image by rounding the float values, 
 and check for counter example by executing $N$ on denormalized image.
 If found counter example then tool reports it, otherwise tool reports unknown.
@@ -59,24 +62,56 @@ If found counter example then tool reports it, otherwise tool reports unknown.
 
 \subsection{Results}
 We conducted the experiments on machine with \texttt{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
-processor with CentOS Linux 7 operating system.   
-The approaches deeppoly, refinepoly and deepSRGR are the incomplete approaches and do the refinement on deeppoly. 
+processor with CentOS Linux 7 operating system. 
+To make the fair comparison between the tools, we provide only single \texttt{CPU} for each benchmarks instances for each tool. 
+The approaches \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR} are the incomplete approaches and do not report the counter example. 
 Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
 Figure~\ref{res:milp_with_milp} shows the comparison with the help of cactus plot. Our approach performing well 
 in terms of verified number of instances as well as in terms of time in comparison to the above incomplete approaches. 
 We are also comparing with state of the arts to check the effectiveness of our approach globally.
-As shown in figure~\ref{res:milp_with_milp}, tools $\alpha - \beta-$Crown and oval are performing better then our approach. 
+Table~\ref{tb:soacomparison} shows that our tool is verifying $180$ and $190$ benchmarks which $\alpha -\beta$-CROWN and 
+\texttt{oval} respectively are not able to verify. In addition to this, our tool verifying $172$ unique instance 
+which neither $\alpha -\beta$-CROWN nor \texttt{oval} able to verify.  
+Despite of it, $\alpha - \beta-$Crown and \texttt{oval} are verifying more number of benchmarks in comparison to our tool. 
+Although the total time taken by both state of the arts is higher than our tool as shown in figure~\ref{res:milp_with_milp}. 
 
 
-\input{fig/data_plot.tex}
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        -  & Not verified by oval & Not verified by $\alpha - \beta$-CROWN & Not verified by both \\
+        \hline
+        Verified by our tool & 190 & 180 & 172 \\
+        \hline
+    \end{tabular}
+    \caption{Comparison with $\alpha - \beta$-CROWN and Oval}
+    \label{tb:soacomparison}
+\end{table}
+
+
+
+\begin{figure}
+    \centering
+    \input{fig/data_plot.tex}
+    \caption{Cactus plot with related techniques}
+    \label{res:milp_with_milp}
+\end{figure}
 
 
 Figure~\ref{res:ep:milp_with_milp} shows the comparison with respect to different epsilon values. 
 At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the 
-performance of tools can be seen clearly. Here also we are performing better than the approaches deeppoly, refinepoly and deepSRGR,
-while $\alpha - \beta -$Crown performing better than our approach. 
+performance of tools can be seen clearly. Here also we are performing better than the approaches \deeppoly{}, 
+\texttt{refinepoly} and \texttt{deepSRGR},
+while $\alpha - \beta -$Crown and \texttt{oval} are performing better than our tool. 
+The average number of marked neurons on the finished benchmarks instances are $31$. 
 
-Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
-the most related techniques refinepoly and deepSRGR. But the state of the arts are doing better than our approach. 
+% Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
+% the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
 
-\input{fig/ep_plot.tex}
+\begin{figure}
+    \centering
+    \input{fig/ep_plot.tex}
+    \caption{Epsilon wise comparison with related techniques}
+    \label{res:ep:milp_with_milp}
+\end{figure}

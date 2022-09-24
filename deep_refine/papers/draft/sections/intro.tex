@@ -1,0 +1,46 @@
+In recent years, neural networks are increasingly being applied in
+safety-critical systems such as autonomous vehicles \cite{bojarski2016end},
+medical diagnosis \cite{amato2013artificial}, and speech recognition \cite{hinton2012deep}.
+Goodfellow \cite{goodfellow2014explaining} has shown that slight change in the input can fool the neural networks,
+i.e., image misclassification by the change in a few pixels.
+The developers find it hard to analyze/debug the neural networks because they contain hundreds of thousands of non-linear nodes.
+To address this problem, developers need automatic verification of the networks.
+Since automatic verification of the neural network is an NP-hard problem, therefore researchers use approximations in their methods.
+We may divide the methods into two classes, namely complete and incomplete.
+The methods\cite{lomuscio2017approach}, \cite{fischetti2018deep},
+\cite{dutta2018output}, \cite{cheng2017maximum}, \cite{katz2017reluplex}, \cite{katz2019marabou}, 
+\cite{ehlers2017formal}, \cite{huang2017safety}, \cite{wang2021beta}, \cite{xu2020fast}, \cite{zhang2022general}
+are complete methods, i.e., they explore the exact state space.
+Since complete methods explore exact state space, they suffers with the scalability issues on large scale network.
+On the other hand, the abstraction based methods
+\cite{dvijotham2018dual}, \cite{gehr2018ai2}, \cite{singh2018fast},
+ \cite{singh2018boosting}, \cite{weng2018towards}, \cite{wong2018provable}, \cite{zhang2018efficient}, \cite{zhang2018efficient}
+are sound and incomplete because they over approximate the state space.
+The incomplete methods scale well in comparison to complete methods. 
+The abstraction based methods suffer with imprecision, hence the methods
+\cite{wang2018formal,wang2018efficient,elboher2020abstraction,yang2021improving,lin2020art}
+refine the over-approximated state space to achieve completeness. 
+Papers \cite{wang2018formal,wang2018efficient,lin2020art} eliminate the
+spurious information by bisecting the input space on the guided dimension. The \cite{yang2021improving} works
+on top of \deeppoly{}~\cite{singh2019abstract}, the remove
+the spurious region by taking each neuron's constraints with negation of the property and use the 
+Gurobi optimizer \cite{gurobioptimizer} to refine the bounds of neurons.
+The \cite{elboher2020abstraction} defined the four classes of neurons based on their characteristics.
+At the time of abstraction, \cite{elboher2020abstraction} merge each neuron into one of the four classes. 
+After completing the abstraction process they use state of the complete verifier to verify 
+the abstract network, they go to the refinement process in case of failure.  
+In the refinement process \cite{elboher2020abstraction} partition one of the four classes into two subclasses. 
+In the worst case, this method may get back to the original network. 
+The work \cite{elboher2020abstraction} refinement process focus on the structure of the networks. 
+While our work refining the abstraction based on \deeppoly{}.
+We two parts of our approach, one finds the causes of spurious information and the second part refine the 
+information gets in first part. We two methods to find the causes of spuriousness namely {\em pullback} method, and 
+{\em optimization based} method. And two methods for the refinement namely {em splitting} based method and 
+{\em MILP based} method.    
+
+We explain our approach by a motivating example in next section~\ref*{sec:motivation}. 
+We define the notions and definitions in section~\ref{sec:model}. The section~\ref{sec:algo} contains the 
+algorithm process of our approach, and the section~\ref{sec:experiments} contains the experiments. 
+We present the related work and future work in sections \ref{sec:related} and \ref{sec:conclusion} respectively. 
+
+
