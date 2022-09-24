@@ -1,21 +1,22 @@
 We have implemented our approach in a prototype and compared it with the related 
-approaches refinepoly~\cite{refinepoly}, deepSRGR~\cite{deepsrgr} and deeppoly~\cite{deeppoly}. 
+approaches refinepoly~\cite{singh2019beyond}, deepSRGR~\cite{yang2021improving} and deeppoly~\cite{singh2019abstract}. 
 The approaches refinepoly and deepSRGR do the refinement on deeppoly. We also compare 
 our tool with state of the art tools $\alpha - \beta$-Crown~\cite{alphabetacrown} and oval~\cite{ovaltool}. 
 The $\alpha - \beta$-Crown tool has achieved the 1st and oval 3rd rank in
 2nd International Verification of Neural Networks Competition (VNN-COMP'21). 
-We use the MNIST \cite{mnistdataset} for our evaluation.    
+We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
 We have implemented our tool in \texttt{C++} programming language. Our approach relies on \deeppoly{}, so, 
 we also have implemented \deeppoly{} in \texttt{C++}. We are using \texttt{C++} interface of gurobi solver 
 to check the satisfiability or to solve an optimization query. 
 
 \subsection{Benchmarks}
-We are using the MNIST~\cite{mnistdataset} dataset to check the effectiveness of our tool. 
+We are using the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool. 
 We are using 11 different fully connected feedforward neural networks with \relu{} activation as shown in table~\ref{tb:nndetail}.
-These benchmarks are taken from the \deeppoly{}'s website~\cite{erantool}. The input and output dimensions of each network 
-are $784$ and $10$ respectively. Deep et al~\cite{deeppolyref} used projected gradient descent (PGD)~\cite{pgdref}
-and DiffAI~\cite{diffairef} for adversarial training. The table \ref{tb:nndetail} contains the defended network i.e.
+These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}. 
+The input and output dimensions of each network are $784$ and $10$ respectively. 
+Deep et al~\cite{singh2019abstract} used projected gradient descent (PGD)~\cite{dong2018boosting}
+and DiffAI~\cite{mirman2018differentiable} for adversarial training. The table \ref{tb:nndetail} contains the defended network i.e.
 trained with adversarial training as well as undefended network. The last column of the table \ref{tb:nndetail}
 shows tools name by which the defended networks are trained.  
 

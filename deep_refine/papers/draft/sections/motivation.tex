@@ -3,10 +3,10 @@ which has one input, one hidden and one output layer. The hidden layer separated
 \texttt{Affine} and \texttt{ReLU} layers, so total four layers shown in figure~\ref{fig:motivating}. 
 Every layer contains two neurons. The neuron $x_8$ has bias $1$ and all the other neurons has bias $0$. 
 Our goal is to verify for all possible input $x_1,x_2 \in [-1,1]$ the outputs $x_7 \leq x_8$ satisfy. 
-Our approach is top on \deeppoly{}~\ref{deeppoly}. \deeppoly{} maintains the one upper and one lower constraint
+Our approach is top on \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
 as well as upper and lower bound for each neurons. For a neuron of affine layer the upper and lower constraint is 
 same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
-For an activation neuron the upper and lower expression is computed using triangle approximation~\cite{deeppoly}, 
+For an activation neuron the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
 which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
 new expression $x_9 = x_7 - x_8$ and compute the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
