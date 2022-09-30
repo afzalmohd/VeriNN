@@ -1,9 +1,7 @@
 % one paragraph per point
 % about 2 pages 
 
-% Why this problem?
 
-% What is the problem?
 
 % Current state
 
@@ -18,20 +16,31 @@
 % Layout of the rest of the paper
 
 
-
-In recent years, neural networks are increasingly being applied in
-safety-critical systems such as autonomous vehicles \cite{bojarski2016end},
-medical diagnosis \cite{amato2013artificial}, and speech recognition \cite{hinton2012deep}.
+% Why this problem?
+In the recent years,
+people are  increasingly applying
+neural networks in
+safety-critical systems such as
+autonomous vehicles,
+medical diagnosis, and
+speech recognition~\cite{bojarski2016end,amato2013artificial,hinton2012deep}.
+%
+% describe mechanics of neural network
+%
+Since the neural networks are trained using data, it may not give the expected output for each unseen input.
+% 
 Goodfellow \cite{goodfellow2014explaining} have shown that a slight change in the input can fool the neural networks,
 i.e., image misclassification by the change in a few pixels.
+%
 The developers find it hard to analyze/debug the neural networks because they contain hundreds of thousands of non-linear nodes.
+
+% What is the problem?
+
+
 To address this problem, developers need automatic verification of the networks.
 Since automatic verification of the neural network is an NP-hard problem, therefore researchers use approximations in their methods.
 We may divide the methods into two classes, namely complete and incomplete.
-The methods\cite{lomuscio2017approach}, \cite{fischetti2018deep},
-\cite{dutta2018output}, \cite{cheng2017maximum}, \cite{katz2017reluplex}, \cite{katz2019marabou}, 
-\cite{ehlers2017formal}, \cite{huang2017safety}, \cite{wang2021beta}, \cite{xu2020fast}, \cite{zhang2022general}
-are complete methods, i.e., they explore the exact state space.
+The methods~\cite{lomuscio2017approach,fischetti2018deep,dutta2018output,cheng2017maximum,katz2017reluplex,katz2019marabou,ehlers2017formal,huang2017safety,wang2021beta,xu2020fast,zhang2022general} are complete methods, i.e., they explore the exact state space.
 Since complete methods explore exact state space, they suffer from scalability issues on the large-scale networks.
 On the other hand, the abstraction based methods
 \cite{dvijotham2018dual}, \cite{gehr2018ai2}, \cite{singh2018fast},
@@ -79,3 +88,9 @@ algorithm procedure of our approach and section~\ref{sec:experiments} contains t
 We present the related work and future work in sections \ref{sec:related} and \ref{sec:conclusion} respectively. 
 
 
+% --- do not erase below this line ----
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
