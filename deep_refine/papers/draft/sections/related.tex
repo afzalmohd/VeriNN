@@ -1,18 +1,18 @@
- The papers also do the refinement on \deeppoly{} are \texttt{deepSRGR}~\cite{yang2021improving} and
- \texttt{refinepoly}~\cite{singh2019beyond}, 
- although these papers do not do the cegar based refinement. The approach \texttt{refinepoly} consider 
- a group neurons at once to generate the constraints and compute the bounds of neurons. 
- The approach \texttt{deepSRGR} remove the 
- spurious region by taking each neuron's constrains with the negation of the property and use the 
- \texttt{Gurobi}~\cite{gurobioptimizer} optimizer to tighten the bounds of each neurons. 
- As per our knowledge elbohar et al~\cite{elboher2020abstraction} and \texttt{NARv}~\cite{liu2022abstraction} 
- do the cegar based refinement, but their abstraction techniques orthogonal to \deeppoly{}. 
- They reduces the network size by merging the similar 
- neurons with over-approximation, while \deeppoly{} maintains the linear constrains for each neurons without changing the 
- structure of the network. Paper~\cite{lin2020art} do the refinement by bisecting the input space on the guided dimension. 
- Our approach exploit the incomplete technique \deeppoly{},
- which scale well, but if it fails to verify then we do the cegar based refinement.
- 
+The papers also do the refinement on \deeppoly{} are \texttt{deepSRGR}~\cite{yang2021improving} and
+\texttt{refinepoly}~\cite{singh2019beyond}, 
+although these papers do not do the cegar-based refinement. The approach \texttt{refinepoly} considers 
+a group of neurons at once to generate the constraints and compute the bounds of neurons. 
+The approach \texttt{deepSRGR} removes the 
+spurious region by taking each neuron's constraints with the negation of the property and using the 
+\texttt{Gurobi}~\cite{gurobioptimizer} optimizer to tighten the bounds of each neuron. 
+As per our knowledge elbohar et al~\cite{elboher2020abstraction} and \texttt{NARv}~\cite{liu2022abstraction} 
+do the cegar-based refinement, but their abstraction techniques are orthogonal to \deeppoly{}. 
+They reduce the network size by merging similar 
+neurons with over-approximation, while \deeppoly{} maintains the linear constraints for each neuron without changing the 
+structure of the network. Paper~\cite{lin2020art} do the refinement by bisecting the input space on the guided dimension. 
+Our approach exploits the incomplete technique \deeppoly{},
+which scales well, but if it fails to verify then we do the cegar-based refinement.
+
 %  In general neural network verification techniques can be classify broadly in two categories, 
 %  complete and incomplete techniques. The techniques \cite{lomuscio2017approach}, \cite{fischetti2018deep},
 %  \cite{dutta2018output}, \cite{cheng2017maximum}, \cite{katz2017reluplex}, \cite{katz2019marabou}, 

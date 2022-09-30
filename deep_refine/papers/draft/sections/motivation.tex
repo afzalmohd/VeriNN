@@ -1,18 +1,18 @@
 Consider a neural network in figure~\ref{fig:motivating}, 
-which has one input, one hidden and one output layer. The hidden layer separated into two layers 
-\texttt{Affine} and \texttt{ReLU} layers, so total four layers shown in figure~\ref{fig:motivating}. 
-Every layer contains two neurons. The neuron $x_8$ has bias $1$ and all the other neurons has bias $0$. 
+which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
+\texttt{Affine} and \texttt{ReLU} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
+Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the other neurons have a bias of $0$. 
 Our goal is to verify for all possible input $x_1,x_2 \in [-1,1]$ the outputs $x_7 \leq x_8$ satisfy. 
-Our approach is top on \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
-as well as upper and lower bound for each neurons. For a neuron of affine layer the upper and lower constraint is 
-same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
-For an activation neuron the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
+Our approach is top on \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one the upper and one lower constraint
+as well as upper and lower bound for each neuron. For a neuron of the affine layer, the upper and lower constraint is 
+the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
+For an activation neuron, the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
 which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
-new expression $x_9 = x_7 - x_8$ and compute the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
+new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
-from the previous layer, the back substitute further from the previous layer. They keep back substitute 
+from the previous layer, the back substitute further from the previous layer. They keep the back substitute 
 up to the input layer. The process of back substitution is shown in equation~\ref{eq:deeppoly}.
-After back substitution the upper bound of $x_9$ is computed $1$ which is greater than $0$, 
+After back substitution, the upper bound of $x_9$ is computed as $1$ which is greater than $0$, 
 hence, the \deeppoly{} fails to verify the property. 
 
 
@@ -27,13 +27,13 @@ hence, the \deeppoly{} fails to verify the property.
 \label{eq:deeppoly}
 \end{equation}
 
-There are two main reasons of the failure of \deeppoly{}. One is it can not maintain the complete corelation 
+There are two main reasons for the failure of \deeppoly{}. One is it can not maintain the complete correlation 
 between the neurons. In this example neurons $x_3$ and $x_4$ has the same expression $x_1+x_2$, so, they always
-get the same value. But in the \deeppoly{} analysis process it may fails to get the same value. Second is the triangle
+get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second is the triangle
 approximation on relu neurons.
-We take the conjunction of upper and lower expressions of each neurons with the negation of the property
+We take the conjunction of upper and lower expressions of each neuron with the negation of the property
 as shown in equation~\ref{eq:conjunction},
-and use \milp{} solver to check the satisfiability and tackled the first issue. 
+and use the \milp{} solver to check the satisfiability and tackled the first issue. 
 The second issue can be resolved either by splitting the 
 bound at zero of the affine node or by using the exact encoding (eq~\ref{eq:reluexact}) instead of triangle approximation.
 Both solutions increase the problem size exponentially in terms of relu neurons. 
@@ -56,12 +56,12 @@ The problem size will be huge if we repair every neuron of the network.
 
 We find the set of important neurons (marked neurons), and repair only marked neurons. 
 When \deeppoly{} fails to verify the network, we use an \milp{} solver to check the satisfiability
-on equation~\ref{eq:conjunction}. 
-If it return \unsat{} it means the property verified otherwise we get the satisfying assignment of each variables. 
+of equation~\ref{eq:conjunction}. 
+If it returns \unsat{} it means the property is verified otherwise we get the satisfying assignment of each variable. 
 The satisfying assignment of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}
-We execute the satisfying assignment $x_1=1,x_2=1$ on neural network and get the values on each neurons 
+We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get the values on each neuron 
 as shown in equation~\ref{eq:sat2}. 
-The output values $x'_7=2, x'_8=3$ satisfying the property, so, the input $x_1=1, x_2=1$ is an spurious counter example. 
+The output values $x'_7=2, x'_8=3$ satisfying the property, so, the input $x_1=1, x_2=1$ is an spurious counter-example. 
 We have to remove spurious counter example by doing the refinement analysis. 
 We are using two approaches to find the marked neurons guided by the spurious counter example, 
 and two approaches to refine (repair) the marked neurons.
@@ -112,7 +112,7 @@ and $x_8=1$.
 \label{eq:back1}
 \end{equation}
 
-In this approach we compute the predecessor point by considering both \texttt{affine} and \texttt{relu} layer together. 
+In this approach, we compute the predecessor point by considering both the \texttt{affine} and \texttt{relu} layers together. 
 We compute the predecessor point of $x_5=2, x_6=0$ in terms of $x_1$ and $x_2$.
 Since $x_6=0$ and $x_6=max(0,x_4)$ then $x_4$ can be anything from its lower bound to $0$ i.e. $-2 \leq x_4 \leq 0$.
 Similarly the value of $x_5=2$ and $x_5=max(0,x_3)$ then the value of $x_3$ will be $2$. 
@@ -127,28 +127,28 @@ The \sat{} query build as shown in equation~\ref{eq:back2}.
 \label{eq:back2}
 \end{equation}
 
-When we check the satisfiability of equation~\ref{eq:back2}, it return \unsat{}. It means the predecessor point of 
-$x_5=2,x_6=0$ does not exits, which implies that point $x_5=2, x_6=0$ is introduced by the triangle approximation.
-Whenever the solver return \unsat{}, we also get the \unsatcore{}~\ref{sec:solver}. In this example we get the 
+When we check the satisfiability of equation~\ref{eq:back2}, it returns \unsat{}. It means the predecessor point of 
+$x_5=2,x_6=0$ does not exist, which implies that point $x_5=2, x_6=0$ is introduced by the triangle approximation.
+Whenever the solver returns \unsat{}, we also get the \unsatcore{}~\ref{sec:solver}. In this example we get the 
 \unsatcore{}=$\{x_1+x_2=2, -2\leq  x_1+x_2 \leq 0\}$, so, we mark the corresponding neurons $x_3$ and $x_4$ as a marked neurons. 
 And refine the marked neurons in the refinement procedure. 
 \\
 \textbf{Optimization based approach}\\
 The satisfying assignments of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}. 
-We execute the satisfying assignment $x_1=1,x_2=1$ on neural network and get values on each neurons as 
+We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get values on each neuron as 
 shown in equation~\ref{eq:sat2}. We make the point on \texttt{relu} layer as close as possible 
 to the point of \texttt{relu} in equation~\ref{eq:sat2}, such that input points $x_1,x_2$ and 
-output point $x_7,x_8$ remain same as in equation~\ref{eq:sat1}. 
-The equation~\ref{eq:opt1} shows the constrains which must be satisfied. The first and the last line of equation~\ref{eq:opt1}
-ensure that the input and output points remain same as in equation~\ref{eq:sat1}. 
-The constrains $\{x_5=2, x_6=2\}$ are soft constraints, which means maximum number of soft constraints should satisfy. 
-The soft constraints define the closeness point on relu layer of equation~\ref{eq:sat1} and \ref{eq:sat2}. 
+output point $x_7,x_8$ remains the same as in equation~\ref{eq:sat1}. 
+Equation~\ref{eq:opt1} shows the constraints which must be satisfied. The first and the last line of equation~\ref{eq:opt1}
+ensure that the input and output points remain the same as in equation~\ref{eq:sat1}. 
+The constraints $\{x_5=2, x_6=2\}$ are soft constraints, which means maximum number of soft constraints should satisfy. 
+The soft constraints define the closeness point on the relu layer of equations~\ref{eq:sat1} and \ref{eq:sat2}. 
 Finally, we give to the optimizer the constraints in equation~\ref{eq:opt1} and the soft constraints. 
-The constraints of equation~\ref{eq:opt1} must satisfied because it is the same equation as of \ref{eq:conjunction}
-except the fixed input and output points. 
-The optimizer returns the constraints from soft constrains which are satisfied with the constraints 
+The constraints of equation~\ref{eq:opt1} must be satisfied because it is the same equation as \ref{eq:conjunction}
+except for the fixed input and output points. 
+The optimizer returns the constraints from soft constraints which are satisfied with the constraints 
 of equation~\ref{eq:opt1}. If optimizer returns all soft constraints($\{x_5=2,x_6=2\}$) it means the output point
-$x_7=2, x_8=1$ can be reached from $x_5=2,x_6=2$. But optimizer returns the soft constrains $\{x_5=2\}$, it mean 
+$x_7=2, x_8=1$ can be reached from $x_5=2,x_6=2$. But optimizer returns the soft constraint $\{x_5=2\}$, it mean 
 $x_6$ is a neurons which is contributing to the output point $x_7=2, x_8$. We mark the neuron $x_6$ as 
 marked neurons.  
 
@@ -164,22 +164,22 @@ marked neurons.
 \end{equation}
 \\
 \textbf{Refinement} \\
-We have two approaches for the refinement {\em Splitting based approach} and {\em MILP based approach}.
-We elaborate here the {\em MILP based approach} only. The other approach can be seen in algorithm~\ref{algo:verif2}. 
-These two approaches refine the marked neurons. We got two different set of marked neurons in the above analysis. 
-The {\em pullback} approach returns $\{x_5, x_6\}$ as the marked neurons, while {\em optimization based approach}
-return the $\{x_6\}$ as the marked neurons. In the following analysis we are taking the marked neurons set as $\{x_5, x_6\}$.
-Although the analysis will also work if we takes the other set of marked neurons.
+We have two approaches for the refinement {\em Splitting based approach} and {\em MILP-based approach}.
+We elaborate here the {\em MILP-based approach} only. The other approach can be seen in algorithm~\ref{algo:verif2}. 
+These two approaches refine the marked neurons. We got two different sets of marked neurons in the above analysis. 
+The {\em pullback} approach returns $\{x_5, x_6\}$ as the marked neurons, while {\em optimization-based approach}
+return $\{x_6\}$ as the marked neurons. In the following analysis, we are taking the marked neurons set as $\{x_5, x_6\}$.
+Although the analysis will also work if we take the other set of marked neurons.
 
-In {\em MILP based approach}, we add the exact encoding of marked neuron ($x_5, x_6$) in addition to the constraints
-in equation~\ref{eq:conjunction} and check the satisfiability, now it become \unsat{}, hence, the property verified. 
+In {\em MILP based approach}, we add the exact encoding of the marked neuron ($x_5, x_6$) in addition to the constraints
+in equation~\ref{eq:conjunction} and check the satisfiability, now it becomes \unsat{}, hence, the property verified. 
 The exact constraint of a \relu{} neuron is explained in equation~\ref{eq:reluexact}. 
 
 The {\em Splitting based approach} splits the bounds at $0$ of the incoming neurons of the marked neurons. 
 The incoming neurons of $x_5$ and $x_6$ are $x_3$ and $x_4$ respectively. 
 The affine expression of both the incoming neurons is $x_1+x_2$. 
 When we split both $x_3$ and $x_4$ then four cases get generated. The property should get verified in all four cases. 
-All the cases are explained as follow: 
+All the cases are explained as follows: 
 % Suppose I split $x_3$ then two cases generated
 % $x_3 > 0$ and $x_3 \leq 0$, which implies $x_1+x_2 > 0$ and $x_1+x_2 \leq 0$ respectively. 
 % When we split both $x_3$ and $x_4$ then four cases get generated. Out of four cases $x_3 > 0 \land x_4 \leq 0$ and 
@@ -187,7 +187,7 @@ All the cases are explained as follow:
 % $x_1+x_2 > 0 \land x_1 + x_2 \leq 0$ is infeasible. We analyze the remaining tow cases as follow: 
 \begin{itemize}
     \item $x_3 > 0$ and $x_4 > 0$, since neurons are in active phase, so, upper and lower expressions for $x_5$ 
-    becomes $x_3$, similarly the the upper and lower expression for $x_6$ become $x_4$. 
+    becomes $x_3$, similarly the upper and lower expression for $x_6$ becomes $x_4$. 
     The expression for $x_7$ and $x_8$ remains the same. The upper bound of $x_7 - x_8$ computed in equation~\ref{eq:split1} is $-1$. 
     The property got verified.   
     \item $x_3 \leq 0$ and $x_4 \leq 0$, since both neurons are in passive phase, so, the upper and lower expressions 
