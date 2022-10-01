@@ -17,6 +17,7 @@
 #define PULL_BACK_WITH_PATH_SPLIT 5000
 #define NUM_GUROBI_THREAD 2
 #define DIFF_TOLERANCE 1e-5
+#define NUM_RANDOM_IMAGES 20
 
 enum drefine_status {Failed, Verified, Unknown};
 

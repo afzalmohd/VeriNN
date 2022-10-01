@@ -64,6 +64,13 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
 
 int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time){
     size_t image_index = Configuration_deeppoly::image_index;
+    bool is_ce = is_ce_cheap_check(net);
+    if(is_ce){
+        std::cout<<"Got counter example!!!"<<std::endl;
+        print_status_string(net, 2, "pre-check", image_index, 0, start_time);
+        return 0;
+    }
+
     Configuration_deeppoly::is_unmarked_deeppoly = true;
     bool is_verified = run_deeppoly(net);
     Configuration_deeppoly::is_unmarked_deeppoly = false;
@@ -74,7 +81,7 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
         if(Configuration_deeppoly::tool == "deeppoly"){
-            print_status_string(net, 0, "deeppoly", image_index, 0, start_time);
+            print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
             return 0;
         }
         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
@@ -615,5 +622,61 @@ std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
     }
     std::tuple<int, size_t> tup1(status, loop_counter);
     return tup1;
+}
+
+double get_random_val(double low, double high){
+    double r = low + static_cast <double> (rand()) /( static_cast <double> (RAND_MAX/(high-low)));
+    return r;
+}
+
+xt::xarray<double> get_random_images(Network_t* net){
+    std::vector<double> vals;
+    double v;
+    vals.reserve((net->input_dim)*NUM_RANDOM_IMAGES);
+    for(size_t i=0; i<NUM_RANDOM_IMAGES; i++){
+        for(size_t j=0; j<net->input_dim; j++){
+            Neuron_t* nt = net->input_layer->neurons[j];
+            v = get_random_val(-nt->lb, nt->ub);
+            vals.push_back(v);
+        }
+    }
+    std::vector<size_t> shape = {NUM_RANDOM_IMAGES, net->input_dim};
+    xt::xarray<double> temp = xt::adapt(vals, shape);
+    // temp = xt::transpose(temp);
+    // std::cout<< xt::adapt(temp.shape()) << std::endl;
+    return temp;
+}
+
+bool is_ce_cheap_check(Network_t* net){
+    xt::xarray<double> images = get_random_images(net);
+    net->forward_propgate_network(0, images);
+    xt::xarray<double> res = net->layer_vec.back()->res;
+    size_t count = 0;
+    std::vector<double> row_double;
+    row_double.resize(net->output_dim);
+
+    for(size_t i=0; i<(NUM_RANDOM_IMAGES*net->output_dim); i++){
+        if(count < net->output_dim){
+            row_double[count] = res[i];
+            count++;
+        }
+        if(count == net->output_dim){
+            size_t max_ind = 0;
+            double max_elem = row_double[0];
+            // std::cout<<row_double[0]<<" ";
+            for(size_t j=1; j<net->output_dim; j++){
+                if(max_elem < row_double[j]){
+                    max_ind = j;
+                    max_elem = row_double[j];
+                }
+                // std::cout<<row_double[j]<<" ";
+            }
+            if(max_ind != net->actual_label){
+                return true;
+            }
+            count = 0;
+        }
+    }
+    return false;
 }
 
