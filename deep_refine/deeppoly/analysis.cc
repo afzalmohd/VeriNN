@@ -646,7 +646,7 @@ bool is_image_verified(Network_t* net){
                     return false;
                 }
             }
-            else{
+            else if(Configuration_deeppoly::tool == "drefine"){
                 net->verified_out_dims.push_back(i);
             }
         }

@@ -76,3 +76,8 @@ VnnLib_t* parse_vnnlib(std::string& file_path){
     print_post_cond(verinn_lib->out_prp, "");
     return verinn_lib;
 }
+
+bool is_image_verified_deeppoly(Network_t* net){
+    bool is_verif = is_image_verified(net);
+    return is_verif;
+}

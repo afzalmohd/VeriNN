@@ -64,15 +64,18 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
 
 int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time){
     size_t image_index = Configuration_deeppoly::image_index;
-    bool is_ce = is_ce_cheap_check(net);
-    if(is_ce){
-        std::cout<<"Got counter example!!!"<<std::endl;
-        print_status_string(net, 2, "pre-check", image_index, 0, start_time);
-        return 0;
-    }
+    // bool is_ce = is_ce_cheap_check(net);
+    // if(is_ce){
+    //     std::cout<<"Got counter example!!!"<<std::endl;
+    //     print_status_string(net, 2, "pre-check", image_index, 0, start_time);
+    //     return 0;
+    // }
 
     Configuration_deeppoly::is_unmarked_deeppoly = true;
+    std::string tool_name = Configuration_deeppoly::tool;
+    Configuration_deeppoly::tool = "deeppoly";
     bool is_verified = run_deeppoly(net);
+    Configuration_deeppoly::tool = tool_name;
     Configuration_deeppoly::is_unmarked_deeppoly = false;
     if(is_verified){
         print_status_string(net, 1, "deeppoly", image_index, 0, start_time);
@@ -84,6 +87,13 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
             print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
             return 0;
         }
+
+        is_verified = is_image_verified_deeppoly(net);
+        if(is_verified){
+            print_status_string(net, 1, "drefine", image_index, 0, start_time);
+            return 1;
+        }
+
         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
             run_milp_refine_with_milp_mark(net, image_index, start_time);
         }

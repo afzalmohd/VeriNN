@@ -14,5 +14,6 @@ VnnLib_t* parse_vnnlib(std::string& file_path);
 double get_random_val(double low, double high);
 xt::xarray<double> get_random_images(Network_t* net);
 bool is_ce_cheap_check(Network_t* net);
+bool is_image_verified_deeppoly(Network_t* net);
 
 #endif
