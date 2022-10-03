@@ -83,12 +83,13 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
     }
     else{
         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
+        // return 0;
         if(Configuration_deeppoly::tool == "deeppoly"){
             print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
             return 0;
         }
-
-        is_verified = is_image_verified_deeppoly(net);
+        remove_non_essential_neurons(net);
+        is_verified = run_deeppoly(net);
         if(is_verified){
             print_status_string(net, 1, "drefine", image_index, 0, start_time);
             return 1;
@@ -690,3 +691,134 @@ bool is_ce_cheap_check(Network_t* net){
     return false;
 }
 
+bool is_exists_in_vector(size_t val, std::vector<size_t>& vec){
+    for(size_t v : vec){
+        if(v == val){
+            return true;
+        }
+    }
+    return false;
+}
+
+xt::xarray<double> delete_rows_weight(xt::xarray<double>& mat, std::vector<size_t>& del_rows, size_t num_rows, size_t num_cols){
+    size_t effective_num_rows = num_rows - del_rows.size();
+    assert(effective_num_rows >= 0 && "Row index out of range\n");
+    std::vector<double> vals;
+    vals.reserve(effective_num_rows*num_cols);
+    size_t row_count=0;
+    size_t col_count=0;
+    bool is_row_to_be_deleted = false;
+    for(size_t i=0; i<num_rows*num_cols; i++){
+        is_row_to_be_deleted = is_exists_in_vector(row_count, del_rows);
+        if(!is_row_to_be_deleted){
+            double v = mat[i];
+            vals.push_back(v);
+        }
+        col_count++;
+        if(col_count == num_cols){
+            row_count++;
+            col_count=0;
+        }
+    }
+    std::vector<size_t> shape = {effective_num_rows, num_cols};
+    xt::xarray<double> res_mat = xt::adapt(vals, shape);
+    return res_mat;
+}
+
+xt::xarray<double> delete_rows_bias(xt::xarray<double>& mat, std::vector<size_t>& del_rows, size_t size){
+    size_t effective_size = size - del_rows.size();
+    assert(effective_size >= 0 && "Row index out of range\n");
+    std::vector<double> vals;
+    vals.reserve(effective_size);
+    for(size_t i=0; i<size; i++){
+        bool is_index_to_be_deleted = is_exists_in_vector(i, del_rows);
+        if(!is_index_to_be_deleted){
+            double v = mat[i];
+            vals.push_back(v);
+        }
+    }
+    std::vector<size_t> shape = {effective_size};
+    xt::xarray<double> res_mat = xt::adapt(vals, shape);
+    return res_mat;
+}
+
+std::map<size_t, std::vector<size_t>> get_non_essential_neurons(Network_t* net){
+    std::map<size_t, std::vector<size_t>> mark;
+    for(size_t i=0; i<net->layer_vec.size()-2; i++){
+        Layer_t* layer = net->layer_vec[i];
+        std::vector<size_t> vec1;
+        std::vector<size_t> vec2;
+        if(!layer->is_activation){
+            for(size_t j=0; j<layer->neurons.size(); j++){
+                Neuron_t* nt = layer->neurons[j];
+                if(nt->ub <= 0){
+                    vec1.push_back(j);
+                    vec2.push_back(j);
+                }
+            }
+        }
+        if(vec1.size() > 0){
+            mark[i] = vec1;
+            mark[i+1] = vec2;
+        }
+    }
+    return mark;
+}
+
+void init_neurons(Network_t* net){
+    for(Layer_t* layer : net->layer_vec){
+        for(size_t i=0; i<layer->neurons.size(); i++){
+            Neuron_t* nt = layer->neurons[i];
+            delete nt;
+        }
+        layer->neurons.clear();
+        for(size_t i=0; i<layer->dims; i++){
+            Neuron_t* nt = new Neuron_t();
+            nt->neuron_index = i;
+            nt->layer_index = layer->layer_index;
+            layer->neurons.push_back(nt);
+        }
+    }
+}
+
+void update_weight_matrices(Network_t* net, std::map<size_t, std::vector<size_t>>& mark_map){
+    for(auto i : mark_map){
+        size_t layer_index = i.first;
+        std::vector<size_t> del_indexes = i.second;
+        Layer_t* layer = net->layer_vec[layer_index];
+        if(!layer->is_activation){
+            Layer_t* next_affine_layer = net->layer_vec[layer_index+2];
+            xt::xarray<double> curr_weight = layer->w;
+            xt::xarray<double> curr_bias = layer->b;
+            curr_weight = xt::transpose(curr_weight);
+            curr_weight = delete_rows_weight(curr_weight, del_indexes, layer->dims, layer->pred_layer->dims);
+            layer->w = xt::transpose(curr_weight);
+            curr_bias = delete_rows_bias(curr_bias, del_indexes, layer->dims);
+            layer->b = curr_bias;
+
+            xt::xarray<double> next_layer_w = next_affine_layer->w;
+            next_layer_w = delete_rows_weight(next_layer_w, del_indexes, layer->dims, next_affine_layer->dims);
+            next_affine_layer->w = next_layer_w;
+
+            layer->dims = layer->dims - del_indexes.size();
+            net->layer_vec[layer_index+1]->dims = layer->dims;
+            layer->w_shape = {layer->pred_layer->dims, layer->dims};
+            next_affine_layer->w_shape = {layer->dims, next_affine_layer->dims};
+        }
+    } 
+}
+
+
+void remove_non_essential_neurons(Network_t* net){
+    std::map<size_t, std::vector<size_t>> mark_mp = get_non_essential_neurons(net);
+    for(auto i : mark_mp){
+        std::cout<<"Layer index: "<<i.first<<", removed neurons: "<<i.second.size()<<std::endl;
+    }
+    update_weight_matrices(net, mark_mp);
+    init_neurons(net);
+    for(Layer_t* layer : net->layer_vec){
+        if(!layer->is_activation){
+            std::cout<<"Layer index: "<<layer->layer_index<<", weight: "<<xt::adapt(layer->w.shape())<<" , bias: "<<xt::adapt(layer->b.shape())<<std::endl;
+        }
+    }
+}

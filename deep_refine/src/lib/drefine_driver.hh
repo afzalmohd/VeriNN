@@ -24,4 +24,5 @@ void denormalize_image(Network_t* net);
 int run_drefine_vnnlib(Network_t* net);
 std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net);
 size_t num_marked_neurons(Network_t* net);
+void remove_non_essential_neurons(Network_t* net);
 #endif
