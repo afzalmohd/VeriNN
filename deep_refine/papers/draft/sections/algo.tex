@@ -215,6 +215,19 @@ $\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. Which is a contradiction.
   In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
 \end{theorem}
 
+{\em Proof: } Moreover, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
+in any iteration greater than $t$.
+
+Consider an iteration $t' > t$, if we get the marked neurons from layer other than $l_i$ then $n_{ij}$ 
+can not be part of it because $n_{ij}$ is in layer $l_i$. 
+
+Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
+Since we have repaired $n_{ij}$ in line 6 of algorithm \ref{algo:refine2}, its behavior in constraints 
+optimization will be same as the exact relu. 
+Moreover, $\boldsymbol{satval_i}(j) = \boldsymbol{val_i^{\boldsymbol{v_0}}}(j)$, 
+which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
+marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}. 
+ 
 
 
 
