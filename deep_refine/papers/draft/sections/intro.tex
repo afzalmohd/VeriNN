@@ -17,55 +17,19 @@
 
 
 % Why this problem?
-In the recent years,
-people are  increasingly applying
-neural networks in
-safety-critical systems such as
-autonomous vehicles,
-medical diagnosis, and
-speech recognition~\cite{bojarski2016end,amato2013artificial,hinton2012deep}.
-%
-% describe mechanics of neural network
-%
-Since the neural networks are trained using data, it may not give the expected output for each unseen input.
-% 
-Goodfellow \cite{goodfellow2014explaining} have shown that a slight change in the input can fool the neural networks,
-i.e., image misclassification by the change in a few pixels.
-%
-The developers find it hard to analyze/debug the neural networks because they contain hundreds of thousands of non-linear nodes.
+In the recent years, neural networks are being increasingly used in
+safety-critical systems such as autonomous vehicles,
+medical diagnosis, and speech recognition~\cite{bojarski2016end,amato2013artificial,hinton2012deep}. Since the neural networks are trained using data, they may not give the expected output for each unseen input. Goodfellow \cite{goodfellow2014explaining} have shown that a slight change in the input can fool the neural networks, i.e., image misclassification by the change in a few pixels.  The developers find it hard to analyze/debug the neural networks because they contain hundreds of thousands of non-linear nodes.
 
 % What is the problem?
 
-
 To address this problem, developers need automatic verification of the networks.
-Since automatic verification of the neural network is an NP-hard problem, therefore researchers use approximations in their methods.
-We may divide the methods into two classes, namely complete and incomplete.
-The methods~\cite{lomuscio2017approach,fischetti2018deep,dutta2018output,cheng2017maximum,katz2017reluplex,katz2019marabou,ehlers2017formal,huang2017safety,wang2021beta,xu2020fast,zhang2022general} are complete methods, i.e., they explore the exact state space.
-Since complete methods explore exact state space, they suffer from scalability issues on the large-scale networks.
-On the other hand, the abstraction based methods
-\cite{dvijotham2018dual}, \cite{gehr2018ai2}, \cite{singh2018fast},
- \cite{singh2018boosting}, \cite{weng2018towards}, \cite{wong2018provable}, \cite{zhang2018efficient}, \cite{zhang2018efficient}
-are sound and incomplete because they over approximate the state space.
-The incomplete methods scale well in comparison to complete methods. 
-The abstraction based methods suffer from imprecision, so, the methods
-\cite{wang2018formal,wang2018efficient,elboher2020abstraction,yang2021improving,lin2020art}
-refine the over-approximated state space to achieve completeness. 
-Papers \cite{wang2018formal,wang2018efficient,lin2020art} eliminate the
-spurious information by bisecting the input space on the guided dimension. The \cite{yang2021improving} works
-on top of \deeppoly{}~\cite{singh2019abstract}, they remove
-the spurious region by taking each neuron's constraints with the negation of the property and using the 
-Gurobi optimizer \cite{gurobioptimizer} to refine the bounds of neurons.
-Elbohar et.al. \cite{elboher2020abstraction} defined the four classes of neurons based on their characteristics.
-At the time of abstraction, they merge each neuron into one of the four classes. 
-After completing the abstraction process they use the state of the complete verifier to verify 
-the abstract network, they go to the refinement process in case of failure.  
-In the refinement, process authors split the merged neurons. 
-In the worst case, this method may get back to the original network. 
-Although this work is a cegar-based approach, it also suffers from scalability issues on large-scale networks.  
-The work \cite{elboher2020abstraction} refinement process focuses on the structure of the networks.
+Since automatic verification of the neural network is an NP-hard problem, therefore researchers use approximations in their methods. We may divide the methods into two classes, namely complete and incomplete. The methods~\cite{lomuscio2017approach,fischetti2018deep,dutta2018output,cheng2017maximum,katz2017reluplex,katz2019marabou,ehlers2017formal,huang2017safety,wang2021beta,xu2020fast,zhang2022general} are complete methods, i.e., they explore the exact state space.
+Since complete methods explore exact state space, they suffer from scalability issues on the large-scale networks. On the other hand, the abstraction based methods \cite{dvijotham2018dual}, \cite{gehr2018ai2}, \cite{singh2018fast},
+ \cite{singh2018boosting}, \cite{weng2018towards}, \cite{wong2018provable}, \cite{zhang2018efficient}, \cite{zhang2018efficient} are sound and incomplete because they over approximate the state space. The incomplete methods scale well in comparison to complete methods.  The abstraction based methods suffer from imprecision, so, the methods \cite{wang2018formal,wang2018efficient,elboher2020abstraction,yang2021improving,lin2020art} refine the over-approximated state space to achieve completeness. In \cite{wang2018formal,wang2018efficient,lin2020art} the authors eliminate the spurious information by bisecting the input space on the guided dimension. The \cite{yang2021improving} works on top of \deeppoly{}~\cite{singh2019abstract}, they remove
+the spurious region by taking each neuron's constraints with the negation of the property and using the  Gurobi optimizer \cite{gurobioptimizer} to refine the bounds of neurons. Elbohar et.al. \cite{elboher2020abstraction} defined the four classes of neurons based on their characteristics. At the time of abstraction, they merge each neuron into one of the four classes.  After completing the abstraction process they use the state of the complete verifier to verify  the abstract network, they go to the refinement process in case of failure.   In the refinement, process authors split the merged neurons.  In the worst case, this method may get back to the original network.  Although this work is a cegar-based approach, it also suffers from scalability issues on large-scale networks.   The work \cite{elboher2020abstraction} refinement process focuses on the structure of the networks.
 
-Our method is top on the \deeppoly{}. 
-\deeppoly{} maintains a single upper and a single lower linear constraints as well as lower and upper bounds
+Our method is top on the \deeppoly{}.  \deeppoly{} maintains a single upper and a single lower linear constraints as well as lower and upper bounds
 for each neuron in the network. For an affine neuron, the upper and lower constraints are the same as an affine expression, 
 which is a weighted sum of the input neurons. For a \relu{} neuron, they are constructing the upper and lower constraints
 by doing the triangle approximation~\cite{singh2019abstract}. 
