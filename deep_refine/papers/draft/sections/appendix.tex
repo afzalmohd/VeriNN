@@ -103,3 +103,99 @@ the verification query is verified in all the \deeppoly{} runs. If \deeppoly{} f
   \label{algo:verif2}
 \end{algorithm}
 
+
+
+
+\textbf{Pullback approach}\\
+% The core idea of this approach is to find a point in the predecessor layer, such that the current point 
+% can be reached from the predecessor layers point. 
+This approach finds a point of $x_7=2,x_8=1$ in the predecessor layer means the value of $x_5$ and $x_6$. 
+The point $x_7=2$ and $x_8=1$ must reach from the values of $x_5$ and $x_6$. 
+We compute the value by using the \sat{} query on the affine layer. The \sat{} query shown 
+in equation~\ref{eq:back1}, 
+build by using the values and affine expression of $x_7$, $x_8$, and by using the bounds of $x_5$ and $x_6$.
+The satisfying value of equation~\ref{eq:back1} is $x_5=2$ and $x_6=0$, which is the predecessor point of $x_7=2$
+and $x_8=1$.  
+\begin{equation}
+    \begin{aligned}
+        x_7 = 2 & \land x_8 = 1 \\
+        x_5 = 2 & \land x_6 + 1 = 1 \\ 
+        x_5=2\land x_6+1 = 1 & \land 0\leq x_5 \leq 2 \land 0\leq x_6 \leq 2 \\
+    \end{aligned}
+\label{eq:back1}
+\end{equation}
+
+In this approach, we compute the predecessor point by considering both the \texttt{affine} and \texttt{relu} layers together. 
+We compute the predecessor point of $x_5=2, x_6=0$ in terms of $x_1$ and $x_2$.
+Since $x_6=0$ and $x_6=max(0,x_4)$ then $x_4$ can be anything from its lower bound to $0$ i.e. $-2 \leq x_4 \leq 0$.
+Similarly the value of $x_5=2$ and $x_5=max(0,x_3)$ then the value of $x_3$ will be $2$. 
+The \sat{} query build as shown in equation~\ref{eq:back2}. 
+
+\begin{equation}
+    \begin{aligned}
+        x_5 = 2 & \land x_6 = 0 \\
+        x_3 = 2 & \land -2\leq x_4 \leq 0 \\ 
+        x_1+x_2=2\land -2\leq  x_1+x_2 \leq 0 & \land -1\leq x_1 \leq 1 \land -1\leq x_2 \leq 1 \\
+    \end{aligned}
+\label{eq:back2}
+\end{equation}
+
+When we check the satisfiability of equation~\ref{eq:back2}, it returns \unsat{}. It means the predecessor point of 
+$x_5=2,x_6=0$ does not exist, which implies that point $x_5=2, x_6=0$ is introduced by the triangle approximation.
+Whenever the solver returns \unsat{}, we also get the \unsatcore{}~\ref{sec:solver}. In this example we get the 
+\unsatcore{}=$\{x_1+x_2=2, -2\leq  x_1+x_2 \leq 0\}$, so, we mark the corresponding neurons $x_3$ and $x_4$ as a marked neurons. 
+And refine the marked neurons in the refinement procedure. 
+
+
+\textbf{Refinement} \\
+We have two approaches for the refinement {\em Splitting based approach} and {\em MILP-based approach}.
+We elaborate here the {\em MILP-based approach} only. The other approach can be seen in algorithm~\ref{algo:verif2}. 
+These two approaches refine the marked neurons. We got two different sets of marked neurons in the above analysis. 
+The {\em pullback} approach returns $\{x_5, x_6\}$ as the marked neurons, while {\em optimization-based approach}
+return $\{x_6\}$ as the marked neurons. In the following analysis, we are taking the marked neurons set as $\{x_5, x_6\}$.
+Although the analysis will also work if we take the other set of marked neurons.
+
+In {\em MILP based approach}, we add the exact encoding of the marked neuron ($x_5, x_6$) in addition to the constraints
+in equation~\ref{eq:conjunction} and check the satisfiability, now it becomes \unsat{}, hence, the property verified. 
+The exact constraint of a \relu{} neuron is explained in equation~\ref{eq:reluexact}. 
+
+The {\em Splitting based approach} splits the bounds at $0$ of the incoming neurons of the marked neurons. 
+The incoming neurons of $x_5$ and $x_6$ are $x_3$ and $x_4$ respectively. 
+The affine expression of both the incoming neurons is $x_1+x_2$. 
+When we split both $x_3$ and $x_4$ then four cases get generated. The property should get verified in all four cases. 
+All the cases are explained as follows: 
+% Suppose I split $x_3$ then two cases generated
+% $x_3 > 0$ and $x_3 \leq 0$, which implies $x_1+x_2 > 0$ and $x_1+x_2 \leq 0$ respectively. 
+% When we split both $x_3$ and $x_4$ then four cases get generated. Out of four cases $x_3 > 0 \land x_4 \leq 0$ and 
+% $x_3 \leq 0 \land x_4 > 0$ are infeasible cases, because the corresponding affine expression 
+% $x_1+x_2 > 0 \land x_1 + x_2 \leq 0$ is infeasible. We analyze the remaining tow cases as follow: 
+\begin{itemize}
+    \item $x_3 > 0$ and $x_4 > 0$, since neurons are in active phase, so, upper and lower expressions for $x_5$ 
+    becomes $x_3$, similarly the upper and lower expression for $x_6$ becomes $x_4$. 
+    The expression for $x_7$ and $x_8$ remains the same. The upper bound of $x_7 - x_8$ computed in equation~\ref{eq:split1} is $-1$. 
+    The property got verified.   
+    \item $x_3 \leq 0$ and $x_4 \leq 0$, since both neurons are in passive phase, so, the upper and lower expressions 
+        for both the neurons become $0$. The upper and lower expressions of the other neurons remain same. 
+        The upper bound of $x_7 - x_8$ is computed $-1$ in equation~\ref{eq:split2}. The property got verified here too. 
+    \item $x_3 \leq 0$ and $x_4 > 0$, is infeasible case because $x_1+x_2 \leq 0 \land x_1 + x_2 > 0$ is infeasible. 
+    \item $x_3 > 0$ and $x_4 \leq 0$, is infeasible case because $x_1+x_2 > 0 \land x_1 + x_2 \leq 0$ is infeasible. 
+\end{itemize}
+
+\begin{equation}
+    \begin{aligned}
+        x_7 - x_8 \leq & x_5 - x_6 - 1 \\
+       \leq & x_3 - x_4 -1 \\
+       \leq & x_1 + x_2 -(x_1+x_2) -1 \\
+       \leq & -1 
+    \end{aligned}
+    \label{eq:split1}
+\end{equation}
+
+\begin{equation}
+    \begin{aligned}
+      x_7 - x_8 \leq & x_5 - x_6 - 1 \\
+        \leq & 0 - 0 - 1 \\
+        \leq & -1
+    \end{aligned}
+    \label{eq:split2}
+\end{equation}
