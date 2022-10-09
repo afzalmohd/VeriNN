@@ -133,7 +133,7 @@ corresponding element of vector $\boldsymbol{val_2^{v_0}}$.
     \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
     \State Let us say $\boldsymbol{val_{i}}$ is the value vector at layer $l_i$, when $\boldsymbol{v_0}$ executed on network $N$. 
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
-      \If{$l_i$ is \relu{} layer}
+      \If{$l_i$ is $\relu${} layer}
         \State $constr := \Land_{t=i}^k lc_t$
         \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref{eq:reluexact}}
         \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val_{i-1}(j))$
