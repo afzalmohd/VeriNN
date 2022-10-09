@@ -1,11 +1,11 @@
-We define the notions and definitions in this section. 
-These notions and definitions are used in the later part of the paper. 
-The network is defined in definition \ref{def:net}. 
+In this section, We present the notions and the relevant definitions.
+% These notions and definitions are used in the later part of the paper. 
+A neural network is defined as follows. %\ref{def:net}. 
 
 % l_{in}, l_{out}
 \begin{df}
     \label{def:net}
-    A neural network $N = (Neurons, Layers, Edges, W, B, LayerType)$ is a tuple, where
+    A neural network $N = (Neurons, Layers, Edges, W, B, Type)$ is a tuple, where
     \begin{itemize}
         \item $Neurons$ is the set of neurons in $N$,
         \item $Layers = \{l_0,...,l_k\}$ is an indexed partition of $Neurons$,
@@ -15,14 +15,20 @@ The network is defined in definition \ref{def:net}.
         \item $ Edges \subseteq \Union_{i=1}^{k} l_{i-1} \times l_{i}$
         \item $W : Edges \mapsto \reals$
         \item $B : Neurons \mapsto \reals$
-        \item $LayerType : Layers \mapsto \{\mathtt{Affine}, \mathtt{Relu}\}$
+        \item $Type : Layers \mapsto \{\mathtt{Affine}, \mathtt{Relu}\}$
     \end{itemize}
 \end{df}
 
-A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers.
-We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all the other layers 
-as {\em hidden layers}. We assume a separate layer for the activation function. Though there are different kinds of
-activation, we focus only on \relu{}, hence each layer can either be an affine layer or a \relu{} layer.
+A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents
+the number of layers.
+We assume $l_i$ are also indexed. We denote
+We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all
+the other layers as {\em hidden layers}.
+%
+In our presentation, we assume a separate layer for the activation function.
+%
+Though there are different kinds of
+activation, we focus only on \relu{}, hence each layer can either be  \affine{} or \relu{} layer.
 There is a one-to-one mapping between an affine layer $l_{i-1}$ and a \relu{} layer $l_i$. 
 % If a layer $l_i$ is \relu{} layer, then the input neuron of $n_{ij}$ will only be the neuron $n_{(i-1)j}$. 
 Let us say a vector $\boldsymbol{val_i} = [val_{i0}, val_{i1}, ... val_{im}]$ represents the values of each neuron 
