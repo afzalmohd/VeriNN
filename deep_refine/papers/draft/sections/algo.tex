@@ -57,10 +57,10 @@ and return either the verification successful or abstractCEX.
 
 If these algorithms return verification successful then we report verified,
 otherwise analyze the abstractCEX by algorithm \ref{algo:refine2} and return the causes of spuriousness (markedNeurons). 
-Algorithms \ref{algo:verif1} and \ref{algo:verif2} exploit the markedNeurons to verify the property. 
+Algorithm \ref{algo:verif1} exploits the markedNeurons to verify the property. 
 
 Our approach contains two parts, the first part contains an approach to finding the markedNeurons. 
-The second part contains the verification approaches (utilizing markedNeurons).
+The second part contains the verification approach (utilizing markedNeurons).
 
 \begin{algorithm}[t]
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
@@ -124,7 +124,7 @@ corresponding element of vector $\boldsymbol{val_2^{v_0}}$.
  
 
 \begin{algorithm}[t]
-  \textbf{Name: } getMarkedNeurons1 \\
+  \textbf{Name: } getMarkedNeurons \\
   \textbf{Input: } $\langle N,P,Q \rangle,A,markedNeurons,abstractCEX = \boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$\\
   \textbf{Output: } markedNeurons or real cex. 
   \begin{algorithmic}[1]
@@ -152,20 +152,16 @@ corresponding element of vector $\boldsymbol{val_2^{v_0}}$.
 \end{algorithm}
 
 \subsection{Utilizing of spurious information}
-The \emph{isVerified} function in algorithm~\ref{algo:main} calls either algorithm~\ref{algo:verif1} or algorithm~\ref{algo:verif2}. 
-Both algorithms~\ref{algo:verif1} and \ref{algo:verif2} take \markednewrons{} as input. 
+The \emph{isVerified} function in algorithm~\ref{algo:main} calls algorithm~\ref{algo:verif1}. 
+The algorithm~\ref{algo:verif1} takes \markednewrons{} as input. 
 The \markednewrons{} represent the set of the culprit neurons. 
 Algorithm~\ref{algo:verif1} replaces the abstract constraints of \markednewrons{} by exact constraints and check for the 
 property by \milp{} solver. If \milp{} solver return \sat{} then we return satisfying assignments as an abstractCEX, 
-otherwise, return verified. Algorithm~\ref{algo:verif2} splits each neuron of \markednewrons{} into two sub-cases. Suppose the 
-neuron $x\in [lb,ub]$ belongs to \markednewrons{}, then the first case is when $x \in [lb,0]$, and the second case is when $x \in [0,ub]$.   
-After splitting neurons into two cases \deeppoly{} runs for both cases separately. In algorithm \ref{algo:verif2}, \deeppoly{}
-runs an exponential number of times in the size of the \markednewrons{}. We return verified in algorithm~\ref{algo:verif2} if 
-the verification query is verified in all the \deeppoly{} runs. If \deeppoly{} fails to verify in any case then we return the abstractCEX. 
+otherwise, return verified. 
 
 
 \begin{algorithm}[t]
-  \textbf{Name: } isVerified1 \\
+  \textbf{Name: } isVerified \\
   \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons $\subseteq ~ N.neurons$ \\
   \textbf{Output: } verified abstractCEX. 
   \begin{algorithmic}[1]
@@ -180,25 +176,6 @@ the verification query is verified in all the \deeppoly{} runs. If \deeppoly{} f
   \end{algorithmic}
   \caption{An approach to verify $\langle N,P,Q \rangle$ with abstraction A}
   \label{algo:verif1}
-\end{algorithm}
-
-\begin{algorithm}[t]
-  \textbf{Name: } isVerified2 \\
-  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons \\
-  \textbf{Output: } verified or  abstractCEX. 
-  \begin{algorithmic}[1]
-    \For{all combination in $2^{markedNeurons}$}
-      \State $A'$ = run deeppoly
-      \State $constr := P \land (\Land_{i=1}^k lc'_i) \land \neg Q$ \Comment{$lc'$ is with respect to $A'$}
-      \State isSat = checkSat(constr)
-      \If{isSat}
-        \State \textbf{return} abstractCEX
-      \EndIf
-    \EndFor
-    \State \textbf{return} verified
-  \end{algorithmic}
-  \caption{An approach to verify $\langle N,P,Q \rangle$ with abstraction A}
-  \label{algo:verif2}
 \end{algorithm}
 
 

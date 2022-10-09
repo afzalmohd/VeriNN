@@ -71,3 +71,35 @@ in $\mathtt{unsat}$core, and return them as the markedNeurons.
     \caption{A pullback approach to get mark neurons or counter example}
     \label{algo:refine1}
   \end{algorithm}
+
+
+
+\subsection{Utilizing of spurious information}
+The \emph{isVerified} function in algorithm~\ref{algo:main} calls either algorithm~\ref{algo:verif1} or algorithm~\ref{algo:verif2}. 
+Both algorithms~\ref{algo:verif1} and \ref{algo:verif2} take \markednewrons{} as input. 
+The \markednewrons{} represent the set of the culprit neurons. 
+Algorithm~\ref{algo:verif2} splits each neuron of \markednewrons{} into two sub-cases. Suppose the 
+neuron $x\in [lb,ub]$ belongs to \markednewrons{}, then the first case is when $x \in [lb,0]$, and the second case is when $x \in [0,ub]$.   
+After splitting neurons into two cases \deeppoly{} runs for both cases separately. In algorithm \ref{algo:verif2}, \deeppoly{}
+runs an exponential number of times in the size of the \markednewrons{}. We return verified in algorithm~\ref{algo:verif2} if 
+the verification query is verified in all the \deeppoly{} runs. If \deeppoly{} fails to verify in any case then we return the abstractCEX. 
+
+\begin{algorithm}[t]
+  \textbf{Name: } isVerified2 \\
+  \textbf{Input: } $\langle N,P,Q \rangle$ with abstract constraints $A$ and markedNeurons \\
+  \textbf{Output: } verified or  abstractCEX. 
+  \begin{algorithmic}[1]
+    \For{all combination in $2^{markedNeurons}$}
+      \State $A'$ = run deeppoly
+      \State $constr := P \land (\Land_{i=1}^k lc'_i) \land \neg Q$ \Comment{$lc'$ is with respect to $A'$}
+      \State isSat = checkSat(constr)
+      \If{isSat}
+        \State \textbf{return} abstractCEX
+      \EndIf
+    \EndFor
+    \State \textbf{return} verified
+  \end{algorithmic}
+  \caption{An approach to verify $\langle N,P,Q \rangle$ with abstraction A}
+  \label{algo:verif2}
+\end{algorithm}
+
