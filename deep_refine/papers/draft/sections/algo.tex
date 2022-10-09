@@ -76,7 +76,7 @@ The second part contains the verification approach (utilizing markedNeurons).
         \If{abstractCEX is a cex of $\langle N,P,Q \rangle$}
           \State \textbf{return} cex
         \Else
-          \State marked, cex = getMarkedNeurons($\langle N,P,Q \rangle$ , A, markedNeurons)
+          \State marked, cex = getMarkedNeurons($\langle N,P,Q \rangle$ , A, markedNeurons, abstractCEX)
           \If{cex not None}
             \State \textbf{return} cex
           \EndIf
@@ -95,6 +95,8 @@ We have a following approach to find the causes of spuriousness (markedNeurons).
 \subsubsection{Optimization based approach: }
 
 Let us say the abstractCEX is $\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$. 
+Suppose $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
+if we execute the neural network on input $\boldsymbol{v_0}$. 
 The algorithm return $\boldsymbol{v_0}$ as a counter-example if $\boldsymbol{val_k^{\boldsymbol{v_0}}}$ 
 does not satisfy the property $Q$. 
 Since $l_0$ is an input layer, so, $\boldsymbol{v_0}$ and $\boldsymbol{val_0^{v_0}}$ are equal, 
@@ -177,6 +179,41 @@ otherwise, return verified.
   \caption{An approach to verify $\langle N,P,Q \rangle$ with abstraction A}
   \label{algo:verif1}
 \end{algorithm}
+
+
+\subsection{Proofs of progress}
+The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every iteration {\em getMarkedNeurons} 
+returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
+the neurons of the network, and encode them in the exact behavior. 
+
+Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
+$\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$ as input, 
+and $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
+when we execute the neural network on input $\boldsymbol{v_0}$.
+Suppose $\boldsymbol{satval_i}$ represent the satisfying assignment on layer $l_i$ after calling the optimization 
+query at line 10 of algorithm \ref{algo:refine2}. 
+
+
+
+\begin{theorem}
+  \label{th:progress1}
+  In every refinement iteration {\em getMarkedNeurons} return the non empty set of marked neurons. 
+\end{theorem}
+
+{\em Proof by contradiction:} 
+By the definition of abstractCEX, $\boldsymbol{v_k} \models \lnot Q$. 
+By the check at line 8 of algorithm~\ref{algo:main} $\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. 
+
+Set of mark neurons is empty, implies that $markedNt = \{\}$ for each layer. 
+$markedNt= \{\}$ implies that all the neurons in any layer $l_i$ become equal to $\boldsymbol{val_i^{\boldsymbol{v_0}}}$,  
+which implies $\boldsymbol{v_k}$ equals to $\boldsymbol{val_k^{\boldsymbol{v_0}}}$, but $\boldsymbol{v_k} \models \lnot Q$ and 
+$\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. Which is a contradiction. 
+
+
+\begin{theorem}
+  \label{th:progress2}
+  In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
+\end{theorem}
 
 
 
