@@ -1,14 +1,14 @@
-\documentclass[10pt]{llncs}
-
+\documentclass{llncs}
 
 \input{macro.tex}
-\setlength{\textfloatsep}{1mm}% Remove \textfloatsep
+%\setlength{\textfloatsep}{1mm}% Remove \textfloatsep
 
-\title{A CEGAR Based Verification of Neural Network}
+\title{Using counter-examples to improve Robustness Verification in Neural Networks}
+\author{}
+\institute{}
+%\author{Mohammad Afzal\inst{1,2}\and Ashutosh Gupta\inst{1}\and Akshay S\inst{1}\and Supratik Chakraborty\inst{1}}
 
-\author{Mohammad Afzal\inst{1,2}\and Ashutosh Gupta\inst{1}\and Akshay S\inst{1}\and Supratik Chakraborty\inst{1}}
-
-\institute{Indian Institute of Technology, Bombay, India\and TCS Research, Pune, India}
+%\institute{Indian Institute of Technology, Bombay, India\and TCS Research, Pune, India}
 % \date{April 2021}
 
 \begin{document}
@@ -16,48 +16,14 @@
 \maketitle
 
 \begin{abstract}
-  Increasingly, people are using neural networks for important
-  safety-critical systems, e. g., autonomous vehicles,
-  medical diagnosis, and speech recognition.
-  % Neural networks have achieved an important role in 
+  Given the pervasive use of neural networks in safety-critical systems, e. g., in autonomous vehicles, medical diagnosis, and speech recognition, it is becoming increasingly important to ensure their robustness under perturbations. Thus, a significant body of recent work in the last five years has focussed on the question of Robustness verification, i.e., whether such networks are robust (do not alter their behavior) under small perturbations in inputs. Most successful methods are based on the paradigm of branch-and-bound, an abstraction-refinement technique. However, despite tremendous improvements in the last five years, there are still several benchmarks where these methods fail. One reason for this is that these methods use off-the-shelf methods to find reason for errors before refinement.  % Therefore, the practical verification methods need to resolve the   trade-off between scalability and precision.
+
+In this paper, our aim is to develop an approach to identify the source imprecision by using information from previous failed runs. More precisely, we present a {\em novel} counterexample guided abstraction refinement method that can be applied on top on most existing refinement techniques. As a specific illustration, we implement our technique  on top of a basic abstraction framework provided by an existing tool\deeppoly{} and demonstrate how we can remove imprecisions in a targetted manner. Doing this allowed us to go past~\deeppoly{}'s performance as well as all other refinement-based approaches. We also show that this allows us to verify more than 172 (out of 1000) benchmarks on which leading tools (as illustrated by their performance in the competition VNNCOMP 2021) fail. 
+
+  %  We have implemented the method as a prototype.
+%  We compare the performance of our tool against leading tools from VNNCOMP 2021.
   %
-  However, a malicious actor can easily
-  mislead state-of-the-art networks
-  by carefully making small modifications in input.
-  %
-  We need neural networks that do not change their output
-  under small perturbations in inputs.
-  %
-  The researchers are developing techniques to formally
-  verify that a network satisfies the property.
-  %
-  % The researchers found a need here to formally verify
-  % the desired properties of the neural networks.
-  % % 
-  The neural network verification problem is an NP-hard problem.
-  %
-  Therefore, the practical verification methods need to resolve the
-  trade-off between scalability and precision.
-  %
-  The leading methods that scale on real-world
-  networks are based on the abstraction-based approach.
-  %
-  The methods suffer from imprecision.
-  %
-  In this paper, % we remove imprecision using
-  % guided refinement of the abstraction.
-  % %
-  we present a {\em novel} counterexample guided abstraction
-  refinement method on top of abstraction \deeppoly{} to remove
-  the imprecision.  
-  % 
-  We have implemented the method as a prototype.
-  %
-  We compare the performance of our tool against leading tools from VNNCOMP 2021.
-  %
-  Our experiments show that we can solve 172
-  verification problems that none of the tools
-  can solve.
+ % Our experiments show that we can solve 172  verification problems that none of the tools   can solve.
   % Our experiments show that we are outperforming in comparison
   % to the related refinement techniques, also verifying the more
   % number of unique
