@@ -191,20 +191,21 @@ If the formula is unsatisfied then we have proven the query successfully.
 Otherwise, \deeppoly fails to prove the query.
 
 
-% Equation ~\ref{eq:reluexact} shows the exact constraints
-% for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
+\todo{Why do we have the following formula?}
+Equation ~\ref{eq:reluexact} shows the exact constraints
+for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
 
-% \begin{align}
-%     \label{eq:reluexact}
-%     \begin{split}
-%         y &\leq x - l*(1-a) \\
-%         y &\geq x \\
-%         y &\leq u*a \\
-%         y &\geq 0 \\
-%         a &\in \{0,1\} \\ 
-%         \text{where }l = A(x).lb &\text{ and }u = A(x).ub \\
-%     \end{split}
-% \end{align}
+\begin{align}
+    \label{eq:reluexact}
+    \begin{split}
+        y &\leq x - l*(1-a) \\
+        y &\geq x \\
+        y &\leq u*a \\
+        y &\geq 0 \\
+        a &\in \{0,1\} \\ 
+        \text{where }l = A(x).lb &\text{ and }u = A(x).ub \\
+    \end{split}
+\end{align}
 
 
 \subsection{Solver}

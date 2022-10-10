@@ -1,4 +1,11 @@
-%\clearpage
+In this section, we present our method to refine \deeppoly in a novel way.
+%
+\texttt{DeepPoly} is a sound and incomplete technique because it does over-approximation analysis. 
+If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, the result of it is unknown. 
+We overcome this limitation by using a CEGAR-like technique, which is a complete technique
+and rely on~\deeppoly{}. 
+
+% \clearpage
 
 % The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 % $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
@@ -37,9 +44,6 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
 
 
 
-\texttt{DeepPoly} is a sound and incomplete technique because it does over-approximation analysis. 
-If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, the result of it is unknown. 
-We overcome this limitation by using a cegar-based technique, which is a complete technique and rely on \deeppoly{}. 
 The algorithm~\ref{algo:main} represents the high-level flow of our approach.
 The first line of the algorithm generates all the abstract constraints by using \deeppoly{}. 
 These abstract constraints are the lower and upper constraints as well as the lower and upper bounds 
