@@ -1,10 +1,11 @@
 In this section, We present the notions and the relevant definitions.
 % These notions and definitions are used in the later part of the paper. 
-A neural network is defined as follows. %\ref{def:net}. 
+We define a neural network as follows. %\ref{def:net}. 
 
 % l_{in}, l_{out}
 \begin{df}
-    \label{def:net}
+  \label{def:net}
+  \todo{Relu layer also have W and B?}
     A neural network $N = (Neurons, Layers, Edges, W, B, Type)$ is a tuple, where
     \begin{itemize}
         \item $Neurons$ is the set of neurons in $N$,
@@ -23,7 +24,7 @@ A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ r
 the number of layers.
 We assume $l_i$ are also indexed.
 % 
-We denote $n_{ij}$ be the $j$ the neuron of layer $l_i$.
+Let $n_{ij}$ be the $j$th neuron of layer $l_i$.
 %
 We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all
 the other layers as {\em hidden layers}.
@@ -32,25 +33,71 @@ In our presentation, we assume separate layers for the activation functions.
 %
 Though there are different kinds of
 activation, we focus only on $\relu${}, hence each layer can either be  $\affine${} or $\relu${} layer.
-If $Type(l_i) = \relu$, then $l_{i-1} = l_{i}$.
-There is a one-to-one mapping between an affine layer $l_{i-1}$ and a $\relu${} layer $l_i$. 
-% If a layer $l_i$ is $\relu${} layer, then the input neuron of $n_{ij}$ will only be the neuron $n_{(i-1)j}$. 
-Let us say a vector $\boldsymbol{val_i} = [val_{i0}, val_{i1}, ... val_{im}]$ represents the values of each neuron 
-in the layer $l_i$, where $m$ is the number of nodes in the same layer.
-The value of $\boldsymbol{val_i}$ is computed by the weighted sum of the previous layer's values($W_i * V_{i-1} + B_i$)
-if $l_i$ is an affine layer, otherwise $\boldsymbol{val_i}$ is computed by the $\relu${} function. 
-A function $y = max(0,x)$ is a $\relu${} function that takes an argument $x$ as input and returns the
-same value $x$ as output if $x$ is non-negative otherwise return the value 0. 
-
-A neural network can be visualized as a function $N$ which takes an input of $m$ dimensions and gives an 
-output of $n$ dimensions. $N$ can be represented as a composition of functions $f_k o f_{l-1} ... o f_1$,
-where each function $f_i$ represents either the linear combinations of the previous layer's
-output or an activation function. Let us say $n_{ij} \in N.Neurons$ represent 
-the $i^{th}$ neuron of layer $l_j$, and $x_{ij}$ is a real variable for $n_{ij}$. 
-Let us say $val_i^{x}$ represent the point on layer $l_i$ if neural network executes on input $x$. 
+%
 Without loss of generality, we assume that the output layer is an affine layer 
-since we can always append an identity affine layer in the neural network, also the layers $l_1, l_3, l_5, ..., l_k$ 
+since we can always append an identity affine layer in the neural network, also
+the layers $l_1, l_3, l_5, ..., l_k$ 
 are the affine layers and $l_2, l_4, l_6, ..., l_{k-1}$ are the relu layers.  
+%
+If $Type_i = \relu$, then $|l_{i-1}| = |l_{i}|$.
+A matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ represents the weight matrix for layer $l_i$, where
+\todo{Cleaner notation for $W_i$}
+$$
+W_i[t_1, t_2] = 
+\begin{cases}
+  W(e) & e=(n_{(i-1)t_2}, n_{it_1}) \in Edges,\\
+  0 & \text{otherwise.}\\
+\end{cases}
+$$
+A matrix $B_i \in \reals^{|l_i|\times 1}$ represents the bias matrix for layer $l_i$. The entry $B_i[t,0] = B(n_{it})$, where $n_{it} \in Neurons$. 
+
+% There is a one-to-one mapping between an affine layer $l_{i-1}$ and a $\relu${} layer $l_i$. 
+% If a layer $l_i$ is $\relu${} layer, then the input neuron of $n_{ij}$ will only be the neuron $n_{(i-1)j}$. 
+
+
+Let us say a vector $\boldsymbol{val_i} = [val_{i1}, val_{i2}, ... val_{i|l_i|}]$ represents the values
+of each neuron 
+in the layer $l_i$.
+Let $f_i$ be a function that computes the output of a layer for layer $i$,
+i.e., $val_i = f_i(val_{i-1})$.
+For each type the layer the functions are defined as follows.
+If $Type_i = \affine$, then $f_{i}(val_{i-1}) = W_i * val_{i-1} + B_i$.
+If $Type_i = \relu$, then $f_{i}(val_{i-1})_j =  max(val_{{(i-1)}j},0)$.
+%
+A neural network is a function $N$ which takes an input of $|l_0|$ dimensions and gives an 
+output of $|l_k|$ dimensions. $N$ is a a composition of functions $f_k o ... o f_1$.
+For an input $v$, let $val^v_{i}$ denote $f_i o ... o f_1(v)$.
+
+Let us define 
+$Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \text{ and } x_i \text{ is a real variable} \}$
+and
+$Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$.
+A {\em predicate} is a Boolean combination of $Linconstr$.
+We use real variable $x_{ij}$ to represent values of $n_{ij}$ in the predicates.
+
+Let $P$ and $Q$ be a predicate over input and output layers respectively.
+A {\em verification query} is a triple $\langle N, P, Q \rangle$.
+We need to prove that for each input $\boldsymbol{v}$,
+if $\boldsymbol{v} \models P$, $N(\boldsymbol{v}) \models Q$.
+We assume $P$ is of the form
+% Let us say $P$ is a predicate on input layer's variables
+$\Land_{i=1}^{|l_0|}lb_{0i} \leq x_{0i} \leq ub_{0i}$, where $lb_{0i}$ and $ub_{0i}$ are lower and upper bounds respectively for a neuron $n_{0i}$.
+
+
+% The value of $\boldsymbol{val_i}$ is computed by the weighted sum of the
+% previous layer's values($W_i * V_{i-1} + B_i$)
+% if $l_i$ is an affine layer, otherwise $\boldsymbol{val_i}$ is computed by the $\relu${} function. 
+% A function $y = max(0,x)$ is a $\relu${} function that takes an argument $x$ as input and returns the
+% same value $x$ as output if $x$ is non-negative otherwise return the value 0. 
+
+
+% where each function $f_i$ represents either the linear combinations of the previous layer's
+% output or an activation function.
+
+% Let us say $n_{ij} \in N.Neurons$ represent 
+% the $i^{th}$ neuron of layer $l_j$,
+
+% Let us say $val_i^{x}$ represent the point on layer $l_i$ if neural network executes on input $x$. 
 
 % For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
 
@@ -58,118 +105,130 @@ are the affine layers and $l_2, l_4, l_6, ..., l_{k-1}$ are the relu layers.
 % Let $x_{\alpha}$ are unbounded set of real variables, where
 % $\alpha$ is arbitrary index for variables.
 
-\begin{df}
-    \label{def:linexpr}
-    $Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \land x_i \text{ is a real variable} \}$.
-\end{df}
+% \begin{df}
+%   \label{def:linexpr}
+% \end{df}
   
-\begin{df}
-    \label{def:linconstr}
-    $Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$
-\end{df}
-
-
-
-
-
-
-\begin{df}
-  A matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ represents the weight matrix for layer $l_i$, where  
-    $$
-    W_i[t_1, t_2] = 
-    \begin{cases}
-      W(e) & e=(n_{(i-1)t_2}, n_{it_1}) \in Edges,\\
-      0 & \text{otherwise.}\\
-    \end{cases}
-    $$
-\end{df}
-
-\begin{df}
-    A matrix $B_i \in \reals^{|l_i|\times 1}$ represents the bias matrix for layer $l_i$. The entry $B_i[t,0] = B(n_{it})$, where $n_{it} \in Neurons$. 
-\end{df}
+% \begin{df}
+%     \label{def:linconstr}
+% \end{df}
 
 
 
 \subsection{DeepPoly}
 \label{sec:deeppoly}
-We develop our abstract refinement approaches on top of \deeppoly{} abstraction~\cite{singh2019abstract}, 
-which is an abstraction-based method. The abstraction uses the combination of
+
+We develop our abstract refinement approaches on top of abstraction based method
+\deeppoly{}~\cite{singh2019abstract}, which uses a combination of
 well-understood polyhedra~\cite{cousot1978automatic} and box~\cite{cousot1977abstract} abstract domain.
 The abstraction maintains upper and lower linear expressions as well as upper and lower bounds for each neuron.
 The variables appearing in upper and lower expressions are only from the predecessor layer.
+Formally, we define the abstraction as follows. 
 % \todo{Add some intuition}
-Formally, we define abstraction as follows. 
 % Globally \texttt{DeepPoly} forms a polyhedron.
 % Experimentally, it has better precision in comparison to Box~\cite{} and Zonotope~\cite{}.
 % Deeppoly has the abstract transformer of various types of layers and activation functions.
 
+
 \begin{df}
-    For a neuron $x \in N.neurons$,
-    an abstract constraint $A(x) = (lb,ub, lexpr, uexpr)$ is a tuple, where
-    $lb \in \reals$ is lower bound on the value of $x$,
-    $ub \in \reals$ is the upper bound on the value of  $x$,
+    For a neuron $n$,
+    an abstract constraint $A(n) = (lb,ub, lexpr, uexpr)$ is a tuple, where
+    $lb \in \reals$ is lower bound on the value of $n$,
+    $ub \in \reals$ is the upper bound on the value of  $n$,
     $lexpr \in LinExpr$ is the expression for the lower bound, and
     $uexpr \in LinExpr$ is the expression for the upper bound.
 \end{df}
 
+\deeppoly{} computes the abstraction $A$ as follows.
+
 % The abstract constraint $A$ is generated by the tool deeppoly~\cite{} as explained in subsection~\ref*{sec:deeppoly}. 
 
-In \deeppoly{}, we compute the abstraction $A$ as follow:
 \begin{itemize}
-\item For an affine neuron $x_{ij}$, we set 
-  $A(x_{ij}).lexpr := A(x_{ij}).uexpr := \sum_{t=1}^{|l_{i-1}|} W[j,t]*x_{(i-1)t} + B_i[j,0]$.
-  They compute the value of $A(x_{ij}).lb$ and $A(x_{ij}).ub$ by back substituting
-  the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.  
-\item For a relu neuron $x_{ij} = max(0,x_{(i-1)j})$, we consider three cases:
-            \begin{enumerate}
-                \item If $A(x_{(i-1)j}).lb \geq 0$ then relu is in active phase and $A(x_{ij}).lexpr = A(x_{ij}).uexpr = x_{(i-1)j}$,
-                        and $A(x_{ij}).lb = A(x_{(i-1)j}).lb$ and $A(x_{ij}).ub = A(x_{(i-1)j}).ub$
-                \item If $A(x_{(i-1)j}).ub \leq 0$ then relu is in passive phase and $A(x_{ij}).lexpr = A(x_{ij}).uexpr = 0$, 
-                        and $A(x_{ij}).lb = A(x_{ij}).ub = 0$
-                \item  If $A(x_{(i-1)j}).lb < 0$ and $A(x_{(i-1)j}).ub > 0$ then the behavior of relu is uncertain, and authors
-                        do over-approximation. $A(x_{ij}).uexpr = u(x_{(i-1)j} - l) / (u - l)$, 
-                        where $u = A(x_{(i-1)j}).ub \text{ and } l = A(x_{(i-1)j}).lb$.
-                        And $A(x_{ij}).lexpr = \lambda . x_{(i-1)j}$, where $\lambda \in \{0,1\}$. 
-                        They are choosing the value of $\lambda$ dynamically. They compute the value of $A(x_{ij}).lb$ and $A(x_{ij}).ub$ 
-                        by back substituting the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to the input layer. 
-            \end{enumerate} 
+\item If $Type_i= \affine$, we set 
+  $A(x_{ij}).lexpr := A(x_{ij}).uexpr := \sum_{t=1}^{|l_{i-1}|} W_i[j,t]*x_{(i-1)t} + B_i[j,0]$.
+  We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ by back substituting
+  the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.
+  Since $P$ of the verification query has lower and upper bounds of the input layer,
+  we can compute the bounds for $x_{ij}$.
+  
+\item If $Type_i= \relu$, we consider the following three cases:
+  \begin{enumerate}
+  \item If $A(x_{(i-1)j}).lb \geq 0$ then $\relu$ is in active phase and
+    $A(x_{ij}).lexpr := A(x_{ij}).uexpr := A(x_{(i-1)j}).lexpr $,
+    and $A(x_{ij}).lb := A(x_{(i-1)j}).lb$ and $A(x_{ij}).ub := A(x_{(i-1)j}).ub$
+  \item If $A(x_{(i-1)j}).ub \leq 0$ then $\relu$ is in passive phase and
+    $A(x_{ij}).lexpr := A(x_{ij}).uexpr := 0$, 
+    and $A(x_{ij}).lb := A(x_{ij}).ub := 0$.
+  \item  If $A(x_{(i-1)j}).lb < 0$ and $A(x_{(i-1)j}).ub > 0$,
+    the behavior of $\relu$ is uncertain, and we need to apply
+    over-approximation. We set $A(x_{ij}).uexpr := u(x_{(i-1)j} - l) / (u - l)$, 
+    where $u = A(x_{(i-1)j}).ub \text{ and } l = A(x_{(i-1)j}).lb$.
+    And $A(x_{ij}).lexpr := \lambda . x_{(i-1)j}$, where $\lambda \in \{0,1\}$. 
+    We can choose any value of $\lambda$ in a run.
+    We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ in the same way as
+    in the case of affine neurons.
+    % They compute the value of $A(x_{ij}).lb$ and $A(x_{ij}).ub$ 
+    % by back substituting the variables in $A(x_{ij}).lexpr$ and
+    % $A(x_{ij}).uexpr$ respectively up to the input layer. 
+  \end{enumerate} 
 \end{itemize}
 
-The constraints for an affine neuron are exact because it is just an affine transformation of input neurons. 
-The constraints for a relu neuron are also exact if the relu is either in the active or passive phase. 
-The constraints for relu are over-approximated if the behavior of relu is uncertain, although the exact 
-constraints for this case exist, but with the cost of efficiency. 
-Equation ~\ref{eq:reluexact} shows the exact constraints
-for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
+The constraints for an affine neuron are exact because it is just an affine
+transformation of input neurons. 
+The constraints for a relu neuron are also exact if the relu is either
+in the active or passive phase. 
+The constraints for relu are over-approximated if the behavior of relu
+is uncertain. Although we may compute exact 
+constraints for this case, but the constraints will be arbitrary polyhedron,
+which are expensive to compute.
+The \deepoly abstraction finds a balance between precision and efficiency.
 
-\begin{align}
-    \label{eq:reluexact}
-    \begin{split}
-        y &\leq x - l*(1-a) \\
-        y &\geq x \\
-        y &\leq u*a \\
-        y &\geq 0 \\
-        a &\in \{0,1\} \\ 
-        \text{where }l = A(x).lb &\text{ and }u = A(x).ub \\
-    \end{split}
-\end{align}
+For the verification query $\langle N, P, Q \rangle$, we check if
+$\lnot Q \land \Land_{j=1}^{|l_k|}lb_{kj} \leq x_{kj} \leq ub_{kj}$
+are satisfiable.
+%
+If the formula is unsatisfied then we have proven the query successfully.
+Otherwise, \deeppoly fails to prove the query.
+
+
+% Equation ~\ref{eq:reluexact} shows the exact constraints
+% for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
+
+% \begin{align}
+%     \label{eq:reluexact}
+%     \begin{split}
+%         y &\leq x - l*(1-a) \\
+%         y &\geq x \\
+%         y &\leq u*a \\
+%         y &\geq 0 \\
+%         a &\in \{0,1\} \\ 
+%         \text{where }l = A(x).lb &\text{ and }u = A(x).ub \\
+%     \end{split}
+% \end{align}
 
 
 \subsection{Solver}
 \label{sec:solver}
 
-We are using Gurobi(v9.1)~\cite{gurobioptimizer} to optimize the query or to check the satisfiability. 
-The function \texttt{checkSAT} in algorithm \ref{algo:refine1}, \ref{algo:verif1}, and \ref{algo:verif2} 
-take a boolean formula of constraints as input and return \texttt{SAT} or \texttt{UNSAT}. 
+In our algorithms, we will be needing a optimizer and a solver.
+To solve the verification queries,
+we are using Gurobi(v9.1)~\cite{gurobioptimizer} to optimize the query or to check the satisfiability. 
+The function \texttt{checkSAT} in algorithm \ref{algo:refine1}, \ref{algo:verif1}, and
+\ref{algo:verif2} 
+takes a Boolean formula as input and returns \texttt{SAT} or \texttt{UNSAT}. 
 In the case of \texttt{UNSAT}, it returns the \unsatcore{}. 
-The \unsatcore{} is a subset of constraints, which are still \texttt{UNSAT}, 
+The \unsatcore{} is a subset of constraints, which are \texttt{UNSAT}, 
 but if a single constraint removed from \unsatcore{} then it becomes \texttt{SAT}.
-The function \texttt{maxsoftConstr} in the algorithm \ref{algo:refine2} takes two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
-The \texttt{hardConstr} is a boolean formula of constraints, and \texttt{softConstrs} is a set of constraints. 
-The function \texttt{maxsoftConstr} satisfies the maximum number of constraints in \texttt{softConstrs} with satisfying the \texttt{hardConstr}. 
-The function \texttt{maxsoftConstr} return \texttt{SAT} with the set of constraints satisfied in \texttt{softConstr}, or return
-\texttt{UNSAT} if \texttt{hardConstr} fails to satisfy. We encoded the \texttt{maxsoftConstr} function as an optimization 
-query in gurobi. 
+The function \texttt{maxsoftConstr} in the algorithm \ref{algo:refine2} takes
+two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
+The \texttt{hardConstr} is a Boolean formula of constraints,
+and \texttt{softConstrs} is a set of constraints. 
+The function \texttt{maxsoftConstr} satisfies the maximum number of constraints
+in \texttt{softConstrs} while satisfying the \texttt{hardConstr}. 
+The function \texttt{maxsoftConstr} returns \texttt{SAT} with the set of
+constraints satisfied in \texttt{softConstr}, or returns
+\texttt{UNSAT} if \texttt{hardConstr} fails to satisfy.
+We use an optimization query in gurobi to implement \texttt{maxsoftConstr} function.
 
 
 
