@@ -135,6 +135,65 @@ The exact constraint of a $\relu${} neuron is explained in equation~\ref{eq:relu
 
 
 
+% \begin{figure}[!ht]
+% 	\centering
+% 	\scalebox{0.55}{\input{fig/pictorial1.tex}}
+% 	\caption{Pictorial representation of our approach}
+% 	\label{fig:pictorial}
+% \end{figure}
+
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[scale=0.55]{fig/pictorial.pdf}
+%     \caption{Pictorial representation of our approach}
+%     \label{fig:pictorial}
+% \end{figure}
+
+\begin{figure}
+    \begin{minipage}{0.9\textwidth}
+        \centering
+        \includegraphics[scale=0.8]{fig/pictorial1.pdf}
+        
+        (a)
+    \end{minipage}
+
+    \begin{minipage}{0.9\textwidth}
+        \centering
+        \includegraphics[scale=0.8]{fig/pictorial2.pdf}
+
+        (b)
+    \end{minipage}
+    \caption{Pictorial representation of our approach}
+    \label{fig:pictorial}
+\end{figure}
+
+
+Consider the pictorial representation of our approach in figure~\ref{fig:pictorial}. This pictorial representation is not 
+related to the motivating example of figure~\ref{fig:motivating}. The shapes $p_0, p_1, p_2$, and $p_4$ represent 
+the abstract constraints on each layer. We took the rectangle shape for simplicity,  but it is not necessarily a rectangle shape. 
+The red zone on the output layer shows the intersection of the abstract constraints and the negation of the property. If this 
+intersection is empty, we can say that the property was verified. Otherwise, we will get a path 
+$v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$ as shown in figure~\ref{fig:pictorial}(a), which may or may not be a counter-example. 
+We execute $v_0$ on neural network
+and get path $v_0\rightarrow v'_1\rightarrow v'_2\rightarrow v'_3$ as shown in figure~\ref{fig:pictorial}(a). 
+If the point $v'_3$ reaches the red zone, 
+we report $v_0$ as a counter-example. Otherwise, we refine the path $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$. 
+To refine, we make the black line close to the green line from the first layer to the last layer so that the endpoints($v_0, v_3$)
+remain unchanged. Here the closeness means making the neuron's values equal. 
+First, we make the points $v_1$ close to $v'_1$, and it become completely equal (all neuron's values of $v_1$ become equal to the 
+corresponding neuron's values of $v'_1$), we move on the the layer $l_2$. 
+On layer $l_2$,
+we make the points $v_2$ close to $v'_2$, and some neurons of $v_2$ become equal to the corresponding neurons of $v'_2$, and some
+neurons could not become equal, so we got a new point $v''_2$ close to $v'_2$.  
+Finally we got the path $v_0\rightarrow v'_1\rightarrow v''_2\rightarrow v_3$ in figure~\ref{fig:pictorial}(b) 
+close to the green line.
+We pick the layer where the blue line diverges first from the green line. Furthermore, get the neurons whose values are different 
+from the green point's neuron's values. In figure ~\ref{fig:pictorial}(b), the first layer where blue line diverges from the 
+green line is $l_2$.
+We find all the neurons of points $v''_2$ and $v'_2$ whose values differ and mark them.     
+
+
 % \begin{equation}
 %     \begin{align}
 %         \text{softConstrs} = \{x_5=2, x_6=0\}
