@@ -26,8 +26,8 @@ Since complete methods explore exact state space, they suffer from scalability i
 the spurious region by taking each neuron's constraints with the negation of the property and using the  Gurobi optimizer \cite{gurobioptimizer} to refine the bounds of neurons. Elbohar et.al. \cite{elboher2020abstraction} defined the four classes of neurons based on their characteristics. At the time of abstraction, they merge each neuron into one of the four classes.  After completing the abstraction process they use the state of the complete verifier to verify  the abstract network, they go to the refinement process in case of failure.   In the refinement, process authors split the merged neurons.  In the worst case, this method may get back to the original network.  Although this work is a cegar-based approach, it also suffers from scalability issues on large-scale networks.   The work \cite{elboher2020abstraction} refinement process focuses on the structure of the networks.
 
 Our method is top on the \deeppoly{}.  \deeppoly{} maintains a single upper and a single lower linear constraints as well as lower and upper bounds
-for each neuron in the network. For an affine neuron, the upper and lower constraints are the same as an affine expression, 
-which is a weighted sum of the input neurons. For a \relu{} neuron, they are constructing the upper and lower constraints
+for each neuron in the network. For an affine neuron, the upper and lower constraints are the same as an affine expression,
+which is a weighted sum of the input neurons. For a $\relu${} neuron, they are constructing the upper and lower constraints
 by doing the triangle approximation~\cite{singh2019abstract}. 
 Triangle approximation is also explained in section~\ref{sec:deeppoly}. 
 \deeppoly{} scales well on large-scale networks, but it also suffers from imprecision. 

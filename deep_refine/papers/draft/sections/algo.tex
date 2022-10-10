@@ -1,21 +1,12 @@
 %\clearpage
-A {\em predicate} is a Boolean combination of $Linconstr$.
-Let $P$ and $Q$ be a predicate over input and output layers respectively.
-A verification query is a triple $\langle N, P, Q \rangle$.
-We need to prove that for each input $\boldsymbol{v}$,
-if $\boldsymbol{v} \models P$, $N(\boldsymbol{v}) \models Q$.
-We assume $P$ is of the form
-% Let us say $P$ is a predicate on input layer's variables
-$\Land_{i=1}^{|l_0|}lb_i \leq x_{0i} \leq ub_i$, where $lb_i$ and $ub_i$ are lower and upper bounds respectively for a neuron $n_{0i}$.
-An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
-Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
 
 % The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
 % $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
 % The triple  is our verification query.
 %  \todo{How to formalize $P$ and $Q$}
 
-
+An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
+Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
 
 
 % We will use the following convention in writing our algorithms.
@@ -76,7 +67,7 @@ The second part contains the verification approach (utilizing markedNeurons).
         \If{abstractCEX is a cex of $\langle N,P,Q \rangle$}
           \State \textbf{return} cex
         \Else
-          \State marked, cex = getMarkedNeurons($\langle N,P,Q \rangle$ , A, markedNeurons)
+          \State marked, cex = getMarkedNeurons($\langle N,P,Q \rangle$ , A, markedNeurons, abstractCEX)
           \If{cex not None}
             \State \textbf{return} cex
           \EndIf
@@ -95,6 +86,8 @@ We have a following approach to find the causes of spuriousness (markedNeurons).
 \subsubsection{Optimization based approach: }
 
 Let us say the abstractCEX is $\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$. 
+Suppose $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
+if we execute the neural network on input $\boldsymbol{v_0}$. 
 The algorithm return $\boldsymbol{v_0}$ as a counter-example if $\boldsymbol{val_k^{\boldsymbol{v_0}}}$ 
 does not satisfy the property $Q$. 
 Since $l_0$ is an input layer, so, $\boldsymbol{v_0}$ and $\boldsymbol{val_0^{v_0}}$ are equal, 
@@ -131,7 +124,7 @@ corresponding element of vector $\boldsymbol{val_2^{v_0}}$.
     \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
     \State Let us say $\boldsymbol{val_{i}}$ is the value vector at layer $l_i$, when $\boldsymbol{v_0}$ executed on network $N$. 
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
-      \If{$l_i$ is \relu{} layer}
+      \If{$l_i$ is $\relu${} layer}
         \State $constr := \Land_{t=i}^k lc_t$
         \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref{eq:reluexact}}
         \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val_{i-1}(j))$
@@ -179,6 +172,54 @@ otherwise, return verified.
 \end{algorithm}
 
 
+\subsection{Proofs of progress}
+The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every iteration {\em getMarkedNeurons} 
+returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
+the neurons of the network, and encode them in the exact behavior. 
+
+Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
+$\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$ as input, 
+and $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
+when we execute the neural network on input $\boldsymbol{v_0}$.
+Suppose $\boldsymbol{satval_i}$ represent the satisfying assignment on layer $l_i$ after calling the optimization 
+query at line 10 of algorithm \ref{algo:refine2}. 
+
+
+
+\begin{theorem}
+  \label{th:progress1}
+  In every refinement iteration {\em getMarkedNeurons} return the non empty set of marked neurons. 
+\end{theorem}
+
+{\em Proof by contradiction:} 
+By the definition of abstractCEX, $\boldsymbol{v_k} \models \lnot Q$. 
+By the check at line 8 of algorithm~\ref{algo:main} $\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. 
+
+Set of mark neurons is empty, implies that $markedNt = \{\}$ for each layer. 
+$markedNt= \{\}$ implies that all the neurons in any layer $l_i$ become equal to $\boldsymbol{val_i^{\boldsymbol{v_0}}}$,  
+which implies $\boldsymbol{v_k}$ equals to $\boldsymbol{val_k^{\boldsymbol{v_0}}}$, but $\boldsymbol{v_k} \models \lnot Q$ and 
+$\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. Which is a contradiction. 
+
+
+\begin{theorem}
+  \label{th:progress2}
+  In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
+\end{theorem}
+
+{\em Proof: } Moreover, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
+in any iteration greater than $t$.
+
+Consider an iteration $t' > t$, if we get the marked neurons from layer other than $l_i$ then $n_{ij}$ 
+can not be part of it because $n_{ij}$ is in layer $l_i$. 
+
+Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
+Since we have repaired $n_{ij}$ in line 6 of algorithm \ref{algo:refine2}, its behavior in constraints 
+optimization will be same as the exact relu. 
+Moreover, $\boldsymbol{satval_i}(j) = \boldsymbol{val_i^{\boldsymbol{v_0}}}(j)$, 
+which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
+marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}. 
+ 
+
 
 
 
@@ -193,5 +234,6 @@ otherwise, return verified.
 
 %%% Local Variables:
 %%% mode: latex
-%%% TeX-master: "main"
+%%% TeX-master: "../main"
 %%% End:
+
