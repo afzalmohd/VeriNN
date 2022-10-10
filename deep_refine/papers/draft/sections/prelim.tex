@@ -148,8 +148,8 @@ Formally, we define the abstraction as follows.
   $A(x_{ij}).lexpr := A(x_{ij}).uexpr := \sum_{t=1}^{|l_{i-1}|} W_i[j,t]*x_{(i-1)t} + B_i[j,0]$.
   We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ by back substituting
   the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.
-  Since $P$ has lower and upper bounds of the input layer, we can compute
-  the bounds for $x_{ij}$.
+  Since $P$ of the verification query has lower and upper bounds of the input layer,
+  we can compute the bounds for $x_{ij}$.
   
 \item If $Type_i= \relu$, we consider the following three cases:
   \begin{enumerate}
@@ -182,6 +182,14 @@ is uncertain. Although we may compute exact
 constraints for this case, but the constraints will be arbitrary polyhedron,
 which are expensive to compute.
 The \deepoly abstraction finds a balance between precision and efficiency.
+
+For the verification query $\langle N, P, Q \rangle$, we check if
+$\lnot Q \land \Land_{j=1}^{|l_k|}lb_{kj} \leq x_{kj} \leq ub_{kj}$
+are satisfiable.
+%
+If the formula is unsatisfied then we have proven the query successfully.
+Otherwise, \deeppoly fails to prove the query.
+
 
 % Equation ~\ref{eq:reluexact} shows the exact constraints
 % for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
