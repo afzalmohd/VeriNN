@@ -1,5 +1,10 @@
-Consider a neural network in figure~\ref{fig:motivating}, 
-which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
+\begin{figure}[t]
+	\centering
+	\scalebox{0.8}{\input{fig/nn1.tex}}
+	\caption{Hypothetical example of neural network}
+	\label{fig:motivating}
+\end{figure}
+Consider a neural network in figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
 \texttt{Affine} and \texttt{ReLU} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
 Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the other neurons have a bias of $0$. 
 Our goal is to verify for all possible input $x_1,x_2 \in [-1,1]$ the outputs $x_7 \leq x_8$ satisfy. 
@@ -10,65 +15,67 @@ For an activation neuron, the upper and lower expression is computed using trian
 which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
 new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
-from the previous layer, the back substitute further from the previous layer. They keep the back substitute 
-up to the input layer. The process of back substitution is shown in equation~\ref{eq:deeppoly}.
+from the previous layer.%, the back substitute further from the previous layer.
+They keep the back substitute  up to the input layer. The process of back substitution is shown in equation (1). %~\ref{eq:deeppoly}.
 After back substitution, the upper bound of $x_9$ is computed as $1$ which is greater than $0$, 
-hence, the \deeppoly{} fails to verify the property. 
+hence, the \deeppoly{} fails to verify the property.
 
-
-\begin{equation}
+\hspace*{-1cm}
+\fbox{
+\noindent\begin{minipage}{.23\linewidth}
+\begin{equation*}
     \begin{aligned}
-        x_9 \leq  &  x_7 - x_8 \\
+        x_9 \leq  &  x_7 - x_8 &\\
         x_9 \leq  & x_5 - x_6 - 1 \\
-        x_9 \leq  & 0.5x_3 + 1 - 1 \\
+        x_9 \leq  & 0.5x_3 + 1 - 1 &\\
         x_9 \leq  & 0.5(x_1+x_2) \\
-        x_9 \leq  & 1
+        x_9 \leq  & 1\\
+        (1)
+   \end{aligned}
+%\label{eq:deeppoly}
+\end{equation*}
+\end{minipage}}\quad
+\fbox{
+\begin{minipage}{.68\linewidth}
+\begin{equation*}
+    \begin{aligned}
+      -1 \leq & x_1 \leq 1 \hspace*{-1cm}&  \hspace*{-2cm}
+      -1 \leq & x_2 \leq 1 \\
+         x_1 + x_2 \leq & x_3 \leq x_1 + x_2 \hspace*{-1cm}& \hspace*{-2cm}
+         x_1 + x_2 \leq & x_4 \leq x_1 + x_2 \\
+         0 \leq & x_5 \leq 0.5x_3+1 \hspace*{-1cm}&  \hspace*{-2cm}
+         0 \leq & x_6 \leq 0.5x_4 + 1 \\
+         x_5 \leq & x_7 \leq x_5 \hspace*{-1cm}&\hspace*{-2cm}
+         x_6+1 \leq & x_8 \leq x_6+1 \\
+         x_7 & > x_8 \text{ (negation of property)}&&\\
+        & \hspace*{2cm}(2) &&
     \end{aligned}
-\label{eq:deeppoly}
-\end{equation}
+%\label{eq:conjunction}
+\end{equation*}
 
-There are two main reasons for the failure of \deeppoly{}. One is it can not maintain the complete correlation 
+\end{minipage}
+}  
+
+There are two main reasons for the failure of \deeppoly{}. One is it cannot maintain the complete correlation 
 between the neurons. In this example neurons $x_3$ and $x_4$ has the same expression $x_1+x_2$, so, they always
 get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second is the triangle
 approximation on relu neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
-as shown in equation~\ref{eq:conjunction},
-and use the \milp{} solver to check the satisfiability and tackled the first issue. 
-The second issue can be resolved either by splitting the 
-bound at zero of the affine node or by using the exact encoding (eq~\ref{eq:reluexact}) instead of triangle approximation.
-Both solutions increase the problem size exponentially in terms of relu neurons. 
-The problem size will be huge if we repair every neuron of the network. 
+as shown in equation (2)%~\ref{eq:conjunction},
+and use the \milp{} solver to check satisfiability, thus addressing the first issue.  The second issue can be resolved either by splitting the bound at zero of the affine node (as done in~\cite{?})\todo{add citation?} or by using the exact encoding (eq~\ref{eq:reluexact}) instead of triangle approximation. But both solutions increase the problem size exponentially in terms of relu neurons and this results in a huge blowup if we repair every neuron of the network. 
 
-\begin{equation}
-    \begin{aligned}
-        -1 \leq & x_1 \leq 1 \\ 
-        -1 \leq & x_2 \leq 1 \\
-         x_1 + x_2 \leq & x_3 \leq x_1 + x_2 \\
-         x_1 + x_2 \leq & x_4 \leq x_1 + x_2 \\
-         0 \leq & x_5 \leq 0.5x_3+1 \\ 
-         0 \leq & x_6 \leq 0.5x_4 + 1 \\
-         x_5 \leq & x_7 \leq x_5 \\ 
-         x_6+1 \leq & x_8 \leq x_6+1 \\
-         x_7 & > x_8 \text{ (negation of property)}
-    \end{aligned}
-\label{eq:conjunction}
-\end{equation}
+So, the main hurdle towards efficiency is to find the set of important neurons (we call these {\em marked neurons}), and only repair these.  For this we crucially use the satisfying assignment obtained from the \milp{} solver.
+%When \deeppoly{} fails to verify the network, we use an \milp{} solver to check the satisfiability of equation~\ref{eq:conjunction}. 
+%If it returns \unsat{} it means the property is verified otherwise we get the satisfying assignment of each variable. 
+For instance, a possible satisfying assignment of equation~(2)%\ref{eq:conjunction}
+is in equation~\ref{eq:sat1}. We execute the neural network with the inputs $x_1=1,x_2=1$ and get the values on each neuron as shown in equation~\ref{eq:sat2}. Then we observe that the output values $x'_7=2, x'_8=3$ satisfy the property, so, the input $x_1=1, x_2=1$ is a spurious counter-example. The question is to identify the neuron whose abstraction lead to this imprecision. 
 
-We find the set of important neurons (marked neurons), and repair only marked neurons. 
-When \deeppoly{} fails to verify the network, we use an \milp{} solver to check the satisfiability
-of equation~\ref{eq:conjunction}. 
-If it returns \unsat{} it means the property is verified otherwise we get the satisfying assignment of each variable. 
-The satisfying assignment of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}
-We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get the values on each neuron 
-as shown in equation~\ref{eq:sat2}. 
-The output values $x'_7=2, x'_8=3$ satisfying the property, so, the input $x_1=1, x_2=1$ is an spurious counter-example. 
-We have to remove spurious counter example by doing the refinement analysis. 
-We are using one approach to find the marked neurons guided by the spurious counter example, 
-and one approach to refine (repair) the marked neurons.
+%We have to remove spurious counter example by doing the refinement analysis. 
+%We are using one approach to find the marked neurons guided by the spurious counter example,  and one approach to refine (repair) the marked neurons.
 
 % We are using two approaches to find the marked neurons guided by the spurious counter example, 
 % and two approaches to refine (repair) the marked neurons.
-
+ \setcounter{equation}{2}
 \begin{equation}
     \begin{aligned}
         x_1=1, x_2=1, x_3=2, x_4=2, x_5=2, x_6=0, x_7=2, x_8=1
@@ -83,38 +90,18 @@ and one approach to refine (repair) the marked neurons.
 \label{eq:sat2}
 \end{equation}
 
-
-
-
-\begin{figure}[!ht]
-	\centering
-	\scalebox{0.8}{\input{fig/nn1.tex}}
-	\caption{Hypothetical example of neural network}
-	\label{fig:motivating}
-\end{figure}
-
-
-Following is the approach to find the marked neurons.
-\\
-\textbf{Optimization based approach}\\
-The satisfying assignments of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}. 
-We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get values on each neuron as 
-shown in equation~\ref{eq:sat2}. We make the point on \texttt{relu} layer as close as possible 
-to the point of \texttt{relu} in equation~\ref{eq:sat2}, such that input points $x_1,x_2$ and 
-output point $x_7,x_8$ remains the same as in equation~\ref{eq:sat1}. 
-Equation~\ref{eq:opt1} shows the constraints which must be satisfied. The first and the last line of equation~\ref{eq:opt1}
-ensure that the input and output points remain the same as in equation~\ref{eq:sat1}. 
-The constraints $\{x_5=2, x_6=2\}$ are soft constraints, which means maximum number of soft constraints should satisfy. 
-The soft constraints define the closeness point on the relu layer of equations~\ref{eq:sat1} and \ref{eq:sat2}. 
-Finally, we give to the optimizer the constraints in equation~\ref{eq:opt1} and the soft constraints. 
-The constraints of equation~\ref{eq:opt1} must be satisfied because it is the same equation as \ref{eq:conjunction}
-except for the fixed input and output points. 
-The optimizer returns the constraints from soft constraints which are satisfied with the constraints 
-of equation~\ref{eq:opt1}. If optimizer returns all soft constraints($\{x_5=2,x_6=2\}$) it means the output point
-$x_7=2, x_8=1$ can be reached from $x_5=2,x_6=2$. But optimizer returns the soft constraint $\{x_5=2\}$, it mean 
-$x_6$ is a neurons which is contributing to the output point $x_7=2, x_8=1$. We mark the neuron $x_6$ as 
-marked neurons.  
-
+%Following is the approach to find the marked neurons.
+%\\
+\noindent\textbf{Optimization based approach to identify marked neurons}\\
+%The satisfying assignments of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}. We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get values on each neuron as  shown in equation~\ref{eq:sat2}.
+We make the point on \texttt{relu} layer in eq~\ref{eq:sat1} as close as possible  to the point of \texttt{relu} in equation~\ref{eq:sat2} by encoding them as soft constraints (i.e.,  $\{x_5=2, x_6=2\}$) while maintainingthat the rest of the hard constraints are satisfied (see Equation~\ref{eq:opt1}) e.g., input points $x_1,x_2$ and output points $x_7,x_8$ are the same etc. 
+%The soft constraints define the closeness point on the relu layer of equations~\ref{eq:sat1} and \ref{eq:sat2}. 
+Then we feed this to a maxsat solver \todo{check! afzal} to maximize the soft constraints, while maintaining the hard constraints.
+  %the constraints in equation~\ref{eq:opt1} and the soft constraints. 
+%The constraints of equation~\ref{eq:opt1} must be satisfied because it is the same equation as \ref{eq:conjunction} except for the fixed input and output points. The optimizer returns the constraints from soft constraints which are satisfied with the constraints of equation~\ref{eq:opt1}.
+  If the solver returns all soft constraints($\{x_5=2,x_6=2\}$) it means the output point $x_7=2, x_8=1$ can be reached from $x_5=2,x_6=2$. But in this case the solver could return only the soft constraint $\{x_5=2\}$, which implies that $x_6$ is a neuron which is contributing to the output point $x_7=2, x_8=1$. We mark the neuron $x_6$ as a marked neuron. \todo{this should be written better. maybe the schematic picture should be here for THIS example not general.}
+  \fbox{
+    \begin{minipage}{0.5\linewidth}
 \begin{equation}
     \begin{aligned}
         x_1 = 1 & \land x_2 = 1 \\
@@ -125,14 +112,15 @@ marked neurons.
     \end{aligned}
 \label{eq:opt1}
 \end{equation}
-\\
-\textbf{Refinement} \\
-We have an approach for the refinement named as {\em MILP-based approach}.
-We got $x_6$ as the marked neuron in the above analysis. 
-In {\em MILP based approach}, we add the exact encoding of the marked neuron ($x_5$) in addition to the constraints
-in equation~\ref{eq:conjunction} and check the satisfiability, now it becomes \unsat{}, hence, the property verified. 
-The exact constraint of a $\relu${} neuron is explained in equation~\ref{eq:reluexact}. 
-
+\end{minipage}
+  }\qquad 
+  \begin{minipage}{0.4\linewidth}
+%\textbf{Refinement} \\
+%We have an approach for the refinement named as {\em MILP-based approach}.
+Once we have  $x_6$ as the marked neuron, we use an {\em MILP based approach}, and add the exact encoding of the marked neuron ($x_6$) in addition to the constraints in equation (2) %~\ref{eq:conjunction}
+and check the satisfiability, now it becomes \unsat{}, hence, the property verified (see Eq. equation~\ref{eq:reluexact} for more details).
+%The exact constraint of a $\relu${} neuron is explained in 
+\end{minipage}
 
 
 % \begin{figure}[!ht]
@@ -150,48 +138,49 @@ The exact constraint of a $\relu${} neuron is explained in equation~\ref{eq:relu
 %     \label{fig:pictorial}
 % \end{figure}
 
-\begin{figure}
-    \begin{minipage}{0.9\textwidth}
-        \centering
-        \includegraphics[scale=0.8]{fig/pictorial1.pdf}
+
+%% \begin{figure}
+%%     \begin{minipage}{0.9\textwidth}
+%%         \centering
+%%         \includegraphics[scale=0.8]{fig/pictorial1.pdf}
         
-        (a)
-    \end{minipage}
+%%         (a)
+%%     \end{minipage}
 
-    \begin{minipage}{0.9\textwidth}
-        \centering
-        \includegraphics[scale=0.8]{fig/pictorial2.pdf}
+%%     \begin{minipage}{0.9\textwidth}
+%%         \centering
+%%         \includegraphics[scale=0.8]{fig/pictorial2.pdf}
 
-        (b)
-    \end{minipage}
-    \caption{Pictorial representation of our approach}
-    \label{fig:pictorial}
-\end{figure}
+%%         (b)
+%%     \end{minipage}
+%%     \caption{Pictorial representation of our approach}
+%%     \label{fig:pictorial}
+%% \end{figure}
 
 
-Consider the pictorial representation of our approach in figure~\ref{fig:pictorial}. This pictorial representation is not 
-related to the motivating example of figure~\ref{fig:motivating}. The shapes $p_0, p_1, p_2$, and $p_4$ represent 
-the abstract constraints on each layer. We took the rectangle shape for simplicity,  but it is not necessarily a rectangle shape. 
-The red zone on the output layer shows the intersection of the abstract constraints and the negation of the property. If this 
-intersection is empty, we can say that the property was verified. Otherwise, we will get a path 
-$v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$ as shown in figure~\ref{fig:pictorial}(a), which may or may not be a counter-example. 
-We execute $v_0$ on neural network
-and get path $v_0\rightarrow v'_1\rightarrow v'_2\rightarrow v'_3$ as shown in figure~\ref{fig:pictorial}(a). 
-If the point $v'_3$ reaches the red zone, 
-we report $v_0$ as a counter-example. Otherwise, we refine the path $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$. 
-To refine, we make the black line close to the green line from the first layer to the last layer so that the endpoints($v_0, v_3$)
-remain unchanged. Here the closeness means making the neuron's values equal. 
-First, we make the points $v_1$ close to $v'_1$, and it become completely equal (all neuron's values of $v_1$ become equal to the 
-corresponding neuron's values of $v'_1$), we move on the the layer $l_2$. 
-On layer $l_2$,
-we make the points $v_2$ close to $v'_2$, and some neurons of $v_2$ become equal to the corresponding neurons of $v'_2$, and some
-neurons could not become equal, so we got a new point $v''_2$ close to $v'_2$.  
-Finally we got the path $v_0\rightarrow v'_1\rightarrow v''_2\rightarrow v_3$ in figure~\ref{fig:pictorial}(b) 
-close to the green line.
-We pick the layer where the blue line diverges first from the green line. Furthermore, get the neurons whose values are different 
-from the green point's neuron's values. In figure ~\ref{fig:pictorial}(b), the first layer where blue line diverges from the 
-green line is $l_2$.
-We find all the neurons of points $v''_2$ and $v'_2$ whose values differ and mark them.     
+%% Consider the pictorial representation of our approach in figure~\ref{fig:pictorial}. This pictorial representation is not 
+%% related to the motivating example of figure~\ref{fig:motivating}. The shapes $p_0, p_1, p_2$, and $p_4$ represent 
+%% the abstract constraints on each layer. We took the rectangle shape for simplicity,  but it is not necessarily a rectangle shape. 
+%% The red zone on the output layer shows the intersection of the abstract constraints and the negation of the property. If this 
+%% intersection is empty, we can say that the property was verified. Otherwise, we will get a path 
+%% $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$ as shown in figure~\ref{fig:pictorial}(a), which may or may not be a counter-example. 
+%% We execute $v_0$ on neural network
+%% and get path $v_0\rightarrow v'_1\rightarrow v'_2\rightarrow v'_3$ as shown in figure~\ref{fig:pictorial}(a). 
+%% If the point $v'_3$ reaches the red zone, 
+%% we report $v_0$ as a counter-example. Otherwise, we refine the path $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$. 
+%% To refine, we make the black line close to the green line from the first layer to the last layer so that the endpoints($v_0, v_3$)
+%% remain unchanged. Here the closeness means making the neuron's values equal. 
+%% First, we make the points $v_1$ close to $v'_1$, and it become completely equal (all neuron's values of $v_1$ become equal to the 
+%% corresponding neuron's values of $v'_1$), we move on the the layer $l_2$. 
+%% On layer $l_2$,
+%% we make the points $v_2$ close to $v'_2$, and some neurons of $v_2$ become equal to the corresponding neurons of $v'_2$, and some
+%% neurons could not become equal, so we got a new point $v''_2$ close to $v'_2$.  
+%% Finally we got the path $v_0\rightarrow v'_1\rightarrow v''_2\rightarrow v_3$ in figure~\ref{fig:pictorial}(b) 
+%% close to the green line.
+%% We pick the layer where the blue line diverges first from the green line. Furthermore, get the neurons whose values are different 
+%% from the green point's neuron's values. In figure ~\ref{fig:pictorial}(b), the first layer where blue line diverges from the 
+%% green line is $l_2$.
+%% We find all the neurons of points $v''_2$ and $v'_2$ whose values differ and mark them.     
 
 
 % \begin{equation}
