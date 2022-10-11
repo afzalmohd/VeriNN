@@ -1,0 +1,51 @@
+\subsection{Proofs of progress}
+The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every iteration {\em getMarkedNeurons} 
+returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
+the neurons of the network, and encode them in the exact behavior. 
+
+Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
+${v_0}, {v_1}, ... {v_k}$ as input, 
+and ${val_i^{{v_0}}}$ represents the value vector on layer $l_i$, 
+when we execute the neural network on input ${v_0}$.
+Suppose ${satval_i}$ represent the satisfying assignment on layer $l_i$ after calling the optimization 
+query at line 10 of algorithm \ref{algo:refine2}. 
+
+
+
+\begin{theorem}
+  \label{th:progress1}
+  In every refinement iteration {\em getMarkedNeurons} return the non empty set of marked neurons. 
+\end{theorem}
+
+{\em Proof by contradiction:} 
+By the definition of abstractCEX, ${v_k} \models \lnot Q$. 
+By the check at line 8 of algorithm~\ref{algo:main} ${val_k^{{v_0}}} \models Q$. 
+
+Set of mark neurons is empty, implies that $markedNt = \{\}$ for each layer. 
+$markedNt= \{\}$ implies that all the neurons in any layer $l_i$ become equal to ${val_i^{{v_0}}}$,  
+which implies ${v_k}$ equals to ${val_k^{{v_0}}}$, but ${v_k} \models \lnot Q$ and 
+${val_k^{{v_0}}} \models Q$. Which is a contradiction. 
+
+
+\begin{theorem}
+  \label{th:progress2}
+  In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
+\end{theorem}
+
+{\em Proof: } Moreover, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
+in any iteration greater than $t$.
+
+Consider an iteration $t' > t$, if we get the marked neurons from layer other than $l_i$ then $n_{ij}$ 
+can not be part of it because $n_{ij}$ is in layer $l_i$. 
+
+Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
+Since we have repaired $n_{ij}$ in line 6 of algorithm \ref{algo:refine2}, its behavior in constraints 
+optimization will be same as the exact relu. 
+Moreover, ${satval_i}(j) = {val_i^{{v_0}}}(j)$, 
+which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
+marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}. 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

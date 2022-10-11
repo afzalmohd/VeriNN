@@ -15,7 +15,7 @@ check if the extra constraints rule out all spurious counter-examples.
 %
 The calls to MILP solvers is expensive,
 therefore
-we use spurious counter-examples to identify a minimal set of marked neurons.
+we use spurious counter-examples to identify a small set of marked neurons.
 
 
 In algorithm~\ref{algo:main}, we present the top-level flow of our approach.
@@ -31,10 +31,10 @@ The first line of the algorithm~\ref{algo:main} generates all the abstract const
 by using \deeppoly{}.
 For a node $n_{ij} \in A.neurons$,
 the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds.
-Let $lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a 
+Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a 
 conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$.
 The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, 
-hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
+hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
 
 
 %
@@ -45,37 +45,51 @@ find a counterexample.
 %
 At line 4, we call $\textsc{isVerified}$ with the verification query, abstraction $A$, and the
 set of marked neurons.
+%
+In the verification step, the behavior of the marked neurons are encoded exactly, which
+will be explained shortly.
+%
 The call either returns that the query is verified or returns an abstract counterexample,
 which is defined as follows.
-
-
 
 \begin{df}
   A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
   {\em abstract execution} of abstract constraint $A$ if 
-  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
- Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
- an {\em abstract counter example(abstractCEX)} if $\boldsymbol{v_k} \models \lnot Q$.
+  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models A.lc_i$ for each $i \in [1,k]$.  
+  An abstract execution $\boldsymbol{v_0,...,v_k}$ is
+  an {\em abstract counterexample} if~$\boldsymbol{v_k} \models \lnot Q$.
 \end{df}
 
 
+If these algorithms return verification successful then we report verified,
+otherwise analyze the abstract counterexample $CEX(v_0,...,v_k)$.
+At line 6, we first check if executing the neural network $N$ on input $v_0$
+violates the predicate $Q$.
+If yes, we report input $v_0$ for which the verification query is not true.
+Otherwise, we the abstract counterexample is spurious.
+We call $\textsc{getMarkedNeurons}$ to analyze the counterexample and
+returns the causes of spuriousness, which is a set of neurons $markedNt$.
+We add the new set $markedNt$ in the old set $marked$.
+We iterate our loop again with the new set of marked neurons.
+
+Now let us present $\textsc{isVerified}$ and $\textsc{getMarkedNeurons}$ in detail.
+
+% Algorithm \ref{algo:verif1} exploits the markedNeurons to verify the property. 
+
 %
-The algorithm uses supporting algorithms~\ref{algo:refine1} and~\ref{algo:verif1} to
-verify the query and return either the verification successful or abstractCEX. 
+% The algorithm uses supporting algorithms~\ref{algo:refine1} and~\ref{algo:verif1} to
+% verify the query and return either the verification successful or abstractCEX. 
 
 % The algorithm~\ref{algo:main} represents the high-level flow of our approach.
 
 
-If these algorithms return verification successful then we report verified,
-otherwise analyze the abstractCEX by algorithm \ref{algo:refine2} and return the causes of spuriousness (markedNeurons). 
-Algorithm \ref{algo:verif1} exploits the markedNeurons to verify the property. 
 
-Our approach contains two parts, the first part contains an approach to finding the markedNeurons. 
-The second part contains the verification approach (utilizing markedNeurons).
+% Our approach contains two parts, the first part contains an approach to finding the markedNeurons. 
+% The second part contains the verification approach (utilizing markedNeurons).
 
 
-In algorithm ~\ref{algo:refine2} and ~\ref{algo:verif1}
-They are presented in 
+% In algorithm ~\ref{algo:refine2} and ~\ref{algo:verif1}
+% They are presented in 
 
 % \clearpage
 
@@ -84,8 +98,8 @@ They are presented in
 % The triple  is our verification query.
 %  \todo{How to formalize $P$ and $Q$}
 
-An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
-Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
+% An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
+% Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
 
 
 % We will use the following convention in writing our algorithms.
@@ -121,7 +135,7 @@ Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, a
           \State marked := marked $\union$ markedNt
         \EndIf
       \Else
-        \State \textbf{return} success 
+        \State \textbf{return} verified
       \EndIf
     \EndWhile
   \end{algorithmic}
@@ -130,39 +144,11 @@ Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, a
 \end{algorithm}
 
 \begin{algorithm}[t]
-  \textbf{Name: } $\textsc{getMarkedNeurons}$ \\
-  \textbf{Input: } $\langle N,P,Q \rangle,A,marked$, $({v_0}, {v_1} ... {v_k})$:abstract counterexample\\
-  \textbf{Output: } New marked neurons. 
-  \begin{algorithmic}[1]
-    % \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
-    \State Let ${val_{ij}}$ be the value of $n_{ij}$, when $\boldsymbol{v_0}$ is input of $N$. 
-    \For{$i=1$ to $k$} \Comment{inputLayer excluded}
-      \If{$l_i$ is $\relu${} layer}
-        \State $constr := \Land_{t=i}^k lc_t$
-        \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref{eq:reluexact}}
-        \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val_{(i-1)j})$
-        \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = v_{kj})$
-        \State $softConstrs := \cup_{j=1}^{|l_j|} (x_{ij} = val_{ij})$
-        \State $res, softsatSet = maxsoftConstr(constr, softConstrs)$ \Comment{res always \texttt{SAT}}
-        \State $markedNt := \{n_{ij} | 1 \leq j \leq |l_i| \land (x_{ij} = val_i(j)) \notin  softsatSet\}$ 
-        \If{$markedNt$ is empty}
-          \State \textbf{continue}
-        \Else
-          \State \textbf{return} markedNt
-        \EndIf 
-      \EndIf
-    \EndFor
-  \end{algorithmic}
-  \caption{Marked neurons from counterexample}
-  \label{algo:refine2}
-\end{algorithm}
-
-\begin{algorithm}[t]
   \textbf{Name: } $\textsc{isVerified}$ \\
   \textbf{Input: } Verification query $\langle N,P,Q \rangle$, abstract constraints $A$, and marked $\subseteq ~ N.neurons$ \\
   \textbf{Output: } verified or an abstract counterexample. 
   \begin{algorithmic}[1]
-    \State $constr := P \land (\Land_{i=1}^k lc_i)\land \neg Q$
+    \State $constr := P \land (\Land_{i=1}^k A.lc_i)\land \neg Q$
     \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
     \State isSat = checkSat(constr)
     \If{isSat}
@@ -176,60 +162,44 @@ Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, a
   \label{algo:verif1}
 \end{algorithm}
 
+\begin{algorithm}[t]
+  \textbf{Name: } $\textsc{getMarkedNeurons}$ \\
+  \textbf{Input: } Neural network $N$, \deeppoly{} abstraction $A$, $marked\subseteq N.neurons$, and abstract counterexample $({v_0}, {v_1} ... {v_k})$\\
+  \textbf{Output: } New marked neurons. 
+  \begin{algorithmic}[1]
+    % \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
+    \State Let ${val^{v_0}_{ij}}$ be the value of $n_{ij}$, when $\boldsymbol{v_0}$ is input of $N$. 
+    \For{$i=1$ to $k$} \Comment{inputLayer excluded}
+      \If{$l_i$ is $\relu${} layer}
+        \State $constr := \Land_{t=i}^k A.lc_t$
+        \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref{eq:reluexact}}
+        \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val^{v_0}_{(i-1)j})$
+        \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = v_{kj})$
+        \State $softConstrs := \cup_{j=1}^{|l_j|} (x_{ij} = val^{v_0}_{ij})$
+        \State $res, softsatSet = MaxSat(constr, softConstrs)$ \Comment{res always \texttt{SAT}}
+        \State $newMarked := \{n_{ij} | 1 \leq j \leq |l_i| \land (x_{ij} = val_i(j)) \notin  softsatSet\}$ 
+        \If{$newMarked$ is empty}
+          \State \textbf{continue}
+        \Else
+          \State \textbf{return} newMarked
+        \EndIf 
+      \EndIf
+    \EndFor
+  \end{algorithmic}
+  \caption{Marked neurons from counterexample}
+  \label{algo:refine2}
+\end{algorithm}
 
 
-\subsection{Causes of spuriousness} 
-We have a following approach to find the causes of spuriousness (markedNeurons). 
+\subsection{Verifying query under marked neurons}
 
-\subsubsection{Optimization based approach: }
-
-Let us say the abstractCEX is $\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$. 
-Suppose $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
-if we execute the neural network on input $\boldsymbol{v_0}$. 
-The algorithm return $\boldsymbol{v_0}$ as a counter-example if $\boldsymbol{val_k^{\boldsymbol{v_0}}}$ 
-does not satisfy the property $Q$. 
-Since $l_0$ is an input layer, so, $\boldsymbol{v_0}$ and $\boldsymbol{val_0^{v_0}}$ are equal, 
-and by theorem \ref{th:marked2} $\boldsymbol{v_1}$ and $\boldsymbol{val_1^{v_1}}$ are also equal. 
-The core idea of this algorithm is to make $\boldsymbol{v'_2}$ as close as possible to $\boldsymbol{val_2^{v_0}}$, 
-such that $\boldsymbol{v_0}, \boldsymbol{v_1}, \boldsymbol{v'_2}, ... \boldsymbol{v_k}$ become an abstractCEX. 
-Here the closeness measured by the number of elements of $\boldsymbol{v'_2}$ becomes equal to the 
-corresponding element of vector $\boldsymbol{val_2^{v_0}}$.
-\begin{itemize}
-  \item If $\boldsymbol{v'_2}$ becomes equal to $\boldsymbol{val_2^{v_0}}$ then $\boldsymbol{v'_3}$ will also become 
-    equal to $\boldsymbol{val_3^{v_0}}$ by theorem \ref{th:marked2}. 
-    Now we move on to the next relu layer $l_4$ and try to find the similar point $\boldsymbol{v'_4}$, such that 
-    $\boldsymbol{v_0}, \boldsymbol{v_1}, \boldsymbol{v_2}, \boldsymbol{v'_4}... \boldsymbol{v_k}$ becomes an abstractCEX. 
-    We repeat this process until the following case occurs. 
-  \item If $\boldsymbol{v'_2}$ does not equal to $\boldsymbol{val_2^{v_0}}$ then we collect the neurons whose values differ, 
-        and return them as a set of markedNeurons. 
-\end{itemize}
-
-
-
-\begin{theorem}
-  \label{th:marked2}
-  Let us say $\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$ is an abstract execution. 
-  For an affine layer $l_i$, $\boldsymbol{val_i^{\boldsymbol{v_0}}} = \boldsymbol{v_i}$ if $\boldsymbol{val_{i-1}^{\boldsymbol{v_0}}} = \boldsymbol{v_{i-1}}$.  
-  Since affine layer's constraints are exact.  
-\end{theorem}
- 
-
-
-\subsection{Utilizing of spurious information}
-The \emph{isVerified} function in algorithm~\ref{algo:main} calls algorithm~\ref{algo:verif1}. 
-The algorithm~\ref{algo:verif1} takes \markednewrons{} as input. 
-The \markednewrons{} represent the set of the culprit neurons. 
-Algorithm~\ref{algo:verif1} replaces the abstract constraints of \markednewrons{} by exact constraints and check for the 
-property by \milp{} solver. If \milp{} solver return \sat{} then we return satisfying assignments as an abstractCEX, 
-otherwise, return verified. 
-
-
-
-
-\todo{Why do we have the following formula?}
-Equation ~\ref{eq:reluexact} shows the exact constraints
-for a relu neuron when its behavior is uncertain. Let us say the relu neuron is $y = max(0,x)$. 
-
+In algorithm~\ref{algo:verif1}, we present the implementation of 
+$\textsc{isVerified}$, which takes the verification query, the \deeppoly{} abstraction $A$,
+and a set of marked neurons as input.
+At line 1, we construct constraints $contr$ that encodes the executions that satisfy abstraction
+$A$ at every step.
+At line 2, we also include constraints in $constr$ that encodes exact behavior of the marked
+neurons. The following is the encoding of the exact behavior~\cite{exact} of neuron $n_{ij}$.
 \begin{align}
     \label{eq:reluexact}
     \begin{split}
@@ -237,54 +207,99 @@ for a relu neuron when its behavior is uncertain. Let us say the relu neuron is 
         0 \leq x_{ij} &\leq A(n_{(i-1)j}).ub*a \land a \in \{0,1\} \\ 
     \end{split}
 \end{align}
+where $a$ is a fresh variable for each neuron.
 
-\subsection{Proofs of progress}
-The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every iteration {\em getMarkedNeurons} 
-returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
-the neurons of the network, and encode them in the exact behavior. 
-
-Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
-$\boldsymbol{v_0}, \boldsymbol{v_1}, ... \boldsymbol{v_k}$ as input, 
-and $\boldsymbol{val_i^{\boldsymbol{v_0}}}$ represents the value vector on layer $l_i$, 
-when we execute the neural network on input $\boldsymbol{v_0}$.
-Suppose $\boldsymbol{satval_i}$ represent the satisfying assignment on layer $l_i$ after calling the optimization 
-query at line 10 of algorithm \ref{algo:refine2}. 
+At line 3, we call a solver to find a satisfying assignment of the constraints.
+If $constr$ is satisfiable, we get a model $m$.
+From the model $m$, we extract an abstract counterexample and return it.
+If $constr$ is unsatisfiable, we return that the query is verified.
 
 
+% \subsection{Causes of spuriousness}
+
+% We have a following approach to find the causes of spuriousness (markedNeurons). 
+
+\subsection{Maxsat based approach to find the marked neurons}
+
+In algorithm~\ref{algo:refine2}, we present $\textsc{getMarkedNeurons}$
+which analyzes an abstract spurious counterexample.
+In our abstract constraints, we encode $\affine${} neurons exactly, but
+over-approximate $\relu${} neurons.
+We identify a set of
+marked neurons whose exact encoding will eliminate the counterexample
+in the future analysis.
+%
+
+Let ${val_i^{\boldsymbol{v_0}}}$ represent the value vector on layer $l_i$, 
+if we execute the neural network on input $\boldsymbol{v_0}$.
+%
+\todo{Redefining ${val_i^{\boldsymbol{v_0}}}$ either remove here or in prelim}
+Let us say ${v_0}, {v_1}, ... ,{v_k}$ is an abstract spurious counterexample.
+We iterative modify the counterexample such that it becomes more and more
+like ${val_i^{\boldsymbol{v_0}}}$.
+Initially, ${val_0^{\boldsymbol{v_0}}}$ is equal to $v_0$.
+Since we encode the affine layer exactly in $A.lc_i$, the following
+theorem is trivially true.
+
+% % 
+% $\boldsymbol{v_0}$ is a counterexample if $\boldsymbol{val_k^{\boldsymbol{v_0}}}$ 
+% does not satisfy the property $Q$.
 
 \begin{theorem}
-  \label{th:progress1}
-  In every refinement iteration {\em getMarkedNeurons} return the non empty set of marked neurons. 
+  \label{th:marked2}
+  Let us say ${v_0}, {v_1}, ... {v_k}$ is an abstract execution. 
+  If $Type_i = \affine$, ${val_i^{{v_0}}} = {v_i}$ if ${val_{i-1}^{{v_0}}} = {v_{i-1}}$.  
 \end{theorem}
+% \begin{proof}
+%   Since affine layer's constraints are exact.
+% \end{proof}
+% Since $l_0$ is an input layer, so, ${v_0}$ and ${val_0^{v_0}}$ are equal,
 
-{\em Proof by contradiction:} 
-By the definition of abstractCEX, $\boldsymbol{v_k} \models \lnot Q$. 
-By the check at line 8 of algorithm~\ref{algo:main} $\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. 
+By the above theorem, ${v_1}$ and ${val_1^{v_1}}$ are also equal. 
+The core idea of our algorithm is to find ${v'_2}$ as close as possible to ${val_2^{v_0}}$, 
+such that ${v_0}, {v_1}, {v'_2}, ... {v'_{k-1}}, {v_k}$ becomes an abstract spurious counterexample. 
+We measure closeness by the number of elements of ${v'_2}$ are equal to the 
+corresponding element of vector ${val_2^{v_0}}$.
+\begin{enumerate}
+\item If ${v'_2}$ is equal to ${val_2^{v_0}}$ then ${v'_3}$ will also become 
+  equal to ${val_3^{v_0}}$ due to theorem \ref{th:marked2}. 
+  Now we move on to the next $\relu${} layer $l_4$ and try to find the similar point ${v'_4}$, such that 
+  ${v_0}, {v_1}, {v_2}, {v_3},{v''_4}... {v''_{k-1}},{v_k}$ is an . 
+  We repeat this process until the following case occurs. 
+\item If at some $i$, we can not make ${v'_i}$ equal to ${val_i^{v_0}}$ then we collect the neurons
+  whose values are different in ${v'_i}$ and ${val_i^{v_0}}$. We call them marked neurons.
+\end{enumerate}
 
-Set of mark neurons is empty, implies that $markedNt = \{\}$ for each layer. 
-$markedNt= \{\}$ implies that all the neurons in any layer $l_i$ become equal to $\boldsymbol{val_i^{\boldsymbol{v_0}}}$,  
-which implies $\boldsymbol{v_k}$ equals to $\boldsymbol{val_k^{\boldsymbol{v_0}}}$, but $\boldsymbol{v_k} \models \lnot Q$ and 
-$\boldsymbol{val_k^{\boldsymbol{v_0}}} \models Q$. Which is a contradiction. 
+In the algorithm, the above description is implemented using maxsat solver.
+The loop at line 2 iterates over $\relu${}~layers.
+In lines 4-7, we build constraints that encode that from layer $i$ onward
+\deeppoly~abstract constraints are satisfied,
+the marked neurons have exact behavior, layer $(i-1)$ neurons have value equal to
+${val_{i-1}^{v_0}}$, and the execution finishes at $v_k$.
+At line 8, we construct soft constraints $softConstrs$, which encodes $x_{ij}$ is equal to $val_{i}^{v_0}$.
+At line 9, we call maxsat solver. 
+This call to maxsat solver will always find a satisfying assignment because
+our hard constraints are always satisfiable.
+The solver will also return a subset $softsatSet$ of the soft constraints.
+At line 10, we check which soft constraints are missing in $softsatSet$.
+The corresponding neurons are added in $newMarked$.
+If $newMarked$ is empty, we have managed to find a spurious
+abstract counterexample from $val^{v_0}_{i}$.
+We need to go to the next layer.
+Otherwise, we return the new set of marked neurons.
+
+% \subsection{Utilizing of spurious information}
+% The \emph{isVerified} function in algorithm~\ref{algo:main} calls algorithm~\ref{algo:verif1}. 
+% The algorithm~\ref{algo:verif1} takes \markednewrons{} as input. 
+% The \markednewrons{} represent the set of the culprit neurons. 
+% Algorithm~\ref{algo:verif1} replaces the abstract constraints of \markednewrons{} by exact constraints and check for the 
+% property by \milp{} solver. If \milp{} solver return \sat{} then we return satisfying assignments as an abstractCEX, 
+% otherwise, return verified. 
 
 
-\begin{theorem}
-  \label{th:progress2}
-  In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
-\end{theorem}
 
-{\em Proof: } Moreover, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
-in any iteration greater than $t$.
 
-Consider an iteration $t' > t$, if we get the marked neurons from layer other than $l_i$ then $n_{ij}$ 
-can not be part of it because $n_{ij}$ is in layer $l_i$. 
 
-Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
-Since we have repaired $n_{ij}$ in line 6 of algorithm \ref{algo:refine2}, its behavior in constraints 
-optimization will be same as the exact relu. 
-Moreover, $\boldsymbol{satval_i}(j) = \boldsymbol{val_i^{\boldsymbol{v_0}}}(j)$, 
-which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
-marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}. 
- 
 
 
 
