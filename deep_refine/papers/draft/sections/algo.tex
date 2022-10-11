@@ -19,7 +19,7 @@ we use spurious counter-examples to identify a minimal set of marked neurons.
 
 
 In algorithm~\ref{algo:main}, we present the top-level flow of our approach.
-The algorithm takes a verification query as input and returns
+The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns
 success if the verification is successful, otherwise
 returns a counter-example to the query.
 The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and
@@ -29,13 +29,34 @@ the marked neurons respectively.
 
 The first line of the algorithm~\ref{algo:main} generates all the abstract constraints
 by using \deeppoly{}.
-The abstract constraints are the lower and upper constraints as well as the lower and upper bounds 
-of each neuron in the neural network.
+For a node $n_{ij} \in A.neurons$,
+the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds.
+Let $lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a 
+conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$.
+The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, 
+hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
+
+
 %
-At line 2, we initialize the variable $markedNeurons$ to the empty set of neurons.
+At line 2, we initialize the variable $marked$ to the empty set of neurons.
 %
 At the next line, we iterate in a while loop until either we verify the query or
 find a counterexample.
+%
+At line 4, we call $\textsc{isVerified}$ with the verification query, abstraction $A$, and the
+set of marked neurons.
+The call either returns that the query is verified or returns an abstract counterexample,
+which is defined as follows.
+
+
+
+\begin{df}
+  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
+  {\em abstract execution} of abstract constraint $A$ if 
+  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
+ Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
+ an {\em abstract counter example(abstractCEX)} if $\boldsymbol{v_k} \models \lnot Q$.
+\end{df}
 
 
 %
@@ -80,18 +101,6 @@ Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, a
 % \begin{df}
 % \end{df}
 
-Let us say $lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$ is a 
-conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$.
-The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, 
-hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
-
-\begin{df}
-  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
-  {\em abstract execution} of abstract constraint $A$ if 
-  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models lc_i$ for each $i \in [1,k]$.  
- Moreover, an abstract execution $\boldsymbol{v_0,...,v_k}$ is
- an {\em abstract counter example(abstractCEX)} if $\boldsymbol{v_k} \models \lnot Q$.
-\end{df}
 
 
 
@@ -100,10 +109,10 @@ hence $lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$.
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
   \textbf{Output: } UNSAT or SAT
   \begin{algorithmic}[1]
-    \State $A := deeppoly(N,P,Q)$\Comment{deeppoly generate the abstract constraints}
-    \State marked = \{\}
+    \State $A := deeppoly(N,P)$\Comment{deeppoly generate the abstract constraints}
+    \State marked := \{\}
     \While{True}
-      \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$ , A, markedNeurons)
+      \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$ , A, marked)
       \If{result = CEX($\boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$)}
         \If{$N(\boldsymbol{v_0}) \models \lnot Q$}
           \State \textbf{return} Failed($\boldsymbol{v_0}$)
