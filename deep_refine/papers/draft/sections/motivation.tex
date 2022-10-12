@@ -92,7 +92,7 @@ is in equation~\ref{eq:sat1}. We execute the neural network with the inputs $x_1
 
 %Following is the approach to find the marked neurons.
 %\\
-\noindent\textbf{Optimization based approach to identify marked neurons}\\
+\noindent\textbf{Maxsat based approach to identify marked neurons}\\
 %The satisfying assignments of equation~\ref{eq:conjunction} are in equation~\ref{eq:sat1}. We execute the satisfying assignment $x_1=1,x_2=1$ on the neural network and get values on each neuron as  shown in equation~\ref{eq:sat2}.
 We make the point on \texttt{relu} layer in eq~\ref{eq:sat1} as close as possible  to the point of \texttt{relu} in equation~\ref{eq:sat2} by encoding them as soft constraints (i.e.,  $\{x_5=2, x_6=2\}$) while maintainingthat the rest of the hard constraints are satisfied (see Equation~\ref{eq:opt1}) e.g., input points $x_1,x_2$ and output points $x_7,x_8$ are the same etc. 
 %The soft constraints define the closeness point on the relu layer of equations~\ref{eq:sat1} and \ref{eq:sat2}. 
