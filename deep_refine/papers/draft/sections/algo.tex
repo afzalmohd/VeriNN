@@ -131,7 +131,7 @@ Now let us present $\textsc{isVerified}$ and $\textsc{getMarkedNeurons}$ in deta
         \If{$N(\boldsymbol{v_0}) \models \lnot Q$}
           \State \textbf{return} Failed($\boldsymbol{v_0}$)
         \Else
-        \State markedNt := $\textsc{getMarkedNeurons}$($\langle N,P,Q \rangle$ , A, marked, $\boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$)
+        \State markedNt := $\textsc{getMarkedNeurons}$($N$ , $A$, $marked$, $\boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$)
           \State marked := marked $\union$ markedNt
         \EndIf
       \Else
