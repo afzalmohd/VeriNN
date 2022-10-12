@@ -1,123 +1,9 @@
-In this section, we present our method to refine \deeppoly in a novel way.
-%
-\texttt{DeepPoly} is a sound and incomplete technique because it does over-approximation analysis. 
-If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, the
-result of it is unknown. 
-We overcome this limitation by using a CEGAR-like technique, which is a complete technique
-and rely on~\deeppoly{}. 
-In our refinement approach, we mark some Relu neurons to have exact behavior on top
-of~\deeppoly{} constraints, which is the strategy of refinement in the most complete
-state-of-the-art techniques~\cite{alphabeta,etc}.
-We add the encoding of the exact behavior to the~\deeppoly{} constraints.
-%
-We use MILP solver on the extended constraints to
-check if the extra constraints rule out all spurious counter-examples.
-%
-The calls to MILP solvers is expensive,
-therefore
-we use spurious counter-examples to identify a small set of marked neurons.
+In this section, we present our method to refine \deeppoly. \texttt{DeepPoly} is a sound and incomplete technique because as it does over-approximations. If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, its result is unknown. We overcome this limitation by using a CEGAR-like technique, which is complete. In our refinement approach, we mark some Relu neurons to have exact behavior on top of~\deeppoly{} constraints, similar to the strategy of refinement in the most complete state-of-the-art techniques~\cite{alphabeta,etc}. We add the encoding of the exact behavior to the~\deeppoly{} constraints and use an \milp{} solver on the extended constraints to check if the extra constraints rule out all spurious counter-examples. The calls to MILP solvers are expensive, therefore we use the spurious counter-examples discovered to identify as small as possible set of marked neurons which suffice to be repaired. \todo{do we need this para at all? seems repetitive.. move this to intro?}
 
+\subsection{The top level algorithm}
+We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, otherwise returns a counter-example to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and $\textsc{isVerified}$ (described in subsequent subsection) to get more marked neurons to refine and check the validity of verification query under the marked neurons respectively.
 
-In algorithm~\ref{algo:main}, we present the top-level flow of our approach.
-The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns
-success if the verification is successful, otherwise
-returns a counter-example to the query.
-The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and
-$\textsc{isVerified}$ to
-get more marked neurons to refine and check the validity of verification query under
-the marked neurons respectively.
-
-The first line of the algorithm~\ref{algo:main} generates all the abstract constraints
-by using \deeppoly{}.
-For a node $n_{ij} \in A.neurons$,
-the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds.
-Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a 
-conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$.
-The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, 
-hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
-
-
-%
-At line 2, we initialize the variable $marked$ to the empty set of neurons.
-%
-At the next line, we iterate in a while loop until either we verify the query or
-find a counterexample.
-%
-At line 4, we call $\textsc{isVerified}$ with the verification query, abstraction $A$, and the
-set of marked neurons.
-%
-In the verification step, the behavior of the marked neurons are encoded exactly, which
-will be explained shortly.
-%
-The call either returns that the query is verified or returns an abstract counterexample,
-which is defined as follows.
-
-\begin{df}
-  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
-  {\em abstract execution} of abstract constraint $A$ if 
-  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models A.lc_i$ for each $i \in [1,k]$.  
-  An abstract execution $\boldsymbol{v_0,...,v_k}$ is
-  an {\em abstract counterexample} if~$\boldsymbol{v_k} \models \lnot Q$.
-\end{df}
-
-
-If these algorithms return verification successful then we report verified,
-otherwise analyze the abstract counterexample $CEX(v_0,...,v_k)$.
-At line 6, we first check if executing the neural network $N$ on input $v_0$
-violates the predicate $Q$.
-If yes, we report input $v_0$ for which the verification query is not true.
-Otherwise, we the abstract counterexample is spurious.
-We call $\textsc{getMarkedNeurons}$ to analyze the counterexample and
-returns the causes of spuriousness, which is a set of neurons $markedNt$.
-We add the new set $markedNt$ in the old set $marked$.
-We iterate our loop again with the new set of marked neurons.
-
-Now let us present $\textsc{isVerified}$ and $\textsc{getMarkedNeurons}$ in detail.
-
-% Algorithm \ref{algo:verif1} exploits the markedNeurons to verify the property. 
-
-%
-% The algorithm uses supporting algorithms~\ref{algo:refine1} and~\ref{algo:verif1} to
-% verify the query and return either the verification successful or abstractCEX. 
-
-% The algorithm~\ref{algo:main} represents the high-level flow of our approach.
-
-
-
-% Our approach contains two parts, the first part contains an approach to finding the markedNeurons. 
-% The second part contains the verification approach (utilizing markedNeurons).
-
-
-% In algorithm ~\ref{algo:refine2} and ~\ref{algo:verif1}
-% They are presented in 
-
-% \clearpage
-
-% The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
-% $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
-% The triple  is our verification query.
-%  \todo{How to formalize $P$ and $Q$}
-
-% An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
-% Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
-
-
-% We will use the following convention in writing our algorithms.
-
-
-% \begin{itemize}
-% \item 
-% \item 
-% % \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
-% \end{itemize}
-
-
-% \begin{df}
-% \end{df}
-
-
-
-
+The first line of the algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{}. For a node $n_{ij} \in A.neurons$, the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds. Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$. The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
 
 \begin{algorithm}[t]
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
@@ -191,6 +77,78 @@ Now let us present $\textsc{isVerified}$ and $\textsc{getMarkedNeurons}$ in deta
 \end{algorithm}
 \todo{fix name of maxsat everywhere}
 \todo{Are we doing this incremental? If yes, discuss this in experiments.}
+
+
+
+At line 2, we initialize the variable $marked$ to the empty set of neurons.  At the next line, we iterate in a while loop until either we verify the query or find a counterexample. At line 4, we call $\textsc{isVerified}$ with the verification query, abstraction $A$, and the set of marked neurons. In the verification step, the behavior of the marked neurons are encoded exactly, which will be explained shortly. The call either returns that the query is verified or returns an abstract counterexample, which is defined as follows.
+
+\begin{df}
+  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
+  {\em abstract execution} of abstract constraint $A$ if 
+  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models A.lc_i$ for each $i \in [1,k]$.  
+  An abstract execution $\boldsymbol{v_0,...,v_k}$ is
+  an {\em abstract counterexample} if~$\boldsymbol{v_k} \models \lnot Q$.
+\end{df}
+
+
+If these algorithms return verification successful then we report verified,
+otherwise analyze the abstract counterexample $CEX(v_0,...,v_k)$.
+At line 6, we first check if executing the neural network $N$ on input $v_0$
+violates the predicate $Q$.
+If yes, we report input $v_0$ for which the verification query is not true.
+Otherwise, we the abstract counterexample is spurious.
+We call $\textsc{getMarkedNeurons}$ to analyze the counterexample and
+returns the causes of spuriousness, which is a set of neurons $markedNt$.
+We add the new set $markedNt$ in the old set $marked$.
+We iterate our loop again with the new set of marked neurons.
+
+Now let us present $\textsc{isVerified}$ and $\textsc{getMarkedNeurons}$ in detail.
+
+% Algorithm \ref{algo:verif1} exploits the markedNeurons to verify the property. 
+
+%
+% The algorithm uses supporting algorithms~\ref{algo:refine1} and~\ref{algo:verif1} to
+% verify the query and return either the verification successful or abstractCEX. 
+
+% The algorithm~\ref{algo:main} represents the high-level flow of our approach.
+
+
+
+% Our approach contains two parts, the first part contains an approach to finding the markedNeurons. 
+% The second part contains the verification approach (utilizing markedNeurons).
+
+
+% In algorithm ~\ref{algo:refine2} and ~\ref{algo:verif1}
+% They are presented in 
+
+% \clearpage
+
+% The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
+% $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
+% The triple  is our verification query.
+%  \todo{How to formalize $P$ and $Q$}
+
+% An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
+% Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
+
+
+% We will use the following convention in writing our algorithms.
+
+
+% \begin{itemize}
+% \item 
+% \item 
+% % \item $W_i, B_i$ represent the weight and bias matrix of layer $l_i$ respectively. 
+% \end{itemize}
+
+
+% \begin{df}
+% \end{df}
+
+
+
+
+
 
 \subsection{Verifying query under marked neurons}
 
@@ -289,12 +247,12 @@ abstract counterexample from $val^{v_0}_{i}$.
 We need to go to the next layer.
 Otherwise, we return the new set of marked neurons.
 
-\begin{figure}
-  \centering
-  \includegraphics[scale=0.55]{fig/pictorial2.pdf}
-  \caption{Pictorial representation of our approach}
-  \label{fig:pictorial}
-\end{figure}
+%% \begin{figure}
+%%   \centering
+%%   \includegraphics[scale=0.55]{fig/pictorial2.pdf}
+%%   \caption{Pictorial representation of our approach}
+%%   \label{fig:pictorial}
+%% \end{figure}
 
 % \subsection{Utilizing of spurious information}
 % The \emph{isVerified} function in algorithm~\ref{algo:main} calls algorithm~\ref{algo:verif1}. 
