@@ -1,49 +1,85 @@
-\subsection{Proofs of progress}
-The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every iteration {\em getMarkedNeurons} 
+\subsection{Proofs of progress and termination}
+
+Our refinement strategy ensures progress, i.e., the spurious counterexample does not
+repeat in the future
+iterations of algorithm~\ref{algo:main}. Let us suppose the algorithm
+$\textsc{getMarkedNeurons}$ get abstract spurious counterexample
+${v_0}, {v_1}, ... {v_k}$ and
+returns marked neurons in $i$th iteration.
+The call to $\textsc{MaxSat}$ at line 10
+declares that $constr \land softsatSet$ is satisfiable.
+We can extract an abstract spurious counterexample from the model
+of $constr \land softsatSet$.
+Let the abstract spurious counterexample be $cex = val^{v_0}, ...., val^{v_0}_{i-1},v'_{i},...,v'_{k-1},v_k$.
+and
+% the $\textsc{MaxSat}$ returns abstract spurious counterexample
+% is $({v'_0}, {v'_1} ... {v'_k})$.
+
+\begin{theorem}
+  In the rest of the run of algorithm~\ref{algo:main}, we will never find the abstract
+  spurious counterexample
+  $cex$ again.
+\end{theorem}
+\begin{proof}
+  For $n_{ij} \in newMarked$, the MaxSat query ensures that
+  $val^{v_0}_{ij} \neq v'_{ij}$.
+  If we have the same counterexample again in the future then
+  input of $n_{ij}$ will be $val^{v_0}_{(i-1)j}$.
+  Since we will have exact encoding for $n_{ij}$, the output
+  will be $val^{v_0}_{ij}$, which contradicts the earlier inequality.  
+\end{proof}
+
+Furthermore, we also prove that our method always terminates.
+%
+The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every
+iteration $\textsc{getMarkedNeurons}$
 returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
 the neurons of the network, and encode them in the exact behavior. 
 
-Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
-${v_0}, {v_1}, ... {v_k}$ as input, 
-and ${val_i^{{v_0}}}$ represents the value vector on layer $l_i$, 
-when we execute the neural network on input ${v_0}$.
-Suppose ${satval_i}$ represent the satisfying assignment on layer $l_i$ after calling the optimization 
-query at line 10 of algorithm \ref{algo:refine2}. 
+% Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
+% ${v_0}, {v_1}, ... {v_k}$ as input, 
+% and ${val_i^{{v_0}}}$ represents the value vector on layer $l_i$, 
+% when we execute the neural network on input ${v_0}$.
+
 
 
 
 \begin{theorem}
   \label{th:progress1}
-  In every refinement iteration {\em getMarkedNeurons} return the non empty set of marked neurons. 
+  In every refinement iteration $\textsc{getMarkedNeurons}$
+  returns a non-empty set of marked neurons. 
 \end{theorem}
 
-{\em Proof by contradiction:} 
-By the definition of abstractCEX, ${v_k} \models \lnot Q$. 
-By the check at line 8 of algorithm~\ref{algo:main} ${val_k^{{v_0}}} \models Q$. 
-
-Set of mark neurons is empty, implies that $markedNt = \{\}$ for each layer. 
-$markedNt= \{\}$ implies that all the neurons in any layer $l_i$ become equal to ${val_i^{{v_0}}}$,  
+\begin{proof}
+By the definition of abstract spurious counterexample, ${v_k} \models \lnot Q$. 
+By the check at line 6 of algorithm~\ref{algo:main} ${val_k^{{v_0}}} \models Q$. 
+If the set of returned new marked neurons is empty, $newMarked = \emptyset$ for each layer. 
+Therefore, all the neurons in any layer $l_i$ become equal to ${val_i^{{v_0}}}$,  
 which implies ${v_k}$ equals to ${val_k^{{v_0}}}$, but ${v_k} \models \lnot Q$ and 
-${val_k^{{v_0}}} \models Q$. Which is a contradiction. 
+${val_k^{{v_0}}} \models Q$, which is a contradiction.   
+\end{proof}
+% {\em Proof by contradiction:} 
 
 
 \begin{theorem}
   \label{th:progress2}
-  In every refinement iteration {\em getMarkedNeurons} return the marked neurons which did not get mark in the previous iterations. 
+  In every refinement iteration $\textsc{getMarkedNeurons}$
+  returns the marked neurons, which was not marked in the previous iterations. 
 \end{theorem}
 
-{\em Proof: } Moreover, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
+\begin{proof}
+We will show, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
 in any iteration greater than $t$.
-
-Consider an iteration $t' > t$, if we get the marked neurons from layer other than $l_i$ then $n_{ij}$ 
-can not be part of it because $n_{ij}$ is in layer $l_i$. 
-
+Consider an iteration $t' > t$, if we get the marked neurons from layer other
+than $l_i$ then $n_{ij}$ can not be part of it because $n_{ij}$ is in layer $l_i$. 
 Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
-Since we have repaired $n_{ij}$ in line 6 of algorithm \ref{algo:refine2}, its behavior in constraints 
-optimization will be same as the exact relu. 
-Moreover, ${satval_i}(j) = {val_i^{{v_0}}}(j)$, 
+Since we have made $n_{ij}$ exact in line 6 of algorithm~\ref{algo:refine2},
+its behavior in constraints optimization will be same as the exact relu. 
+Moreover, $v'_{ij} = val_{ij}^{v_0}$, 
 which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
-marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}. 
+marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}.   
+\end{proof}
+
 
 %%% Local Variables:
 %%% mode: latex
