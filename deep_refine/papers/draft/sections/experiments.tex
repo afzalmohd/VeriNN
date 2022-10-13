@@ -1,6 +1,6 @@
-We have implemented our approach in a prototype and compared it 3 types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \texttt{kPoly}~\cite{singh2019beyond}, \texttt{deepSRGR}~\cite{yang2021improving}, (ii) other cegar based approaches and 
+We have implemented our approach in a prototype and compared it three types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \texttt{kPoly}~\cite{singh2019beyond}, \texttt{deepSRGR}~\cite{yang2021improving}, (ii) other cegar based approaches and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
-(iii) state-of-the-art tools \alphabeta~\cite{alphabetacrown} and \ovaltool~\cite{ovaltool}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta achieved the 1st and \ovaltool 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
+(iii) state-of-the-art tools \alphabeta~\cite{alphabetacrown} and \ovaltool~\cite{ovaltool}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta{} achieved the 1st and \ovaltool{} 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
 We have implemented our techniques in a tool, which we call \drefine{}, in \texttt{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \texttt{C++}. We are using a \texttt{C++} interface of the tool Gurobi~\cite{?} \todo{add ref} to check the satisfiability as well as solve  \texttt{maxsat} queries. %We have implemented our technique as a tool and call it \drefine{}.  
@@ -13,7 +13,7 @@ and DiffAI~\cite{mirman2018differentiable} for adversarial training. Table \ref{
 trained with adversarial training as well as the undefended network. The last column of the table \ref{tb:nndetail} how the defended networks were trained.  
 
 The predicate $P$ on the input layer is created using the input image $\boldsymbol{im}$ and user-defined parameter $\epsilon$.  We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create  $P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel should not exceed $0$ and $1$ respectively. The predicate $Q$ on the output layer is created using the network's output.     Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$.  One query instance $\langle N,P,Q \rangle$ is created for one network, one image and one epsilon value.  In our evaluation, we took $11$ different networks, 8 different epsilons, and 100 different images. The 
-total number of instances is computed to $8800$. However, there are 128 instances for which the network's predicted label differs from the image's actual label. we avoided such instances, so, there is a total of $8672$ benchmark instances
+total number of instances is $8800$. However, there are 128 instances for which the network's predicted label differs from the image's actual label. we avoided such instances, so, there is a total of $8672$ benchmark instances
 under consideration.    Whenever our tool found a counter-example on $\langle N,P,Q \rangle$, it denormalizes it into an image by rounding the float values 
 and checks for counter-example by executing $N$ on the denormalized image.
 If a counter-example is found then the tool reports it, otherwise, the tool reports unknown.
@@ -46,7 +46,7 @@ If a counter-example is found then the tool reports it, otherwise, the tool repo
 \subsection{Results}
 We conducted the experiments on a machine with \texttt{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
-To make a fair comparison between the tools, we provide only a single \texttt{CPU} for each benchmarks instances for each tool. 
+To make a fair comparison between the tools, we provide only a single \texttt{CPU} for each instance for each tool. 
 We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp} which compares wrt epsilon, the robustness parameter.
 %represents the verified cases while the column represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the  156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
 
@@ -102,9 +102,11 @@ Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 100
 
 
 
-\subsubsection{Epsilon wise performance: }
-Finally, we note in Figure~\ref{res:ep:milp_with_milp} the comparison with respect to different epsilon values. \todo{please recall what epsilon is here}
-At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the performance of tools can be seen clearly. Here also, we are performing better than the approaches \deeppoly{}, 
+\subsubsection{Epsilon vs. performance: }
+For sanity check, we analyzed the effect of perturbation size and the performance of the tools.
+In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
+At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the the tools drop consistently.
+Here also, we are performing better than the approaches \deeppoly{}, 
 \texttt{kPoly}, \texttt{deepSRGR} and \texttt{cegar\_nn}, while \alphabeta{} and \ovaltool{} perform better.
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
@@ -114,10 +116,10 @@ At $\epsilon=0.005$, the performance of all the tools is almost the same. As the
 \begin{figure}[t]
 %    \centering
 \input{fig/ep_plot.tex}
-    \caption{Epsilon wise comparison with related techniques}
+    \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
     \label{res:ep:milp_with_milp}
 \end{figure}
-\todo{recall what is epsilon... x axis label can perhaps be written out more}
+% \todo{recall what is epsilon... x axis label can perhaps be written out more}
 
 \begin{table}[b]
   \footnotesize
