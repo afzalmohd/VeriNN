@@ -64,30 +64,51 @@ If found counter-example then the tool reports it, otherwise, the tool reports u
 We conducted the experiments on a machine with \texttt{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
 To make a fair comparison between the tools, we provide only a single \texttt{CPU} for each benchmarks instances for each tool. 
-The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
-Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
-Figure~\ref{res:milp_with_milp} shows the comparison with the help of the cactus plot. Our approach performs well 
-in terms of the verified number of instances as well as in terms of time in comparison to the above incomplete approaches. 
-We are also comparing with state of the arts to check the effectiveness of our approach globally.
-Table~\ref{tb:soacomparison} shows that our tool is verifying $180$ and $190$ benchmarks which $\alpha -\beta$-CROWN and 
-\texttt{oval} respectively are not able to verify. In addition to this, our tool verifies $172$ unique instances 
-that neither $\alpha -\beta$-CROWN nor \texttt{oval} is able to verify.  
-Despite it, $\alpha - \beta-$Crown and \texttt{oval} are verifying more benchmarks in comparison to our tool. 
-Although the total time taken by both state of the arts is higher than our tool as shown in figure~\ref{res:milp_with_milp}. 
+We have two plots~\ref{res:milp_with_milp}, ~\ref{res:ep:milp_with_milp}, and one
+table~\ref{tb:matrix} in this section. The row of table represents the verified cases while the column
+represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the 
+156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
+We noticed that we are marking average $9.8\%$ of neurons, whenever we need to mark.     
+
+\subsubsection{Comparison with the most related techniques:}
+In this section we consider the techniques \deeppoly{}, \kpoly{} and \deepsrgr{} to compare with
+our technique. 
+We consider \deeppoly{} because it is a base tool for our technique,  
+and the techniques \kpoly{} and \deepsrgr{} do the refinement on top of \deeppoly{}.
+Since these technique's tool reports only \texttt{verified} instances, but our tool can report 
+\texttt{verified} as well as counter-example.  
+So, we compare these techniques with only \texttt{verified} 
+instances of our technique in the cactus plot ~\ref{res:milp_with_milp}. 
+Our technique performs well in terms of the verified number of instances as well as in terms 
+of time in comparison to these three techniques. 
+It can be shown in table~\ref{tb:matrix} that our tool solves all the benchmark instances 
+which are solved by these three techniques, except 
+the $14$ instances. These $14$ instances are solved by \kpoly{}, but our tool goes timeout for them. 
+
+% The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
+% Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
+% Figure~\ref{res:milp_with_milp} shows the comparison with the help of the cactus plot. Our approach performs well 
+% in terms of the verified number of instances as well as in terms of time in comparison to the above incomplete approaches. 
+% We are also comparing with state of the arts to check the effectiveness of our approach globally.
+% Table~\ref{tb:soacomparison} shows that our tool is verifying $180$ and $190$ benchmarks which $\alpha -\beta$-CROWN and 
+% \texttt{oval} respectively are not able to verify. In addition to this, our tool verifies $172$ unique instances 
+% that neither $\alpha -\beta$-CROWN nor \texttt{oval} is able to verify.  
+% Despite it, $\alpha - \beta-$Crown and \texttt{oval} are verifying more benchmarks in comparison to our tool. 
+% Although the total time taken by both state of the arts is higher than our tool as shown in figure~\ref{res:milp_with_milp}. 
 
 
-\begin{table}
-    \centering
-    \begin{tabular}{|c|c|c|c|}
-        \hline
-        -  & Not verified by oval & Not verified by $\alpha - \beta$-CROWN & Not verified by both \\
-        \hline
-        Verified by our tool & 190 & 180 & 172 \\
-        \hline
-    \end{tabular}
-    \caption{Comparison with $\alpha - \beta$-CROWN and Oval}
-    \label{tb:soacomparison}
-\end{table}
+% \begin{table}
+%     \centering
+%     \begin{tabular}{|c|c|c|c|}
+%         \hline
+%         -  & Not verified by oval & Not verified by $\alpha - \beta$-CROWN & Not verified by both \\
+%         \hline
+%         Verified by our tool & 190 & 180 & 172 \\
+%         \hline
+%     \end{tabular}
+%     \caption{Comparison with $\alpha - \beta$-CROWN and Oval}
+%     \label{tb:soacomparison}
+% \end{table}
 
 
 
@@ -98,13 +119,23 @@ Although the total time taken by both state of the arts is higher than our tool 
     \label{res:milp_with_milp}
 \end{figure}
 
+\subsubsection{Comparison with cegar based technique: }
+As per our knowledge, \texttt{cagar\_nn}~\cite{elboher2020abstraction} is the only published work which do 
+counter example guided refinement. But they use the different abstraction in comparison to the 
+\deeppoly{}. They reduce the size of the network by merging the similar neurons, such that 
+they maintain the overapproximation. And split back in the refinement process. 
+We can see in figure~\ref{res:milp_with_milp} that \texttt{cegar\_nn} could verified only 
+$18.88\%$ while our tool verified $61.42\%$ of the total number of benchmark instances. 
 
+\subsubsection{Comparison with portfolio state of the arts: }
+todo\todo{todo}
+
+\subsubsection{Epsilon wise performance: }
 Figure~\ref{res:ep:milp_with_milp} shows the comparison with respect to different epsilon values. 
 At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the 
 performance of tools can be seen clearly. Here also we are performing better than the approaches \deeppoly{}, 
 \texttt{refinepoly}, and \texttt{deepSRGR},
 while $\alpha - \beta -$Crown and \texttt{oval} are performing better than our tool. 
-The average number of marked neurons on the finished benchmarks instances is $31$. 
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
@@ -115,3 +146,29 @@ The average number of marked neurons on the finished benchmarks instances is $31
     \caption{Epsilon wise comparison with related techniques}
     \label{res:ep:milp_with_milp}
 \end{figure}
+
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+        \hline
+        - & \textbf{total} & \textbf{cegar\_nn} & \textbf{deeppoly} & \textbf{kPoly} & \textbf{deepSRGR} & \textbf{abcrown} & \textbf{oval} & \textbf{drefine} \\
+        \hline
+        cegar\_nn & 1638 & 0 & 713 & 609 & 687 & 217 & 238 & 417 \\ 
+        \hline
+        deeppoly & 4633 & 3708 & 0 & 0 & 0 & 63 & 66 & 0  \\ 
+        \hline
+        kPoly & 4789 & 3760 & 156 & 0 & 114 & 63 & 66 & 14  \\ 
+        \hline
+        deepSRGR & 4687 & 951 & 54 & 2 & 0 & 63 & 66 & 0 \\ 
+        \hline
+        abcrown & 6242 & 4821 & 1672 & 1516 & 1618 & 0 & 84 & 1095  \\
+        \hline
+        oval & 6189 & 4789 & 1622 & 1466 & 1568 & 31 & 0 & 1052 \\
+        \hline
+        drefine & 5327 & 4106 & 694 & 552 & 640 & 180 & 190 & 0  \\
+        \hline
+    \end{tabular}
+    \caption{Neural networks details}
+    \label{tb:matrix}
+\end{table}
