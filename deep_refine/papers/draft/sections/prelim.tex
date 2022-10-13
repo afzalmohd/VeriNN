@@ -33,7 +33,7 @@ We also write matrix $B_i \in \reals^{|l_i|\times 1}$ to denote the bias matrix 
 % If a layer $l_i$ is $\relu${} layer, then the input neuron of $n_{ij}$ will only be the neuron $n_{(i-1)j}$. 
 
 
-To define the semantics of $N$, we will use vectors $\boldsymbol{val_i} = [val_{i1}, val_{i2}, ... val_{i|l_i|}]$ that represent the values of each neuron in the layer $l_i$. Let $f_i$ be a function that computes the output vector of values at layer $i$ using the values at layer $i-1$ as $val_i = f_i(val_{i-1})$. For each type the layer the functions are defined as follows: if $Type_i = \affine$, then $f_{i}(val_{i-1}) = W_i * val_{i-1} + B_i$; if $Type_i = \relu$, then $f_{i}(val_{i-1})_j =  max(val_{{(i-1)}j},0)$. Then, the semantics of a neural network $N$ is a function (we abuse notation and also denote this function as $N$) which takes an input, an $|l_0|$-dimensional vector of reals and gives as output an $|l_k|$-dimensional vector of reals, as a composition of functions $f_k \circ ... \circ f_1$. Thus, for an input $v\in \mathbb{R}^{|l_0|}$, we write its value computed by $N$ at layer $i$ as $val^v_{i}=f_i \circ ... \circ f_1(v)$.
+To define the semantics of $N$, we will use vectors ${val_i} = [val_{i1}, val_{i2}, ... val_{i|l_i|}]$ that represent the values of each neuron in the layer $l_i$. Let $f_i$ be a function that computes the output vector of values at layer $i$ using the values at layer $i-1$ as $val_i = f_i(val_{i-1})$. For each type the layer the functions are defined as follows: if $Type_i = \affine$, then $f_{i}(val_{i-1}) = W_i * val_{i-1} + B_i$; if $Type_i = \relu$, then $f_{i}(val_{i-1})_j =  max(val_{{(i-1)}j},0)$. Then, the semantics of a neural network $N$ is a function (we abuse notation and also denote this function as $N$) which takes an input, an $|l_0|$-dimensional vector of reals and gives as output an $|l_k|$-dimensional vector of reals, as a composition of functions $f_k \circ ... \circ f_1$. Thus, for an input $v\in \mathbb{R}^{|l_0|}$, we write its value computed by $N$ at layer $i$ as $val^v_{i}=f_i \circ ... \circ f_1(v)$.
 
 Let us define 
 $Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \text{ and } x_i \text{ is a real variable} \}$
@@ -43,16 +43,16 @@ A {\em predicate} is a Boolean combination of $Linconstr$.
 We use real variable $x_{ij}$ to represent values of $n_{ij}$ in the predicates.
 Let $P$ and $Q$ be predicates over input and output layers respectively.
 A {\em verification query} is a triple $\langle N, P, Q \rangle$.
-We need to prove that for each input $\boldsymbol{v}$,
-if $\boldsymbol{v} \models P$, $N(\boldsymbol{v}) \models Q$.
+We need to prove that for each input ${v}$,
+if ${v} \models P$, $N({v}) \models Q$.
 We assume $P$ is of the form
 % Let us say $P$ is a predicate on input layer's variables
 $\Land_{i=1}^{|l_0|}lb_{0i} \leq x_{0i} \leq ub_{0i}$, where $lb_{0i}$ and $ub_{0i}$ are lower and upper bounds respectively for a neuron $n_{0i}$.
 
 
-% The value of $\boldsymbol{val_i}$ is computed by the weighted sum of the
+% The value of ${val_i}$ is computed by the weighted sum of the
 % previous layer's values($W_i * V_{i-1} + B_i$)
-% if $l_i$ is an affine layer, otherwise $\boldsymbol{val_i}$ is computed by the $\relu${} function. 
+% if $l_i$ is an affine layer, otherwise ${val_i}$ is computed by the $\relu${} function. 
 % A function $y = max(0,x)$ is a $\relu${} function that takes an argument $x$ as input and returns the
 % same value $x$ as output if $x$ is non-negative otherwise return the value 0. 
 
@@ -65,7 +65,7 @@ $\Land_{i=1}^{|l_0|}lb_{0i} \leq x_{0i} \leq ub_{0i}$, where $lb_{0i}$ and $ub_{
 
 % Let us say $val_i^{x}$ represent the point on layer $l_i$ if neural network executes on input $x$. 
 
-% For any vector $\boldsymbol{v}$, $v_i$ represents it's $i^{th}$ value.  
+% For any vector ${v}$, $v_i$ represents it's $i^{th}$ value.  
 
 % Let $\reals$ be the set of real numbers.
 % Let $x_{\alpha}$ are unbounded set of real variables, where

@@ -1,10 +1,10 @@
-In this section, we present our method to refine \deeppoly. \texttt{DeepPoly} is a sound and incomplete technique because as it does over-approximations. If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, its result is unknown. We overcome this limitation by using a CEGAR-like technique, which is complete. In our refinement approach, we mark some Relu neurons to have exact behavior on top of~\deeppoly{} constraints, similar to the strategy of refinement in the most complete state-of-the-art techniques~\cite{alphabeta,etc}. We add the encoding of the exact behavior to the~\deeppoly{} constraints and use an \milp{} solver on the extended constraints to check if the extra constraints rule out all spurious counter-examples. The calls to MILP solvers are expensive, therefore we use the spurious counter-examples discovered to identify as small as possible set of marked neurons which suffice to be repaired. %\todo{do we need this para at all? seems repetitive.. move this to intro?}
+In this section, we present our method to refine \deeppoly. \texttt{DeepPoly} is a sound and incomplete technique because as it does over-approximations. If \deeppoly{} verifies the property then the property is guaranteed to be verified, otherwise, its result is unknown. We overcome this limitation by using a CEGAR-like technique, which is complete. In our refinement approach, we mark some Relu neurons to have exact behavior on top of~\deeppoly{} constraints, similar to the strategy of refinement in the most complete state-of-the-art techniques~\cite{alphabeta,etc}. We add the encoding of the exact behavior to the~\deeppoly{} constraints and use an \milp{} solver on the extended constraints to check if the extra constraints rule out all spurious counterexamples. The calls to MILP solvers are expensive, therefore we use the spurious counterexamples discovered to identify as small as possible set of marked neurons which suffice to be repaired. %\todo{do we need this para at all? seems repetitive.. move this to intro?}
 
 \subsection{The top level algorithm}
 \label{sec:toplevelalgo}
-We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, otherwise returns a counter-example to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and $\textsc{isVerified}$ (described in subsequently) to get more marked neurons to refine and check the validity of verification query after refinement.
+We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, otherwise returns a counterexample to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and $\textsc{isVerified}$ (described in subsequently) to get more marked neurons to refine and check the validity of verification query after refinement.
 
-The first line of the algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{}, as described in Section~\ref{sec:prelim-deeppoly}. For a node $n_{ij} \in A.neurons$\todo{what is A.neurons?}, the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds. Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$. The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
+The first line of the algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{}, as described in Section~\ref{sec:prelim-deeppoly}. For a node $n_{ij} \in N.neurons$, the abstract constraints consists of the lower and upper constraints as well as the lower and upper bounds. Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a conjunction of upper and lower constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$. The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
 
 \begin{algorithm}[t]
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
@@ -14,11 +14,11 @@ The first line of the algorithm~\ref{algo:main} generates all the abstract const
     \State marked := \{\}
     \While{True}
       \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$ , A, marked)
-      \If{result = CEX($\boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$)}
-        \If{$N(\boldsymbol{v_0}) \models \lnot Q$}
-          \State \textbf{return} Failed($\boldsymbol{v_0}$)
+      \If{result = CEX(${v_0}, {v_1} ... {v_k}$)}
+        \If{$N({v_0}) \models \lnot Q$}
+          \State \textbf{return} Failed(${v_0}$)
         \Else
-        \State markedNt := $\textsc{getMarkedNeurons}$($N$ , $A$, $marked$, $\boldsymbol{v_0}, \boldsymbol{v_1} ... \boldsymbol{v_k}$)
+        \State markedNt := $\textsc{getMarkedNeurons}$($N$ , $A$, $marked$, ${v_0}, {v_1} ... {v_k}$)
           \State marked := marked $\union$ markedNt
         \EndIf
       \Else
@@ -53,8 +53,8 @@ The first line of the algorithm~\ref{algo:main} generates all the abstract const
   \textbf{Input: } Neural network $N$, \deeppoly{} abstraction $A$, $marked\subseteq N.neurons$, and abstract counterexample $({v_0}, {v_1} ... {v_k})$\\
   \textbf{Output: } New marked neurons. 
   \begin{algorithmic}[1]
-    % \State \textbf{return} $\boldsymbol{x}$ if $N(\boldsymbol{x}) \models \neg Q$. 
-    \State Let ${val^{v_0}_{ij}}$ be the value of $n_{ij}$, when $\boldsymbol{v_0}$ is input of $N$. 
+    % \State \textbf{return} ${x}$ if $N({x}) \models \neg Q$. 
+    \State Let ${val^{v_0}_{ij}}$ be the value of $n_{ij}$, when ${v_0}$ is input of $N$. 
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
       \If{$l_i$ is $\relu${} layer}
         \State $constr := \Land_{t=i}^k A.lc_t$
@@ -62,7 +62,7 @@ The first line of the algorithm~\ref{algo:main} generates all the abstract const
         \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val^{v_0}_{(i-1)j})$
         \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = v_{kj})$
         \State $softConstrs := \cup_{j=1}^{|l_j|} (x_{ij} = val^{v_0}_{ij})$
-        \State $res, softsatSet = MaxSat(constr, softConstrs)$ \Comment{res always \texttt{SAT}}
+        \State $res, softsatSet = \texttt{maxsat}(constr, softConstrs)$ \Comment{res always \texttt{SAT}}
         \State $newMarked := \{n_{ij} | 1 \leq j \leq |l_i| \land (x_{ij} = val_i(j)) \notin  softsatSet\}$ 
         \If{$newMarked$ is empty}
           \State \textbf{continue}
@@ -75,21 +75,18 @@ The first line of the algorithm~\ref{algo:main} generates all the abstract const
   \caption{Marked neurons from counterexample}
   \label{algo:refine2}
 \end{algorithm}
-\todo{fix name of maxsat everywhere}
-\todo{Are we doing this incremental? If yes, discuss this in experiments.}
-\todo{what is N.neurons? should it be Neurons?}
+\todo{what is N.neurons? should it be Neurons? Answer ashu: N is neural network. N.neurons is the set of neurons}
 
   
 At line 2, we initialize the variable $marked$ to the empty set of neurons.  At the next line, we iterate in a while loop until either we verify the query or find a counterexample. At line 4, we call $\textsc{isVerified}$ with the verification query, abstraction $A$, and the set of marked neurons. In this verification step, the behavior of the marked neurons are encoded exactly, as detailed in Section~\ref{sec:verif}. The call either returns that the query is verified or returns an abstract counterexample, which is defined as follows.
 
 \begin{df}
-  A sequence of value vectors $\boldsymbol{v_0}, \boldsymbol{v_1}, ... , \boldsymbol{v_k}$ is an 
+  A sequence of value vectors ${v_0}, {v_1}, ... , {v_k}$ is an 
   {\em abstract execution} of abstract constraint $A$ if 
-  $\boldsymbol{v_0} \models lc_0$ and $\boldsymbol{v_{i-1}}, \boldsymbol{v_i} \models A.lc_i$ for each $i \in [1,k]$.  
-  An abstract execution $\boldsymbol{v_0,...,v_k}$ is
-  an {\em abstract counterexample} if~$\boldsymbol{v_k} \models \lnot Q$.
+  ${v_0} \models lc_0$ and ${v_{i-1}}, {v_i} \models A.lc_i$ for each $i \in [1,k]$.  
+  An abstract execution ${v_0,...,v_k}$ is
+  an {\em abstract counterexample} if~${v_k} \models \lnot Q$.
 \end{df}
-\todo{why are $v_i$ in bold here? remove?}
 
 If these algorithms return verified, we are done, otherwise we analyze the abstract counterexample $CEX(v_0,...,v_k)$.
 At line 6, we first check if executing the neural network $N$ on input $v_0$
@@ -119,12 +116,12 @@ We add the new set $markedNt$ to the old set $marked$ and iterate our loop with 
 
 % \clearpage
 
-% The goal is to find an input $\boldsymbol{x}$, such that the predicates $P(\boldsymbol{x})$ and 
-% $Q(N(\boldsymbol{x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
+% The goal is to find an input ${x}$, such that the predicates $P({x})$ and 
+% $Q(N({x}))$ holds. The predicate $Q$ usually is the negation of the desired property. 
 % The triple  is our verification query.
 %  \todo{How to formalize $P$ and $Q$}
 
-% An input vector $\boldsymbol{v} \in \reals^{|l_0|}$ is a counter-example(cex) if $N(\boldsymbol{v}) \models \lnot Q$. 
+% An input vector ${v} \in \reals^{|l_0|}$ is a counterexample(cex) if $N({v}) \models \lnot Q$. 
 % Let us say $satval_{ij}$ represents the satisfying value of variable $x_{ij}$, after an optimization query. 
 
 
@@ -185,19 +182,18 @@ marked neurons whose exact encoding will eliminate the counterexample
 in the future analysis.
 %
 
-Let ${val_i^{\boldsymbol{v_0}}}$ represent the value vector on layer $l_i$, 
-if we execute the neural network on input $\boldsymbol{v_0}$.
+As we have also defined earlier, let ${val_i^{{v_0}}}$ represent the value vector
+on layer $l_i$, if we execute the neural network on input ${v_0}$.
 %
-\todo{Redefining ${val_i^{\boldsymbol{v_0}}}$ either remove here or in prelim}
 Let us say ${v_0}, {v_1}, ... ,{v_k}$ is an abstract spurious counterexample.
 We iterative modify the counterexample such that it becomes more and more
-like ${val_i^{\boldsymbol{v_0}}}$.
-Initially, ${val_0^{\boldsymbol{v_0}}}$ is equal to $v_0$.
+like ${val_i^{{v_0}}}$.
+Initially, ${val_0^{{v_0}}}$ is equal to $v_0$.
 Since we encode the affine layer exactly in $A.lc_i$, the following
 theorem is trivially true.
 
 % % 
-% $\boldsymbol{v_0}$ is a counterexample if $\boldsymbol{val_k^{\boldsymbol{v_0}}}$ 
+% ${v_0}$ is a counterexample if ${val_k^{{v_0}}}$ 
 % does not satisfy the property $Q$.
 
 \begin{theorem}
@@ -225,15 +221,15 @@ corresponding element of vector ${val_2^{v_0}}$.
   whose values are different in ${v'_i}$ and ${val_i^{v_0}}$. We call them marked neurons.
 \end{enumerate}
 
-In the algorithm, the above description is implemented using maxsat solver.
+In the algorithm, the above description is implemented using \texttt{maxsat} solver.
 The loop at line 2 iterates over $\relu${}~layers.
 In lines 4-7, we build constraints that encode that from layer $i$ onward
 \deeppoly~abstract constraints are satisfied,
 the marked neurons have exact behavior, layer $(i-1)$ neurons have value equal to
 ${val_{i-1}^{v_0}}$, and the execution finishes at $v_k$.
 At line 8, we construct soft constraints $softConstrs$, which encodes $x_{ij}$ is equal to $val_{i}^{v_0}$.
-At line 9, we call maxsat solver. 
-This call to maxsat solver will always find a satisfying assignment because
+At line 9, we call \texttt{maxsat} solver. 
+This call to \texttt{maxsat} solver will always find a satisfying assignment because
 our hard constraints are always satisfiable.
 The solver will also return a subset $softsatSet$ of the soft constraints.
 At line 10, we check which soft constraints are missing in $softsatSet$.
