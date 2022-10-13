@@ -10,7 +10,7 @@ Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the
 Our goal is to verify for all input $x_1,x_2 \in [-1,1]$ the outputs satisfy $x_7 \leq x_8$. 
 Our approach extends \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
 as well as upper and lower bound for each neuron. For a neuron of the affine layer, the upper and lower constraint is 
-the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
+the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$.
 For an activation neuron, the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
 which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
 new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
@@ -58,9 +58,9 @@ hence, the \deeppoly{} fails to verify the property.
 \end{minipage}
 }  
 
-There are two main reasons for the failure of \deeppoly{}. One is it cannot maintain the complete correlation 
+There are two main reasons for the failure of \deeppoly{}. First, it cannot maintain the complete correlation 
 between the neurons. In this example neurons $x_3$ and $x_4$ has the same expression $x_1+x_2$, so, they always
-get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second is the triangle
+get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second, it uses triangle
 approximation on relu neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
 as shown in equation (2)%~\ref{eq:conjunction},
