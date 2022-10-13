@@ -7,8 +7,8 @@
 Consider a neural network in figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
 \texttt{Affine} and \texttt{ReLU} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
 Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the other neurons have a bias of $0$. 
-Our goal is to verify for all possible input $x_1,x_2 \in [-1,1]$ the outputs $x_7 \leq x_8$ satisfy. 
-Our approach is top on \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
+Our goal is to verify for all input $x_1,x_2 \in [-1,1]$ the outputs satisfy $x_7 \leq x_8$. 
+Our approach extends \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
 as well as upper and lower bound for each neuron. For a neuron of the affine layer, the upper and lower constraint is 
 the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$. 
 For an activation neuron, the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
@@ -16,8 +16,10 @@ which is briefly explained in section~\ref{sec:deeppoly}. To verify the property
 new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
 from the previous layer.%, the back substitute further from the previous layer.
-They keep the back substitute  up to the input layer. The process of back substitution is shown in equation (1). %~\ref{eq:deeppoly}.
-After back substitution, the upper bound of $x_9$ is computed as $1$ which is greater than $0$, 
+They continue back substituting until only input layer variables are left.
+The process of back substitution is shown in equation (1). %~\ref{eq:deeppoly}.
+After back substitution, the upper bound of $x_9$ is
+computed as $1$, which is greater than $0$, 
 hence, the \deeppoly{} fails to verify the property.
 
 \hspace*{-1cm}
@@ -77,7 +79,7 @@ For instance, a possible satisfying assignment of equation~(2)%\ref{eq:conjuncti
 is in equation~\ref{eq:sat1}. We execute the neural network with the inputs $x_1=1,x_2=1$ and get the values 
 on each neuron as shown in equation~\ref{eq:sat2}. 
 Then we observe that the output values $x'_7=2, x'_8=3$ satisfy the property, 
-so, the input $x_1=1, x_2=1$ is a spurious counter-example. 
+so, the input $x_1=1, x_2=1$ is a spurious counterexample. 
 The question is to identify the neuron whose abstraction lead to this imprecision. 
 
 %We have to remove spurious counter example by doing the refinement analysis. 
@@ -118,8 +120,8 @@ The question is to identify the neuron whose abstraction lead to this imprecisio
 %   $\{x_5=2\}$, which implies that $x_6$ is a neuron which is contributing to the output point $x_7=2, x_8=1$. 
 %   We mark the neuron $x_6$ as a marked neuron. \todo{this should be written better. maybe the schematic picture should be here for THIS example not general.}
 To find the neurons whose abstraction leads to imprecision, let us see figure~\ref{fig:pictorial1}. 
-Here, the black line represents the spurious counter-example denoted by equation~\ref{eq:sat1}. 
-The green line represents the exact execution of the input point of spurious counter-example 
+Here, the black line represents the spurious counterexample denoted by equation~\ref{eq:sat1}. 
+The green line represents the exact execution of the input point of spurious counterexample 
 which is denoted by equation~\ref{eq:sat2}. 
 Our goal is to make the black line as close as possible to the green line from the first layer to the last layer, but the 
 first and last points should remain the same i.e., $x_1=1,x_2=1,$ and $x_7=2, x_8=1$, the closest line is the blue line.
@@ -206,11 +208,11 @@ and check the satisfiability, now it becomes \unsat{}, hence, the property verif
 %% the abstract constraints on each layer. We took the rectangle shape for simplicity,  but it is not necessarily a rectangle shape. 
 %% The red zone on the output layer shows the intersection of the abstract constraints and the negation of the property. If this 
 %% intersection is empty, we can say that the property was verified. Otherwise, we will get a path 
-%% $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$ as shown in figure~\ref{fig:pictorial}(a), which may or may not be a counter-example. 
+%% $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$ as shown in figure~\ref{fig:pictorial}(a), which may or may not be a counterexample. 
 %% We execute $v_0$ on neural network
 %% and get path $v_0\rightarrow v'_1\rightarrow v'_2\rightarrow v'_3$ as shown in figure~\ref{fig:pictorial}(a). 
 %% If the point $v'_3$ reaches the red zone, 
-%% we report $v_0$ as a counter-example. Otherwise, we refine the path $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$. 
+%% we report $v_0$ as a counterexample. Otherwise, we refine the path $v_0\rightarrow v_1\rightarrow v_2\rightarrow v_3$. 
 %% To refine, we make the black line close to the green line from the first layer to the last layer so that the endpoints($v_0, v_3$)
 %% remain unchanged. Here the closeness means making the neuron's values equal. 
 %% First, we make the points $v_1$ close to $v'_1$, and it become completely equal (all neuron's values of $v_1$ become equal to the 
