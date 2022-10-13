@@ -1,9 +1,8 @@
-In this section, we present some basic definitions, starting with a neural network.\todo{afzal, citation please! where did you adapt the definitions from.. book/paper}
+In this section, we present some basic definitions, starting with a neural network.\todo{afzal, citation please! where did you adapt the definitions from.. book/paper,   Afza: I think we defind the new definition, not taking the existing}
 
 % l_{in}, l_{out}
 \begin{df}
   \label{def:net}
-  \todo{Relu layer also have W and B?}
     A neural network $N = (Neurons, Layers, Edges, W, B, Type)$ is a 6-tuple, where
     \begin{itemize}
         \item $Neurons$ is the set of neurons in $N$,
@@ -18,8 +17,8 @@ In this section, we present some basic definitions, starting with a neural netwo
     \end{itemize}
 \end{df}
 
-A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers. Each layer contains neurons that are also indexed, with $n_{ij}$ denoting the $j$th neuron of layer $l_i$. We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all other layers as {\em hidden layers}. In our presentation, we assume separate layers for the activation functions. Though there are different kinds of activations, we focus only on $\relu${}, hence each layer can either be  $\affine${} or $\relu${} layer. Without loss of generality, we assume that the output layer is an affine layer (we can always append an identity affine layer), and layers $l_1, l_3, l_5, ..., l_k$ to be the affine layers, layers $l_2, l_4, l_6, ..., l_{k-1}$ to be the relu layers. If $Type_i = \relu$, then $|l_{i-1}| = |l_{i}|$. We extend the weight function from edges to layers using a matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ that represents the weight matrix for layer $l_i$, such that
-\todo{Cleaner notation for $W_i$}
+A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers. Each layer contains neurons that are also indexed, with $n_{ij}$ denoting the $j$th neuron of layer $l_i$. We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all other layers as {\em hidden layers}. In our presentation, we assume separate layers for the activation functions. Though there are different kinds of activations, we focus only on $\relu${}, hence each layer can either be  $\affine${} or $\relu${} layer. The definition of $W$ and $B$ applies \todo{Please check now} only for the $\affine${} layer. Without loss of generality, we assume that the output layer is an affine layer (we can always append an identity affine layer), and layers $l_1, l_3, l_5, ..., l_k$ to be the affine layers, layers $l_2, l_4, l_6, ..., l_{k-1}$ to be the relu layers. If $Type_i = \relu$, then $|l_{i-1}| = |l_{i}|$. We extend the weight function from edges to layers using a matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ that represents the weight matrix for layer $l_i$, such that
+\todo{Cleaner notation for $W_i$, Please check now}
 $$
 W_i[t_1, t_2] = 
 \begin{cases}
@@ -181,23 +180,23 @@ Otherwise, \deeppoly fails to prove the query.
 % \texttt{UNSAT} if \texttt{hardConstr} fails to satisfy.
 % We use an optimization query in gurobi to implement \texttt{maxsoftConstr} function.
 
-In our algorithms, we are using two major calls \texttt{chackSAT} and a \texttt{maxsat}.
-The function \texttt{checkSAT} in algorithm \ref{algo:verif1}, 
-takes a quantifier-free formula as input and returns \texttt{SAT} or \texttt{UNSAT}. 
+In our algorithms, we are using two major calls \checksat{} and a \maxsat{}.
+The function \checksat{} in algorithm \ref{algo:verif1}, 
+takes a quantifier-free formula as input and returns \sat{} or \unsat{}. 
 % In the case of \texttt{UNSAT}, it returns the irreducible inconsistent subsystem (\texttt{iis}). 
 % The \texttt{iis} is a subset of constraints, which are \texttt{UNSAT}, 
 % but if a single constraint is removed from \texttt{iis} then it becomes \texttt{SAT}.
-The function \texttt{maxsat} in the algorithm \ref{algo:refine2} takes
-two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
-The \texttt{hardConstr} is a Boolean formula of constraints,
-and \texttt{softConstrs} is a set of constraints. 
-The function \texttt{maxsat} satisfies the maximum number of constraints
-in \texttt{softConstrs} while satisfying the \texttt{hardConstr}. 
-The function \texttt{maxsat} returns \texttt{SAT} with the set of
-constraints satisfied in \texttt{softConstr}, or returns
-\texttt{UNSAT} if \texttt{hardConstr} fails to satisfy.
+The function \maxsat{} in the algorithm \ref{algo:refine2} takes
+two arguments as input \hardconstr{} and \softconstr{}. 
+The \hardconstr{} is a Boolean formula of constraints,
+and \softconstr{} is a set of constraints. 
+The function \maxsat{} satisfies the maximum number of constraints
+in \softconstr{} while satisfying the \hardconstr{}. 
+The function \maxsat{} returns \sat{} with the set of
+constraints satisfied in \softconstr{}, or returns
+\unsat{} if \hardconstr{} fails to satisfy.
 We are using Gurobi(v9.1)~\cite{gurobioptimizer} to implement 
-both \texttt{checkSAT} and \texttt{maxsat} functions. 
+both \checksat{} and \maxsat{} functions. 
 
 
 

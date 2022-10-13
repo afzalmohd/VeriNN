@@ -5,7 +5,7 @@
 	\label{fig:motivating}
 \end{figure}
 Consider a neural network in figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
-\texttt{Affine} and \texttt{ReLU} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
+\affine{} and \relu{} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
 Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the other neurons have a bias of $0$. 
 Our goal is to verify for all input $x_1,x_2 \in [-1,1]$ the outputs satisfy $x_7 \leq x_8$. 
 Our approach extends \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
@@ -133,9 +133,9 @@ them as soft constraints (i.e.,  $\{x_5=2, x_6=2\}$)
 while maintaining that the rest of the hard constraints are satisfied (see Equation~\ref{eq:opt1})
 e.g., input points $v_0=v''_0$ and output points $v_3=v''_3$ remain same. 
 We mark the neurons of the layer where the blue line starts diverging from the green line, i.e., $l_2$. 
-The divergence we find by the \texttt{maxsat} query. If \texttt{maxsat} returns all the soft constraints as satisfied, it means
-the blue point becomes equal to the green point. If \texttt{maxsat} returns partial soft constraints as satisfied, 
-we mark the neurons whose soft constraints are not satisfied. In our example, \texttt{maxsat} returns 
+The divergence we find by the \maxsat{} query. If \maxsat{} returns all the soft constraints as satisfied, it means
+the blue point becomes equal to the green point. If \maxsat{} returns partial soft constraints as satisfied, 
+we mark the neurons whose soft constraints are not satisfied. In our example, \maxsat{} returns 
 soft constraints $\{x_5=2\}$, soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
 The blue and black lines are the same for our motivating example since it contains only one \relu{} layer. 
 However, in general, it may or may not same. We are finding the blue line (the closest to the green line) to mark the 

@@ -1,11 +1,11 @@
-The papers also do the refinement on \deeppoly{} are \texttt{deepSRGR}~\cite{yang2021improving} and
-\texttt{refinepoly}~\cite{singh2019beyond}, 
-although these papers do not do the cegar-based refinement. The approach \texttt{refinepoly} considers 
+The papers also do the refinement on \deeppoly{} are \deepsrgr{}~\cite{yang2021improving} and
+\kpoly{}~\cite{singh2019beyond}, 
+although these papers do not do the cegar-based refinement. The approach \kpoly{} considers 
 a group of neurons at once to generate the constraints and compute the bounds of neurons. 
-The approach \texttt{deepSRGR} removes the 
+The approach \deepsrgr{} removes the 
 spurious region by taking each neuron's constraints with the negation of the property and using the 
-\texttt{Gurobi}~\cite{gurobioptimizer} optimizer to tighten the bounds of each neuron. 
-As per our knowledge elbohar et al~\cite{elboher2020abstraction} and \texttt{NARv}~\cite{liu2022abstraction} 
+\textsc{Gurobi}~\cite{gurobioptimizer} optimizer to tighten the bounds of each neuron. 
+As per our knowledge elbohar et al~\cite{elboher2020abstraction} and \narv{}~\cite{liu2022abstraction} 
 do the cegar-based refinement, but their abstraction techniques are orthogonal to \deeppoly{}. 
 They reduce the network size by merging similar 
 neurons with over-approximation, while \deeppoly{} maintains the linear constraints for each neuron without changing the 

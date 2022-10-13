@@ -6,7 +6,7 @@ iterations of algorithm~\ref{algo:main}. Let us suppose the algorithm
 $\textsc{getMarkedNeurons}$ get abstract spurious counterexample
 ${v_0}, {v_1}, ... {v_k}$ and
 returns marked neurons in $i$th iteration.
-The call to $\texttt{maxsat}$ at line 10
+The call to $\maxsat{}$ at line 10
 declares that $constr \land softsatSet$ is satisfiable.
 We can extract an abstract spurious counterexample from a model
 of $constr \land softsatSet$.
@@ -21,7 +21,7 @@ After the step $i$, we use the model, i.e., $m(x_i) = v'_i$.
   $cex$ again.
 \end{theorem}
 \begin{proof}
-  For $n_{ij} \in newMarked$, the \texttt{maxsat} query ensures that
+  For $n_{ij} \in newMarked$, the \maxsat{} query ensures that
   $val^{v_0}_{ij} \neq v'_{ij}$.
   If we have the same counterexample again in the future then
   input of $n_{ij}$ will be $val^{v_0}_{(i-1)j}$.
