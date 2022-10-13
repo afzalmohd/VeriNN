@@ -100,26 +100,13 @@ It can be seen that our technique outperforms the others in terms of the verifie
 The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and could even be considered as portfolio solvers. The authors of \alphabeta{} implement the techniques~\cite{alphabetapapers}\todo{afzal, cite all papers here}, and the authors of \ovaltool{} implement~\cite{ovalpapers}
 Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 1000 (out of 8000) more than we do. However, we found around $180$ benchmarks instances where \alphabeta{} fails and our tool works. Also, around $190$ benchmarks on which \ovaltool{} fails and our tool works; see table~\ref{tb:matrix} for more details. In total, we are solving $172$ unique benchmarks where both tools fail to solve. Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. We also note that in terms of total time, both tools are taking more time in comparison to our tool. 
 
-
-
-\subsubsection{Epsilon vs. performance: }
-For sanity check, we analyzed the effect of perturbation size and the performance of the tools.
-In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
-At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the the tools drop consistently.
-Here also, we are performing better than the approaches \deeppoly{}, 
-\texttt{kPoly}, \texttt{deepSRGR} and \texttt{cegar\_nn}, while \alphabeta{} and \ovaltool{} perform better.
-
-% Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
-% the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
-
-
 \begin{figure}[t]
 %    \centering
 \input{fig/ep_plot.tex}
     \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
     \label{res:ep:milp_with_milp}
 \end{figure}
-% \todo{recall what is epsilon... x axis label can perhaps be written out more}
+
 
 \begin{table}[b]
   \footnotesize
@@ -147,6 +134,20 @@ Here also, we are performing better than the approaches \deeppoly{},
     \caption{Comparison of tools, example row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} but \deeppoly{} fails}
     \label{tb:matrix}
 \end{table}
+
+\subsubsection{Epsilon vs. performance: }
+For sanity check, we analyzed the effect of perturbation size and the performance of the tools.
+In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
+At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the the tools drop consistently.
+Here also, we are performing better than the approaches \deeppoly{}, 
+\texttt{kPoly}, \texttt{deepSRGR} and \texttt{cegar\_nn}, while \alphabeta{} and \ovaltool{} perform better.
+
+% Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
+% the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
+
+
+% \todo{recall what is epsilon... x axis label can perhaps be written out more}
+
 
 
 %--------------------- DO NOT ERASE BELOW THIS LINE --------------------------
