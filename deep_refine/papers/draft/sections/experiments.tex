@@ -1,9 +1,9 @@
-We have implemented our approach in a prototype and compared it three types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \texttt{kPoly}~\cite{singh2019beyond}, \texttt{deepSRGR}~\cite{yang2021improving}, (ii) other cegar based approaches and 
+We have implemented our approach in a prototype and compared it three types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, (ii) other cegar based approaches and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
 (iii) state-of-the-art tools \alphabeta~\cite{alphabetacrown} and \ovaltool~\cite{ovaltool}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta{} achieved the 1st and \ovaltool{} 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
-We have implemented our techniques in a tool, which we call \drefine{}, in \texttt{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \texttt{C++}. We are using a \texttt{C++} interface of the tool Gurobi~\cite{?} \todo{add ref} to check the satisfiability as well as solve  \texttt{maxsat} queries. %We have implemented our technique as a tool and call it \drefine{}.  
+We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.  
 
 \subsection{Benchmarks}
 We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We are using 11 different fully connected feedforward neural networks with $\relu${} activation as shown in table~\ref{tb:nndetail}.
@@ -44,9 +44,9 @@ If a counter-example is found then the tool reports it, otherwise, the tool repo
 \end{table}
 
 \subsection{Results}
-We conducted the experiments on a machine with \texttt{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
+We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
-To make a fair comparison between the tools, we provide only a single \texttt{CPU} for each instance for each tool. 
+To make a fair comparison between the tools, we provide only a single \textsc{CPU} for each instance for each tool. 
 We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp} which compares wrt epsilon, the robustness parameter.
 %represents the verified cases while the column represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the  156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
 
@@ -54,7 +54,7 @@ We remark that on an average, \drefine{} marks $9.8\%$ of neurons, whenever it n
 
 \subsubsection{Comparison with the most related techniques:}
 In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deepsrgr{} to compare with our technique. 
-We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \texttt{verified} instances, while our tool can report  \texttt{verified} and the counter-example. We note that we compare these techniques with only \texttt{verified}  instances of our technique in the line of \texttt{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
+We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and the counter-example. We note that we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
 
 It can be seen that our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are efficient compared to our tool which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and significantly more ~3700 for the first two and ~1000 for the third), except $14$ instances where \kpoly{} succeeds and our tool times out.
 
@@ -93,11 +93,12 @@ It can be seen that our technique outperforms the others in terms of the verifie
 \end{figure}
 
 \subsubsection{Comparison with cegar based techniques: }
-\texttt{cagar\_nn}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement~\todo{afzal, in intro we also refer to arxiv paper. should we remove that?}. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging the similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can see in Figure~\ref{res:milp_with_milp} that \texttt{cegar\_nn} could verified only  $18.88\%$ while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \texttt{cegar\_nn} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
+\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging the similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can see in Figure~\ref{res:milp_with_milp} that \cegarnn could verified only  $18.88\%$ while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
 
 
 \subsubsection{Comparison with portfolio state of the arts: }
-The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and could even be considered as portfolio solvers. The authors of \alphabeta{} implement the techniques~\cite{alphabetapapers}\todo{afzal, cite all papers here}, and the authors of \ovaltool{} implement~\cite{ovalpapers}
+The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and could even be considered as portfolio solvers. The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
+and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}
 Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 1000 (out of 8000) more than we do. However, we found around $180$ benchmarks instances where \alphabeta{} fails and our tool works. Also, around $190$ benchmarks on which \ovaltool{} fails and our tool works; see table~\ref{tb:matrix} for more details. In total, we are solving $172$ unique benchmarks where both tools fail to solve. Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. We also note that in terms of total time, both tools are taking more time in comparison to our tool. 
 
 \begin{figure}[t]
@@ -140,7 +141,7 @@ For sanity check, we analyzed the effect of perturbation size and the performanc
 In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
 At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the the tools drop consistently.
 Here also, we are performing better than the approaches \deeppoly{}, 
-\texttt{kPoly}, \texttt{deepSRGR} and \texttt{cegar\_nn}, while \alphabeta{} and \ovaltool{} perform better.
+\kpoly{}, \deepsrgr{} and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 

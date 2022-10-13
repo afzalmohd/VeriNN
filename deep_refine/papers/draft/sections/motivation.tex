@@ -66,7 +66,7 @@ We take the conjunction of upper and lower expressions of each neuron with the n
 as shown in equation (2)%~\ref{eq:conjunction},
 and use the \milp{} solver to check satisfiability, thus addressing the first issue.  
 The second issue can be resolved either by splitting the bound at zero of the 
-affine node (as done in~\cite{?})\todo{add citation?} or by using the exact encoding (eq~\ref{eq:reluexact}) 
+affine node or by using the exact encoding (eq~\ref{eq:reluexact}) 
 instead of triangle approximation. 
 But both solutions increase the problem size exponentially in terms of relu neurons and this results in a huge 
 blowup if we repair every neuron of the network. 

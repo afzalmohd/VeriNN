@@ -1,4 +1,4 @@
-In this section, we present some basic definitions, starting with a neural network.\todo{afzal, citation please! where did you adapt the definitions from.. book/paper,   Afza: I think we defind the new definition, not taking the existing}
+In this section, we present some basic definitions, starting with a neural network. %\todo{afzal, citation please! where did you adapt the definitions from.. book/paper,   Afza: I think we defind the new definition, not taking the existing}
 
 % l_{in}, l_{out}
 \begin{df}
@@ -17,8 +17,7 @@ In this section, we present some basic definitions, starting with a neural netwo
     \end{itemize}
 \end{df}
 
-A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers. Each layer contains neurons that are also indexed, with $n_{ij}$ denoting the $j$th neuron of layer $l_i$. We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all other layers as {\em hidden layers}. In our presentation, we assume separate layers for the activation functions. Though there are different kinds of activations, we focus only on $\relu${}, hence each layer can either be  $\affine${} or $\relu${} layer. The definition of $W$ and $B$ applies \todo{Please check now} only for the $\affine${} layer. Without loss of generality, we assume that the output layer is an affine layer (we can always append an identity affine layer), and layers $l_1, l_3, l_5, ..., l_k$ to be the affine layers, layers $l_2, l_4, l_6, ..., l_{k-1}$ to be the relu layers. If $Type_i = \relu$, then $|l_{i-1}| = |l_{i}|$. We extend the weight function from edges to layers using a matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ that represents the weight matrix for layer $l_i$, such that
-\todo{Cleaner notation for $W_i$, Please check now}
+A neural network is a collection of layers $l_0, l_1, l_2, ... l_k$, where $k$ represents the number of layers. Each layer contains neurons that are also indexed, with $n_{ij}$ denoting the $j$th neuron of layer $l_i$. We call $l_0$ and $l_k$ the {\em input} and {\em output layers} respectively, and all other layers as {\em hidden layers}. In our presentation, we assume separate layers for the activation functions. Though there are different kinds of activations, we focus only on $\relu${}, hence each layer can either be  $\affine${} or $\relu${} layer. The definition of $W$ and $B$ applies only for the $\affine${} layer. Without loss of generality, we assume that the output layer is an affine layer (we can always append an identity affine layer), and layers $l_1, l_3, l_5, ..., l_k$ to be the affine layers, layers $l_2, l_4, l_6, ..., l_{k-1}$ to be the relu layers. If $Type_i = \relu$, then $|l_{i-1}| = |l_{i}|$. We extend the weight function from edges to layers using a matrix $W_i \in \reals^{|l_i|\times|l_{i-1}|}$ that represents the weight matrix for layer $l_i$, such that
 $$
 W_i[t_1, t_2] = 
 \begin{cases}
