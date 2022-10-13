@@ -86,10 +86,10 @@ It can be seen that our technique outperforms the others in terms of the verifie
 
 
 \begin{figure}[t]
-%    \centering
-    \input{fig/data_plot.tex}
-    \caption{Cactus plot with related techniques}
-    \label{res:milp_with_milp}
+  % \centering
+  \input{fig/data_plot.tex}
+  \caption{Cactus plot with related techniques}
+  \label{res:milp_with_milp}
 \end{figure}
 
 \subsubsection{Comparison with cegar based techniques: }
@@ -119,11 +119,13 @@ At $\epsilon=0.005$, the performance of all the tools is almost the same. As the
 \end{figure}
 \todo{recall what is epsilon... x axis label can perhaps be written out more}
 
-\begin{table}
+\begin{table}[b]
+  \footnotesize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
         \hline
-        - & \textbf{total} & \textbf{cegar\_nn} & \textbf{deeppoly} & \textbf{kPoly} & \textbf{deepSRGR} & \alphabeta{} & \textbf{oval} & \textbf{drefine} \\
+      - & \textbf{total} & \textbf{cegar\_} & \textbf{deeppoly} & \textbf{kPoly} & \textbf{deepSRGR} & $\alpha \beta-$ & \textbf{oval} & \textbf{drefine} \\
+        &     & \textbf{\_nn}& & & & \textsc{CROWN}& & \\
         \hline
         \textbf{cegar\_nn} & 1638 & 0 & 713 & 609 & 687 & 217 & 238 & 417 \\ 
         \hline
@@ -143,3 +145,12 @@ At $\epsilon=0.005$, the performance of all the tools is almost the same. As the
     \caption{Comparison of tools, example row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} but \deeppoly{} fails}
     \label{tb:matrix}
 \end{table}
+
+
+%--------------------- DO NOT ERASE BELOW THIS LINE --------------------------
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
+
