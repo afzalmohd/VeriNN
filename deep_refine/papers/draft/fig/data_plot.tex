@@ -10,7 +10,7 @@
         xtick={0,1000,2000,3000,4000,5000,6000,7000},
         ytick={0,5,10,15,20,25},
         legend pos=south east,
-        legend entries={drefine, deeppoly, deep\_SRGR, refinepoly, drefine\_verified, alpha\_beta, oval},
+        legend entries={drefine, deeppoly, deep\_SRGR, refinepoly, drefine\_verified, alpha\_beta, oval, cegar\_nn},
         ymajorgrids=true,
         xmajorgrids=true,
         grid style=dashed,
@@ -50,10 +50,10 @@
     ]
     table {fig/oval_data.txt};
 
-    % \addplot[
-    %     color=gray
-    % ]
-    % table {fig/drefine_falsified_data.txt};
+    \addplot[
+        color=gray
+    ]
+    table {fig/four_class_data.txt};
 
     \end{axis}
 

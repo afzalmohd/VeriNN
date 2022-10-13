@@ -8,8 +8,8 @@
         ymin=0, ymax=100,
         xtick={0.005,0.01,0.015,0.02,0.025,0.03,0.04,0.05},
         ytick={0,20,40,60,80,100},
-        legend pos=south west,
-        legend entries={drefine,deeppoly, drefine\_verified, deep\_SRGR, refinepoly, alpha\_beta, oval},
+        legend pos=north east,
+        legend entries={drefine,deeppoly, drefine\_verified, deep\_SRGR, refinepoly, alpha\_beta, oval, cegar\_nn},
         ymajorgrids=true,
         grid style=dashed,
     ]
@@ -67,6 +67,14 @@
     ]
     coordinates {
         (0.005,99.9)(0.01,95.11)(0.015,82.1)(0.02,71.21)(0.025,64.76)(0.03,59.96)(0.04,50.92)(0.05,48.8)
+    };
+
+    \addplot[
+        color=black,
+        mark=*,
+    ]
+    coordinates {
+        (0.005,17.98)(0.01,18.45)(0.015,19.71)(0.02,19.92)(0.025,21.22)(0.03,19.92)(0.04,17.95)(0.05,16.23)
     };
 
 
