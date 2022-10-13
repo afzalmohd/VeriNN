@@ -183,10 +183,10 @@ Otherwise, \deeppoly fails to prove the query.
 
 In our algorithms, we are using two major calls \texttt{chackSAT} and a \texttt{maxsat}.
 The function \texttt{checkSAT} in algorithm \ref{algo:verif1}, 
-takes a Boolean formula as input and returns \texttt{SAT} or \texttt{UNSAT}. 
-In the case of \texttt{UNSAT}, it returns the irreducible inconsistent subsystem (\texttt{iis}). 
-The \texttt{iis} is a subset of constraints, which are \texttt{UNSAT}, 
-but if a single constraint is removed from \texttt{iis} then it becomes \texttt{SAT}.
+takes a quantifier-free formula as input and returns \texttt{SAT} or \texttt{UNSAT}. 
+% In the case of \texttt{UNSAT}, it returns the irreducible inconsistent subsystem (\texttt{iis}). 
+% The \texttt{iis} is a subset of constraints, which are \texttt{UNSAT}, 
+% but if a single constraint is removed from \texttt{iis} then it becomes \texttt{SAT}.
 The function \texttt{maxsat} in the algorithm \ref{algo:refine2} takes
 two arguments as input \texttt{hardConstr} and \texttt{softConstrs}. 
 The \texttt{hardConstr} is a Boolean formula of constraints,
@@ -196,7 +196,7 @@ in \texttt{softConstrs} while satisfying the \texttt{hardConstr}.
 The function \texttt{maxsat} returns \texttt{SAT} with the set of
 constraints satisfied in \texttt{softConstr}, or returns
 \texttt{UNSAT} if \texttt{hardConstr} fails to satisfy.
-We are using Gurobi(v9.1)~\cite{gurobioptimizer} optimizer to implement 
+We are using Gurobi(v9.1)~\cite{gurobioptimizer} to implement 
 both \texttt{checkSAT} and \texttt{maxsat} functions. 
 
 
