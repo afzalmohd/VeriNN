@@ -80,34 +80,33 @@ is in equation~\ref{eq:sat1}. We execute the neural network with the inputs $x_1
 on each neuron as shown in equation~\ref{eq:sat2}. 
 Then we observe that the output values $x'_7=2, x'_8=3$ satisfy the property, 
 so, the input $x_1=1, x_2=1$ is a spurious counterexample. 
-The question is to identify the neuron whose abstraction lead to this imprecision. 
+The question is to identify the neuron whose abstraction lead to this imprecision.
+\vspace{-20mm}
+\setcounter{equation}{2}
+\begin{align}
+  x_1=1, x_2=1, x_3=2, x_4=2, x_5=2, x_6=0, x_7=2, x_8=1 \label{eq:sat1} \\
+  x'_1=1, x'_2=1, x'_3=2, x'_4=2, x'_5=2, x'_6=2, x'_7=2, x'_8=3 \label{eq:sat2}
+\end{align}
 
 %We have to remove spurious counter example by doing the refinement analysis. 
 %We are using one approach to find the marked neurons guided by the spurious counter example,  and one approach to refine (repair) the marked neurons.
 
 % We are using two approaches to find the marked neurons guided by the spurious counter example, 
 % and two approaches to refine (repair) the marked neurons.
- \setcounter{equation}{2}
-\begin{equation}
-    \begin{aligned}
-        x_1=1, x_2=1, x_3=2, x_4=2, x_5=2, x_6=0, x_7=2, x_8=1
-    \end{aligned}
-\label{eq:sat1}
-\end{equation}
+% \begin{equation}
+%     \begin{aligned}
+%         x_1=1, x_2=1, x_3=2, x_4=2, x_5=2, x_6=0, x_7=2, x_8=1\\
+%     \end{aligned}
+%         \label{eq:sat1}
+% \end{equation}
 
-\begin{equation}
-    \begin{aligned}
-        x'_1=1, x'_2=1, x'_3=2, x'_4=2, x'_5=2, x'_6=2, x'_7=2, x'_8=3
-    \end{aligned}
-\label{eq:sat2}
-\end{equation}
+% \begin{equation}
+%     \begin{aligned}
+%         x'_1=1, x'_2=1, x'_3=2, x'_4=2, x'_5=2, x'_6=2, x'_7=2, x'_8=3
+%     \end{aligned}
+% \label{eq:sat2}
+% \end{equation}
 
-\begin{figure}
-    \centering
-    \includegraphics[scale=0.75]{fig/pictorial1.pdf}
-    \caption{Pictorial representation of our approach on example in figure~\ref{fig:motivating}}
-    \label{fig:pictorial1}
-\end{figure}
 
 %Following is the approach to find the marked neurons.
 %\\
@@ -151,8 +150,8 @@ less number of marked neurons.
 
 
 
-  
-  \fbox{
+\noindent  
+\fbox{
     \begin{minipage}{0.5\linewidth}
 \begin{equation}
     \begin{aligned}
@@ -162,17 +161,24 @@ less number of marked neurons.
         x_7 = x_5 & \land x_8 = x_6 + 1 \\
         x_7 = 2 & \land x_8 = 1
     \end{aligned}
-\label{eq:opt1}
+    \label{eq:opt1}
 \end{equation}
 \end{minipage}
-  }\qquad 
-  \begin{minipage}{0.4\linewidth}
+  }\;\;
+  \begin{minipage}{0.42\linewidth}
 %\textbf{Refinement} \\
 %We have an approach for the refinement named as {\em MILP-based approach}.
 Once we have  $x_6$ as the marked neuron, we use an {\em MILP based approach}, and add the exact encoding of the marked neuron ($x_6$) in addition to the constraints in equation (2) %~\ref{eq:conjunction}
 and check the satisfiability, now it becomes \unsat{}, hence, the property verified (see Eq. equation~\ref{eq:reluexact} for more details).
 %The exact constraint of a $\relu${} neuron is explained in 
 \end{minipage}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[scale=0.75]{fig/pictorial1.pdf}
+    \caption{Pictorial representation of our approach on example in figure~\ref{fig:motivating}}
+    \label{fig:pictorial1}
+\end{figure}
 
 
 % \begin{figure}[!ht]
