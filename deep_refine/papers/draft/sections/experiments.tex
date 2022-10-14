@@ -1,6 +1,7 @@
 We have implemented our approach in a prototype and compared it three types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, (ii) other cegar based approaches and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
-(iii) state-of-the-art tools \alphabeta~\cite{alphabetacrown} and \ovaltool~\cite{ovaltool}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta{} achieved the 1st and \ovaltool{} 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
+(iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating} and 
+\ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta{} achieved the 1st and \ovaltool{} 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
 We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.  
