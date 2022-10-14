@@ -2,7 +2,7 @@
 
 Our refinement strategy ensures progress, i.e., the spurious counterexample does not
 repeat in the future
-iterations of algorithm~\ref{algo:main}. Let us suppose the algorithm
+iterations of Algorithm~\ref{algo:main}. Let us suppose the algorithm
 $\textsc{getMarkedNeurons}$ get abstract spurious counterexample
 ${v_0}, {v_1}, ... {v_k}$ and
 returns marked neurons in $i$th iteration.
@@ -16,7 +16,7 @@ Before the $i$ step the counterexample follows the execution of $N$ on input $v_
 After the step $i$, we use the model, i.e., $m(x_i) = v'_i$.
 
 \begin{theorem}
-  In the rest of the run of algorithm~\ref{algo:main}, we will never find the abstract
+  In the rest of the run of Algorithm~\ref{algo:main}, we will never find the abstract
   spurious counterexample
   $cex$ again.
 \end{theorem}
@@ -31,9 +31,9 @@ After the step $i$, we use the model, i.e., $m(x_i) = v'_i$.
 
 Furthermore, we also prove that our method always terminates.
 %
-The theorem \ref{th:progress1} and \ref{th:progress2} implies that in every
+Theorems \ref{th:progress1} and \ref{th:progress2} imply that in every
 iteration $\textsc{getMarkedNeurons}$
-returns the non empty set of marked neurons, which are not already marked. In worst case the algorithms marked all 
+returns a non empty set of unmarked neurons, which we will now be marked. In worst case the algorithms marked all 
 the neurons of the network, and encode them in the exact behavior. 
 
 % Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
@@ -52,7 +52,7 @@ the neurons of the network, and encode them in the exact behavior.
 
 \begin{proof}
 By the definition of abstract spurious counterexample, ${v_k} \models \lnot Q$. 
-By the check at line 6 of algorithm~\ref{algo:main} ${val_k^{{v_0}}} \models Q$. 
+By the check at line 6 of Algorithm~\ref{algo:main} ${val_k^{{v_0}}} \models Q$. 
 If the set of returned new marked neurons is empty, $newMarked = \emptyset$ for each layer. 
 Therefore, all the neurons in any layer $l_i$ become equal to ${val_i^{{v_0}}}$,  
 which implies ${v_k}$ equals to ${val_k^{{v_0}}}$, but ${v_k} \models \lnot Q$ and 
@@ -73,11 +73,11 @@ in any iteration greater than $t$.
 Consider an iteration $t' > t$, if we get the marked neurons from layer other
 than $l_i$ then $n_{ij}$ can not be part of it because $n_{ij}$ is in layer $l_i$. 
 Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
-Since we have made $n_{ij}$ exact in line 6 of algorithm~\ref{algo:refine2},
-its behavior in constraints optimization will be same as the exact relu. 
+Since we have made $n_{ij}$ exact in line 6 of Algorithm~\ref{algo:refine2},
+its behavior in constraints optimization will be same as the exact \relu{}. 
 Moreover, $v'_{ij} = val_{ij}^{v_0}$, 
 which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
-marked neurons as per the criteria of marked neurons in line 11 of algorithm~\ref{algo:refine2}.   
+marked neurons as per the criteria of marked neurons in line 11 of Algorithm~\ref{algo:refine2}.   
 \end{proof}
 
 

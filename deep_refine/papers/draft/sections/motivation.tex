@@ -61,14 +61,14 @@ hence, the \deeppoly{} fails to verify the property.
 There are two main reasons for the failure of \deeppoly{}. First, it cannot maintain the complete correlation 
 between the neurons. In this example neurons $x_3$ and $x_4$ has the same expression $x_1+x_2$, so, they always
 get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second, it uses triangle
-approximation on relu neurons.
+approximation on \relu{} neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
 as shown in equation (2)%~\ref{eq:conjunction},
  and use the \milp{} solver to check satisfiability, thus addressing the first issue.  
 The second issue can be resolved either by splitting the bound at zero of the 
 affine node or by using the exact encoding (eq~\ref{eq:reluexact}) 
 instead of triangle approximation. 
-But both solutions increase the problem size exponentially in terms of relu neurons and this results in a huge 
+But both solutions increase the problem size exponentially in terms of \relu{} neurons and this results in a huge 
 blowup if we repair every neuron of the network. 
 
 So, the main hurdle towards efficiency is to find the set of important neurons (we call these {\em marked neurons}), 

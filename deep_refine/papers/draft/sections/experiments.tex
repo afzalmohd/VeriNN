@@ -54,7 +54,7 @@ We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_mil
 In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deepsrgr{} to compare with our technique. 
 We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and the counter-example. We note that we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
 
-It can be seen that our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are efficient compared to our tool which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and significantly more ~3700 for the first two and ~1000 for the third), except $14$ instances where \kpoly{} succeeds and our tool times out.
+It can be seen that our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and significantly more: $\sim 3700$ for the first two and $\sim 1000$ for the third), except $14$ instances where \kpoly{} succeeds and our tool times out.
 
 % The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
 % Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
@@ -91,13 +91,13 @@ It can be seen that our technique outperforms the others in terms of the verifie
 \end{figure}
 
 \paragraph{Comparison with cegar based techniques: }
-\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging the similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can see in Figure~\ref{res:milp_with_milp} that \cegarnn could verified only  $18.88\%$ while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
+\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging the similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can see in Figure~\ref{res:milp_with_milp} that \cegarnn{} verified only  $18.88\%$ while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
 
 
 \paragraph{Comparison with state-of-the-art solvers: }
 The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and use several techniques. The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}
-Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 1000 (out of 8000) more than we do. However, we found around $180$ benchmarks instances where \alphabeta{} fails and our tool works. Also, around $190$ benchmarks on which \ovaltool{} fails and our tool works; see table~\ref{tb:matrix} for more details. In total, we are solving $172$ unique benchmarks where both tools fail to solve. Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. We also note that in terms of total time, both tools are taking more time in comparison to our tool. 
+Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 1000 (out of 8000) more than we do. However, we found around $180$ benchmarks instances where \alphabeta{} fails and our tool works. Also, around $190$ benchmarks on which \ovaltool{} fails and our tool works; see Table~\ref{tb:matrix} for more details. In total, we are solving $172$ unique benchmarks where both tools fail to solve. Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. We also note that in terms of total time, both tools take more time than our tool. 
 
 \begin{figure}[t]
 %    \centering
@@ -107,7 +107,7 @@ Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 100
 \end{figure}
 
 
-\begin{table}[b]
+\begin{table}[t]
   \footnotesize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
@@ -130,21 +130,21 @@ Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 100
         \textbf{drefine} & 5327 & 4106 & 694 & 552 & 640 & 180 & 190 & 0  \\
         \hline
     \end{tabular}
-    \caption{Comparison of tools, example row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} but \deeppoly{} fails}
+    \caption{Comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} but \deeppoly{} fails}
     \label{tb:matrix}
 \end{table}
 
 \paragraph{Epsilon vs. performance: }
 For sanity check, we analyzed the effect of perturbation size and the performance of the tools.
 In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
-At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the the tools drop consistently.
-Here also, we are performing better than the approaches \deeppoly{}, 
+At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the tools drop consistently.
+Here also, we perform better than the approaches \deeppoly{}, 
 \kpoly{}, \deepsrgr{} and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
 
 
 \paragraph{Number of marked neurons: }
 On an average, \drefine{} marks $9.8\%$ of neurons, whenever it needs to refine. 
-Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. As futurework, we plan to extend our technique to make it independent of \deeppoly{} and applicable with other abstraction based techniques and tools. We believe this could lead to more benchmarks being solved overall.
+Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. 
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
