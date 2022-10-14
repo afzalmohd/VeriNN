@@ -43,9 +43,9 @@ Let $P$ and $Q$ be predicates over input and output layers respectively.
 A {\em verification query} is a triple $\langle N, P, Q \rangle$.
 We need to prove that for each input ${v}$,
 if ${v} \models P$, $N({v}) \models Q$.
-We assume $P$ is of the form
+We assume $P$ has the form
 % Let us say $P$ is a predicate on input layer's variables
-$\Land_{i=1}^{|l_0|}lb_{0i} \leq x_{0i} \leq ub_{0i}$, where $lb_{0i}$ and $ub_{0i}$ are lower and upper bounds respectively for a neuron $n_{0i}$.
+$\Land_{i=1}^{|l_0|}lb_{0i} \leq x_{0i} \leq ub_{0i}$, where $lb_{0i}$, $ub_{0i}$ are lower and upper bounds respectively for a neuron $n_{0i}$.
 
 
 % The value of ${val_i}$ is computed by the weighted sum of the

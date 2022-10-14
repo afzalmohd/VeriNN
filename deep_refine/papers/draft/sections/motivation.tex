@@ -64,7 +64,7 @@ get the same value. But in the \deeppoly{} analysis process, it may fail to get 
 approximation on relu neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
 as shown in equation (2)%~\ref{eq:conjunction},
-and use the \milp{} solver to check satisfiability, thus addressing the first issue.  
+ and use the \milp{} solver to check satisfiability, thus addressing the first issue.  
 The second issue can be resolved either by splitting the bound at zero of the 
 affine node or by using the exact encoding (eq~\ref{eq:reluexact}) 
 instead of triangle approximation. 
