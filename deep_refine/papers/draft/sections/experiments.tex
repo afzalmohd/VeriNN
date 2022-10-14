@@ -110,27 +110,26 @@ Figure~\ref{res:milp_with_milp} shows that both the tools indeed solve about 100
 \begin{table}[t]
   \footnotesize
     \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+    \begin{tabular}{|c|c|c|c|c|c|c|c||c|}
         \hline
-      - & \textbf{total} & \textbf{cegar\_} & \textbf{deeppoly} & \textbf{kPoly} & \textbf{deepSRGR} & $\alpha \beta-$ & \textbf{oval} & \textbf{drefine} \\
-        &     & \textbf{\_nn}& & & & \textsc{CROWN}& & \\
+        - & \tiny \textbf{\cegarnn} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
         \hline
-        \textbf{cegar\_nn} & 1638 & 0 & 713 & 609 & 687 & 217 & 238 & 417 \\ 
+        \tiny \textbf{\cegarnn} & \textbf{0} & 713 & 609 & 687 & 217 & 238 & 417 &  1638 \\ 
         \hline
-        \textbf{deeppoly} & 4633 & 3708 & 0 & 0 & 0 & 63 & 66 & 0  \\ 
+        \tiny \textbf{\deeppoly} & 3708 & \textbf{0} & 0 & 0 & 63 & 66 & 0  & 4633 \\ 
         \hline
-        \textbf{kPoly} & 4789 & 3760 & 156 & 0 & 114 & 63 & 66 & 14  \\ 
+        \tiny \textbf{\kpoly} & 3760 & 156 & \textbf{0} & 114 & 63 & 66 & 14  & 4789  \\ 
         \hline
-        \textbf{deepSRGR} & 4687 & 951 & 54 & 2 & 0 & 63 & 66 & 0 \\ 
+        \tiny \textbf{\deepsrgr} & 951 & 54 & 2 & \textbf{0} & 63 & 66 & 0  & 4687 \\ 
         \hline
-        \alphabeta{} & 6242 & 4821 & 1672 & 1516 & 1618 & 0 & 84 & 1095  \\
+        \tiny \textbf{\alphabeta} & 4821 & 1672 & 1516 & 1618 & \textbf{0} & 84 & 1095  & 6242 \\
         \hline
-        \textbf{Oval} & 6189 & 4789 & 1622 & 1466 & 1568 & 31 & 0 & 1052 \\
+        \tiny \textbf{\ovaltool} & 4789 & 1622 & 1466 & 1568 & 31 & \textbf{0} & 1052 & 6189  \\
         \hline
-        \textbf{drefine} & 5327 & 4106 & 694 & 552 & 640 & 180 & 190 & 0  \\
+        \tiny \textbf{\drefine} & 4106 & 694 & 552 & 640 & 180 & 190 & \textbf{0} & 5327 \\
         \hline
     \end{tabular}
-    \caption{Comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} but \deeppoly{} fails}
+    \caption{Comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails}
     \label{tb:matrix}
 \end{table}
 
