@@ -12,8 +12,8 @@ We can extract an abstract spurious counterexample from a model
 of $constr \land softsatSet$.
 Let $m$ be the model.
 Let the abstract spurious counterexample be $cex = val_0^{v_0}, ...., val^{v_0}_{i-1},v'_{i},...,v'_{k-1},v_k$.
-Before the $i$ step the counterexample follows the execution of $N$ on input $v_0$.
-After the step $i$, we use the model, i.e., $m(x_i) = v'_i$.
+Before the step $i$, $cex$ follows the execution of $N$ on input $v_0$.
+After the step $i$, we use the model to construct $cex$, i.e., $m(x_i) = v'_i$.
 
 \begin{theorem}
   In the rest of the run of Algorithm~\ref{algo:main}, we will never find the abstract
