@@ -4,13 +4,13 @@
         xlabel={Number of benchmarks},
         ylabel={log(time)},
         width=11cm,
-        height=6cm,
+        height=7cm,
         xmin=0, xmax=7000,
         ymin=0, ymax=25,
         xtick={0,1000,2000,3000,4000,5000,6000,7000},
         ytick={0,5,10,15,20,25},
         legend pos=south east,
-        legend entries=  { \tiny \drefine{}, \tiny \deeppoly{}, \tiny \deepsrgr{}, \tiny \kpoly{}, \tiny \textsc{drefine\_verified}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}},
+        legend entries=  { \tiny \drefine{}, \tiny \deeppoly{}, \tiny \deepsrgr{}, \tiny \kpoly{}, \tiny \textsc{drefine\_verified}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}, \tiny \marabou{}},
         ymajorgrids=true,
         xmajorgrids=true,
         grid style=dashed,
@@ -54,6 +54,11 @@
         color=gray
     ]
     table {fig/four_class_data.txt};
+
+    \addplot[
+        color=black
+    ]
+    table {fig/marabou_data.txt};
 
     \end{axis}
 

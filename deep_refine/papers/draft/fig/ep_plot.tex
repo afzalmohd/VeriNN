@@ -3,13 +3,13 @@
         xlabel={epsilons},
         ylabel={percentage of verified/falsified tasks},
         width=11cm,
-        height=6.5cm,
+        height=8cm,
         xmin=0.005, xmax=0.05,
         ymin=0, ymax=120,
         xtick={0.005,0.01,0.015,0.02,0.025,0.03,0.04,0.05},
         ytick={0,20,40,60,80,100},
         legend pos=north east,
-        legend entries={\tiny \drefine{}, \tiny \textsc{deeppoly}, \tiny \textsc{drefine\_verified}, \tiny \textsc{deep\_srgr}, \tiny \textsc{kpoly}, \tiny \textsc{$\alpha\beta$-crown}, \tiny \textsc{oval}, \tiny \cegarnn{}},
+        legend entries={\tiny \drefine{}, \tiny \textsc{deeppoly}, \tiny \textsc{drefine\_verified}, \tiny \textsc{deep\_srgr}, \tiny \textsc{kpoly}, \tiny \textsc{$\alpha\beta$-crown}, \tiny \textsc{oval}, \tiny \cegarnn{}, \tiny \marabou{}},
         ymajorgrids=true,
         grid style=dashed,
     ]
@@ -70,11 +70,19 @@
     };
 
     \addplot[
-        color=black,
+        color=gray,
         mark=*,
     ]
     coordinates {
         (0.005,17.98)(0.01,18.45)(0.015,19.71)(0.02,19.92)(0.025,21.22)(0.03,19.92)(0.04,17.95)(0.05,16.23)
+    };
+
+    \addplot[
+        color=black,
+        mark=*,
+    ]
+    coordinates {
+        (0.005,86.27)(0.01,85.63)(0.015,76.15)(0.02,70.34)(0.025,73.20)(0.03,69.06)(0.04,60.31)(0.05,58.37)
     };
 
 
