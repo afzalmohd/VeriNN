@@ -5,6 +5,7 @@
 #include "../../deeppoly/deeppoly_configuration.hh"
 #include "../../deeppoly/analysis.hh"
 #include <cstdlib>
+#include<map>
 
 
 bool run_milp_mark_with_milp_refine(Network_t* net){
@@ -29,6 +30,29 @@ bool run_milp_mark_with_milp_refine(Network_t* net){
         }
     }
     return false;
+}
+
+Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m){
+    assert(m.size() > 0 && "Map is empty");
+    std::map<Neuron_t*, double>::iterator itr;
+    bool is_first = true;
+    double max_val;
+    Neuron_t* max_val_key = NULL;
+    for(itr = m.begin(); itr != m.end(); itr++){
+        if(is_first){
+            max_val_key = itr->first;
+            max_val = itr->second;
+            is_first = false;
+        }
+        else{
+            if(max_val < itr->second){
+                max_val_key = itr->first;
+                max_val = itr->second;
+            }
+        }
+    }
+
+    return max_val_key;
 }
 
 bool is_layer_marked(Network_t* net, Layer_t* start_layer){
@@ -56,6 +80,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
     model.optimize();
     bool is_marked = false;
     int status = model.get(GRB_IntAttr_Status);
+    std::map<Neuron_t*, double> nt_err_map;
     if(status == GRB_OPTIMAL){
         std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
         for(size_t i=0; i<start_layer->neurons.size(); i++){
@@ -66,10 +91,29 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             double diff = abs(sat_val - res);
             if(diff > DIFF_TOLERANCE){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
-                    pred_nt->is_marked = true;
                     is_marked = true;
                     std::cout<<pred_nt->neuron_index<<", ";
+                    nt_err_map[pred_nt] = diff;
                 }
+            }
+        }
+        std::cout<<std::endl;
+        std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
+        if(nt_err_map.size() > MAX_NUM_MARKED_NEURONS){
+            for(size_t i = 0; i<MAX_NUM_MARKED_NEURONS; i++){
+                if(nt_err_map.size() > 0){
+                    Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
+                    max_val_nt->is_marked = true;
+                    std::cout<<max_val_nt->neuron_index<<", ";
+                    nt_err_map.erase(max_val_nt);
+                }
+            }
+        }
+        else{
+            std::map<Neuron_t*, double>::iterator itr;
+            for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
+                itr->first->is_marked = true;
+                std::cout<<itr->first->neuron_index<<", ";
             }
         }
         std::cout<<std::endl;

@@ -12,12 +12,13 @@
 
 #define IMAGE_DELIMETER ','
 #define NUM_TEST_IMAGES 30
-#define MILP_WITH_MILP_LIMIT 500
+#define MILP_WITH_MILP_LIMIT 5000
 #define PULL_BACK_WITH_MILP_LIMIT 100
 #define PULL_BACK_WITH_PATH_SPLIT 5000
 #define NUM_GUROBI_THREAD 2
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
+#define MAX_NUM_MARKED_NEURONS 5
 
 enum drefine_status {Failed, Verified, Unknown};
 

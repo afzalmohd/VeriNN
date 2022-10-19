@@ -72,10 +72,10 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
     // }
 
     Configuration_deeppoly::is_unmarked_deeppoly = true;
-    std::string tool_name = Configuration_deeppoly::tool;
-    Configuration_deeppoly::tool = "deeppoly";
+    // std::string tool_name = Configuration_deeppoly::tool;
+    // Configuration_deeppoly::tool = "deeppoly";
     bool is_verified = run_deeppoly(net);
-    Configuration_deeppoly::tool = tool_name;
+    // Configuration_deeppoly::tool = tool_name;
     Configuration_deeppoly::is_unmarked_deeppoly = false;
     if(is_verified){
         print_status_string(net, 1, "deeppoly", image_index, 0, start_time);
@@ -88,12 +88,12 @@ int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock:
             print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
             return 0;
         }
-        remove_non_essential_neurons(net);
-        is_verified = run_deeppoly(net);
-        if(is_verified){
-            print_status_string(net, 1, "drefine", image_index, 0, start_time);
-            return 1;
-        }
+        // remove_non_essential_neurons(net);
+        // is_verified = run_deeppoly(net);
+        // if(is_verified){
+        //     print_status_string(net, 1, "drefine", image_index, 0, start_time);
+        //     return 1;
+        // }
 
         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
             run_milp_refine_with_milp_mark(net, image_index, start_time);
