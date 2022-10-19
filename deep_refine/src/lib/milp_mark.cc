@@ -82,7 +82,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
     int status = model.get(GRB_IntAttr_Status);
     std::map<Neuron_t*, double> nt_err_map;
     if(status == GRB_OPTIMAL){
-        std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
+        // std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
         for(size_t i=0; i<start_layer->neurons.size(); i++){
             Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
             GRBVar var = var_vector[var_counter+i];
@@ -92,12 +92,12 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             if(diff > DIFF_TOLERANCE){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
                     is_marked = true;
-                    std::cout<<pred_nt->neuron_index<<", ";
+                    // std::cout<<pred_nt->neuron_index<<", ";
                     nt_err_map[pred_nt] = diff;
                 }
             }
         }
-        std::cout<<std::endl;
+        // std::cout<<std::endl;
         std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
         if(nt_err_map.size() > MAX_NUM_MARKED_NEURONS){
             for(size_t i = 0; i<MAX_NUM_MARKED_NEURONS; i++){
