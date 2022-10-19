@@ -5,17 +5,19 @@
 	\label{fig:motivating}
 \end{figure}
 Consider a neural network in figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
-\affine{} and \relu{} layers, so a total of four layers is shown in figure~\ref{fig:motivating}. 
-Every layer contains two neurons. The neuron $x_8$ has a bias of $1$ and all the other neurons have a bias of $0$. 
+\affine{} and \relu{}, so a total of four layers is shown in figure~\ref{fig:motivating}. 
+Every layer contains two neurons. The neuron $x_8$ has a bias of $1$, and all the other neurons have a bias of $0$. 
 Our goal is to verify for all input $x_1,x_2 \in [-1,1]$ the outputs satisfy $x_7 \leq x_8$. 
-Our approach extends \deeppoly{}~\cite{singh2019abstract}. \deeppoly{} maintains the one upper and one lower constraint
-as well as upper and lower bound for each neuron. For a neuron of the affine layer, the upper and lower constraint is 
+Our approach extends \deeppoly{}~\cite{singh2019abstract}.
+\deeppoly{} maintains one upper and
+one lower constraint and an upper and lower bound for each neuron.
+For a neuron of the affine layer, the upper and lower constraint is 
 the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$.
 For an activation neuron, the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
 which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
 new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
-from the previous layer.%, the back substitute further from the previous layer.
+from the previous layer.
 They continue back substituting until only input layer variables are left.
 The process of back substitution is shown in equation (1). %~\ref{eq:deeppoly}.
 After back substitution, the upper bound of $x_9$ is
@@ -59,8 +61,8 @@ hence, the \deeppoly{} fails to verify the property.
 }  
 
 There are two main reasons for the failure of \deeppoly{}. First, it cannot maintain the complete correlation 
-between the neurons. In this example neurons $x_3$ and $x_4$ has the same expression $x_1+x_2$, so, they always
-get the same value. But in the \deeppoly{} analysis process, it may fail to get the same value. Second, it uses triangle
+between the neurons. In this example, neurons $x_3$ and $x_4$ have the same expression $x_1+x_2$, so they always
+get the same value. However, in the \deeppoly{} analysis process, it may fail to get the same value. Second, it uses triangle
 approximation on \relu{} neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
 as shown in equation (2)%~\ref{eq:conjunction},
@@ -71,8 +73,8 @@ instead of triangle approximation.
 But both solutions increase the problem size exponentially in terms of \relu{} neurons and this results in a huge 
 blowup if we repair every neuron of the network. 
 
-So, the main hurdle towards efficiency is to find the set of important neurons (we call these {\em marked neurons}), 
-and only repair these.  For this we crucially use the satisfying assignment obtained from the \milp{} solver.
+So, the main hurdle toward efficiency is to find the set of important neurons (we call these {\em marked neurons}), 
+and only repair these.  For this, we crucially use the satisfying assignment obtained from the \milp{} solver.
 %When \deeppoly{} fails to verify the network, we use an \milp{} solver to check the satisfiability of equation~\ref{eq:conjunction}. 
 %If it returns \unsat{} it means the property is verified otherwise we get the satisfying assignment of each variable. 
 For instance, a possible satisfying assignment of equation~(2)%\ref{eq:conjunction}
@@ -144,7 +146,7 @@ the blue point becomes equal to the green point. If \maxsat{} returns partial so
 we mark the neurons whose soft constraints are not satisfied. In our example, \maxsat{} returns 
 soft constraints $\{x_5=2\}$, soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
 The blue and black lines are the same for our motivating example since it contains only one \relu{} layer. 
-However, in general, it may or may not same. We are finding the blue line (the closest to the green line) to mark the 
+However, in general, it may or may not be the same. We are finding the blue line (the closest to the green line) to mark the 
 less number of marked neurons. 
 
 
