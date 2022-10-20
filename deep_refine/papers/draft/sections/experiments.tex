@@ -1,17 +1,24 @@
-We have implemented our approach in a prototype and compared it to three types of related approaches (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, (ii) other cegar based approaches, and 
+We have implemented our approach in a prototype and compared it to three types of related approaches 
+(i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, 
+(ii) other cegar based approaches, and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
-(iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating} and 
-\ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, both of which use a set/portfolio of different algorithms and optimizations. The first tool~\alphabeta{} achieved the 1st and \ovaltool{} 3rd rank in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
+(iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
+\ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, 
+and \marabou~\cite{katz2019marabou}. 
+The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. 
+The tool~\alphabeta{}, \ovaltool{}, and \marabou{} achieved the 1st, 3rd, and 5th rank, 
+respectively, 
+in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
 We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.  
 
 \subsection{Benchmarks}
-We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We are using 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in table~\ref{tb:nndetail}.
+We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We are using 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in Table~\ref{tb:nndetail}.
 These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}.  The input and output dimensions of each network are $784$ and $10$, respectively. 
 The authors of \deeppoly{} used projected gradient descent (PGD)~\cite{dong2018boosting}
 and DiffAI~\cite{mirman2018differentiable} for adversarial training. Table \ref{tb:nndetail} contains the defended network i.e.
-trained with adversarial training as well as the undefended network. The last column of table \ref{tb:nndetail} shows how the defended networks were trained.  
+trained with adversarial training, as well as the undefended network. The last column of table \ref{tb:nndetail} shows how the defended networks were trained.  
 
 The predicate $P$ on the input layer is created using the input image $\boldsymbol{im}$ and user-defined parameter $\epsilon$.  We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create  $P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel should not exceed $0$ and $1$, respectively. The predicate $Q$ on the output layer is created using the network's output.     Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$.  One query instance $\langle N,P,Q \rangle$ is created for one network, one image, and one epsilon value.  In our evaluation, we took $11$ different networks, 8 different epsilons, and 100 different images. The 
 total number of instances is $8800$. However, there are 128 instances for which the network's predicted label differs from the image's actual label. We avoided such instances, so there is a total of $8672$ benchmark instances
@@ -92,13 +99,21 @@ It can be seen that our technique outperforms the others in terms of the verifie
 \end{figure}
 
 \paragraph{Comparison with cegar based techniques: }
-\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can see in Figure~\ref{res:milp_with_milp} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
+\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Table~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
 
 
 \paragraph{Comparison with state-of-the-art solvers: }
-The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and use several techniques. The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
+The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly optimized and use several techniques. 
+The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}.
-Figure~\ref{res:milp_with_milp} shows that both tools indeed solve about 1000 (out of 8000) more than we do. However, we found around $180$ benchmarks instances where \alphabeta{} fails, and our tool works. Also, around $190$ benchmarks on which \ovaltool{} fails and our tool works; see Table~\ref{tb:matrix} for more details. In total, we are solving $172$ unique benchmarks where both tools fail to solve. Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. We also note that in terms of total time, both tools take more time than our tool. 
+The authors of \marabou{} implement the technique~\cite{katz2019marabou}. 
+Table~\ref{tb:matrix} shows that both tools indeed solve about 1000 (out of 8672) more than we do. 
+However, we found around $180$ benchmarks instances where \alphabeta{} fails, and our tool works, 
+and around $190$ benchmarks on which \ovaltool{} fails and our tool works. 
+Also, around $655$ benchmarks where \marabou{} fails and our tool works; see Table~\ref{tb:matrix} for more details. 
+In total, we are solving $59$ unique benchmarks where all three tools fail to solve. 
+Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. 
+% We also note that in terms of total time, both tools take more time than our tool. 
 
 \begin{figure}[t]
 %    \centering
@@ -139,9 +154,12 @@ Figure~\ref{res:milp_with_milp} shows that both tools indeed solve about 1000 (o
 \paragraph{Epsilon vs. performance: }
 For sanity checks, we analyzed the effect of perturbation size and the performance of the tools.
 In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
-At $\epsilon=0.005$, the performance of all the tools is almost the same. As the value of epsilon increases, the success rate of the tools drops consistently.
+At $\epsilon=0.005$, the performance of all the tools is almost the same except \cegarnn{} and \marabou{}.
+As the value of epsilon increases, the success rate of the tools drops consistently except \cegarnn{} and \marabou{}.
 Here also, we perform better than the approaches \deeppoly{}, 
-\kpoly{}, \deepsrgr{} and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
+\kpoly{}, \deepsrgr{}, and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
+We are performing better compared to \marabou{} only when $\epsilon$ is less than $0.015$. 
+
 
 
 \paragraph{Number of marked neurons: }

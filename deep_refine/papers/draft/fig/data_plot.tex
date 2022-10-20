@@ -4,21 +4,17 @@
         xlabel={Number of benchmarks},
         ylabel={log(time)},
         width=11cm,
-        height=7cm,
-        xmin=0, xmax=7000,
+        height=6cm,
+        xmin=0, xmax=6000,
         ymin=0, ymax=25,
-        xtick={0,1000,2000,3000,4000,5000,6000,7000},
+        xtick={0,1000,2000,3000,4000,5000,6000},
         ytick={0,5,10,15,20,25},
         legend pos=south east,
-        legend entries=  { \tiny \drefine{}, \tiny \deeppoly{}, \tiny \deepsrgr{}, \tiny \kpoly{}, \tiny \textsc{drefine\_verified}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}, \tiny \marabou{}},
+        legend entries=  {\tiny \deeppoly{}, \tiny \deepsrgr{}, \tiny \kpoly{}, \tiny \textsc{drefine\_verified}},%, \tiny \drefine{}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}, \tiny \marabou{}},
         ymajorgrids=true,
         xmajorgrids=true,
         grid style=dashed,
     ]
-    \addplot[
-        color=blue
-    ] 
-    table {fig/drefine_data.txt};
     
     \addplot[
         color=red
@@ -39,26 +35,31 @@
         color=violet
     ]
     table {fig/drefine_verified_data.txt};
+
+    % \addplot[
+    %     color=blue
+    % ] 
+    % table {fig/drefine_data.txt};
     
-    \addplot[
-        color=purple
-    ]
-    table {fig/alpha_beta_data.txt};
+    % \addplot[
+    %     color=purple
+    % ]
+    % table {fig/alpha_beta_data.txt};
 
-    \addplot[
-        color=brown
-    ]
-    table {fig/oval_data.txt};
+    % \addplot[
+    %     color=brown
+    % ]
+    % table {fig/oval_data.txt};
 
-    \addplot[
-        color=gray
-    ]
-    table {fig/four_class_data.txt};
+    % \addplot[
+    %     color=gray
+    % ]
+    % table {fig/four_class_data.txt};
 
-    \addplot[
-        color=black
-    ]
-    table {fig/marabou_data.txt};
+    % \addplot[
+    %     color=black
+    % ]
+    % table {fig/marabou_data.txt};
 
     \end{axis}
 
