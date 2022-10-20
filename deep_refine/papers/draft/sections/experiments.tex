@@ -7,7 +7,7 @@ We have implemented our approach in a prototype and compared it to three types o
 and \marabou~\cite{katz2019marabou}. 
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. 
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} achieved the 1st, 3rd, and 5th rank, 
-respectively, 
+respectively\footnote{We could not compare with 2nd rank tool \textsc{VeriNet}, since we had difficulties installing its external solver's (\textsc{Xpress}) license. Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, so we skip to compare with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21}, 
 in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 \subsection{Implementation}
@@ -64,6 +64,13 @@ We consider \deeppoly{} because it is at the base of our technique, and the tech
 
 It can be seen that our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and significantly more: $\sim 3700$ for the first two and $\sim 1000$ for the third), except $14$ instances where \kpoly{} succeeds and our tool times out.
 
+\begin{figure}[t]
+    % \centering
+    \input{fig/data_plot.tex}
+    \caption{Cactus plot with most related techniques}
+    \label{res:milp_with_milp}
+\end{figure}
+
 % The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
 % Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
 % Figure~\ref{res:milp_with_milp} shows the comparison with the help of the cactus plot. Our approach performs well 
@@ -91,12 +98,7 @@ It can be seen that our technique outperforms the others in terms of the verifie
 
 
 
-\begin{figure}[t]
-  % \centering
-  \input{fig/data_plot.tex}
-  \caption{Cactus plot with related techniques}
-  \label{res:milp_with_milp}
-\end{figure}
+
 
 \paragraph{Comparison with cegar based techniques: }
 \cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Table~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
@@ -107,7 +109,8 @@ The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly op
 The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}.
 The authors of \marabou{} implement the technique~\cite{katz2019marabou}. 
-Table~\ref{tb:matrix} shows that both tools indeed solve about 1000 (out of 8672) more than we do. 
+Table~\ref{tb:matrix} shows that all three tools indeed solve about 1000 (out of 8672) more than 
+we do\footnote{\alphabeta{} outperforms compared to \marabou{} in VNN-COMP'21, while in our experiment \marabou{} is doing better than \alphabeta{}, a potential reason could be \alphabeta{} uses \textsc{GPU}, while \marabou{} uses \textsc{CPU} in VNN-COMP'21.}. 
 However, we found around $180$ benchmarks instances where \alphabeta{} fails, and our tool works, 
 and around $190$ benchmarks on which \ovaltool{} fails and our tool works. 
 Also, around $655$ benchmarks where \marabou{} fails and our tool works; see Table~\ref{tb:matrix} for more details. 
