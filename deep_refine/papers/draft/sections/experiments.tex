@@ -125,11 +125,16 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
     \label{res:ep:milp_with_milp}
 \end{figure}
 
+% \definecolor{Gray}{gray}{0.6}
+% \definecolor{LightRed}{rgb}{0.6,0,0}
+% \definecolor{Lightgreen}{rgb}{0.88,1,1}
+
+\newcolumntype{g}{>{\columncolor{red}}c}
 
 \begin{table}[t]
   \scriptsize
     \centering
-    \begin{tabular}{|c|c|c|c|c|c|c|c|c||c|}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|g||c|}
         \hline
         \diagbox{\tiny Verified}{\tiny Not verified} & \tiny \textbf{\marabou} & \tiny \textbf{\cegarnn} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
         \hline
@@ -147,10 +152,11 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
         \hline
         \tiny \textbf{\ovaltool} & 902 & 4789 & 1622 & 1466 & 1568 & 31 & \textbf{0} & 1052 & 6189  \\
         \hline
+        \rowcolor{green}
         \tiny \textbf{\drefine} & 655 & 4106 & 694 & 552 & 640 & 180 & 190 & \textbf{0} & 5327 \\
         \hline
     \end{tabular}
-    \caption{Comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails}
+    \caption{Pairwise comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row represents the number of solved benchmark instances by \drefine{} and not by other, the red column represents green's opposite.}
     \label{tb:matrix}
 \end{table}
 
