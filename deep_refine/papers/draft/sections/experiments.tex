@@ -65,7 +65,7 @@ In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deeps
 We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and counter-example. Hence, we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
 
 Our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and in fact around $\sim 700$ more), %\todo{check this number - was written 3700) for \deeppoly{} and \kpoly{} and $\sim 1000$ for \deepsrgr),
-\todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
+% \todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
 except $14$ instances where \kpoly{} succeeds and our tool times out.
 
 \begin{figure}[t]
@@ -129,29 +129,58 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
 
 \newcolumntype{g}{>{\columncolor{red!20}}c}
 
+% \begin{table}[t]
+%   \scriptsize
+%     \centering
+%     \begin{tabular}{|c|c|c|c|c|c|c|c|g||c|}
+%         \hline
+%         \diagbox{\tiny Verified}{\tiny Not verified} & \tiny \textbf{\marabou} & \tiny \textbf{\cegarnn} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
+%         \hline
+%         \tiny \textbf{\marabou} & \textbf{0} & 4741 & 2042 & 1892 & 2006 & 994 & 1005 &  1624 & 6292 \\
+%         \hline
+%         \tiny \textbf{\cegarnn} & 87 & \textbf{0} & 713 & 609 & 687 & 217 & 238 & 417 &  1638 \\ 
+%         \hline
+%         \tiny \textbf{\deeppoly} & 383 & 3708 & \textbf{0} & 0 & 0 & 63 & 66 & 0  & 4633 \\ 
+%         \hline
+%         \tiny \textbf{\kpoly} & 389 & 3760 & 156 & \textbf{0} & 114 & 63 & 66 & 14  & 4789  \\ 
+%         \hline
+%         \tiny \textbf{\deepsrgr} & 401 & 951 & 54 & 2 & \textbf{0} & 63 & 66 & 0  & 4687 \\ 
+%         \hline
+%         \tiny \textbf{\alphabeta} & 944 & 4821 & 1672 & 1516 & 1618 & \textbf{0} & 84 & 1095  & 6242 \\
+%         \hline
+%         \tiny \textbf{\ovaltool} & 902 & 4789 & 1622 & 1466 & 1568 & 31 & \textbf{0} & 1052 & 6189  \\
+%         \hline
+%         \rowcolor{green!20}
+%         \tiny \textbf{\drefine} & 655 & 4106 & 694 & 552 & 640 & 180 & 190 & \textbf{0} & 5327 \\
+%         \hline
+%     \end{tabular}
+%     \caption{Pairwise comparison of tools, e.g. entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
+%     \label{tb:matrix}
+% \end{table}
+
 \begin{table}[t]
   \scriptsize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|c|g||c|}
         \hline
-        \diagbox{\tiny Verified}{\tiny Not verified} & \tiny \textbf{\marabou} & \tiny \textbf{\cegarnn} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
+        \diagbox{\tiny Verified}{\tiny Not verified} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\cegarnn} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\marabou} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
         \hline
-        \tiny \textbf{\marabou} & \textbf{0} & 4741 & 2042 & 1892 & 2006 & 994 & 1005 &  1624 & 6292 \\
+        \tiny \textbf{\deeppoly} & \textbf{0} & 0 & 0 & 3708 & 63 & 66 & 383 &  0 & 4633 \\
         \hline
-        \tiny \textbf{\cegarnn} & 87 & \textbf{0} & 713 & 609 & 687 & 217 & 238 & 417 &  1638 \\ 
+        \tiny \textbf{\kpoly} & 156 & \textbf{0} & 114 & 3760 & 63 & 66 & 389 & 14 &  4789 \\ 
         \hline
-        \tiny \textbf{\deeppoly} & 383 & 3708 & \textbf{0} & 0 & 0 & 63 & 66 & 0  & 4633 \\ 
+        \tiny \textbf{\deepsrgr} & 54 & 2 & \textbf{0} & 3736 & 63 & 66 & 401 & 0  & 4687 \\ 
         \hline
-        \tiny \textbf{\kpoly} & 389 & 3760 & 156 & \textbf{0} & 114 & 63 & 66 & 14  & 4789  \\ 
+        \tiny \textbf{\cegarnn} & 713 & 609 & 687 & \textbf{0} & 217 & 238 & 87 & 417  & 1624  \\ 
         \hline
-        \tiny \textbf{\deepsrgr} & 401 & 951 & 54 & 2 & \textbf{0} & 63 & 66 & 0  & 4687 \\ 
+        \tiny \textbf{\alphabeta} & 1672 & 1516 & 1618 & 4821 & \textbf{0} & 84 & 944 & 1095  & 6242 \\ 
         \hline
-        \tiny \textbf{\alphabeta} & 944 & 4821 & 1672 & 1516 & 1618 & \textbf{0} & 84 & 1095  & 6242 \\
+        \tiny \textbf{\ovaltool} & 1622 & 1466 & 1568 & 4789 & 31 & \textbf{0} & 902 & 1052  & 6189 \\
         \hline
-        \tiny \textbf{\ovaltool} & 902 & 4789 & 1622 & 1466 & 1568 & 31 & \textbf{0} & 1052 & 6189  \\
+        \tiny \textbf{\marabou} & 2042 & 1892 & 2006 & 4741 & 994 & 1005 & \textbf{0} & 1624 & 6292  \\
         \hline
         \rowcolor{green!20}
-        \tiny \textbf{\drefine} & 655 & 4106 & 694 & 552 & 640 & 180 & 190 & \textbf{0} & 5327 \\
+        \tiny \textbf{\drefine} & 694 & 552 & 640 & 4106 & 180 & 190 & 655 & \textbf{0} & 5327 \\
         \hline
     \end{tabular}
     \caption{Pairwise comparison of tools, e.g. entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}

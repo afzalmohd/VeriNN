@@ -10,21 +10,16 @@
         xtick={0,1000,2000,3000,4000,5000,6000},
         ytick={0,5,10,15,20,25},
         legend pos=south east,
-        legend entries=  {\tiny \deeppoly{}, \tiny \deepsrgr{}, \tiny \kpoly{}, \tiny \textsc{drefine\_verified}},%, \tiny \drefine{}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}, \tiny \marabou{}},
+        legend entries=  {\tiny \deeppoly{}, \tiny \kpoly{}, \tiny \deepsrgr{}, \tiny \textsc{drefine\_verified}, \tiny \drefine{}},%, \tiny \drefine{}, \tiny \alphabeta{}, \tiny \ovaltool{}, \tiny \cegarnn{}, \tiny \marabou{}},
         ymajorgrids=true,
         xmajorgrids=true,
         grid style=dashed,
     ]
     
     \addplot[
-        color=red
+        color=cyan
     ] 
     table {fig/deeppoly_data.txt};
-
-    \addplot[
-        color=orange
-    ] 
-    table {fig/deepsrgr_data.txt};
 
     \addplot[
         color=green
@@ -32,14 +27,20 @@
     table {fig/refinepoly_data.txt};
 
     \addplot[
+        color=orange
+    ] 
+    table {fig/deepsrgr_data.txt};
+
+
+    \addplot[
         color=violet
     ]
     table {fig/drefine_verified_data.txt};
 
-    % \addplot[
-    %     color=blue
-    % ] 
-    % table {fig/drefine_data.txt};
+    \addplot[
+        color=blue
+    ] 
+    table {fig/drefine_data.txt};
     
     % \addplot[
     %     color=purple
