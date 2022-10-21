@@ -1,9 +1,8 @@
 \subsection{Proofs of progress and termination}
-
 Our refinement strategy ensures progress, i.e., the spurious counterexample does not
 repeat in the future
 iterations of Algorithm~\ref{algo:main}. Let us suppose the algorithm
-$\textsc{getMarkedNeurons}$ get abstract spurious counterexample
+$\textsc{getMarkedNeurons}$ gets the abstract spurious counterexample
 ${v_0}, {v_1}, ... {v_k}$ and
 returns marked neurons in $i$th iteration.
 The call to $\maxsat{}$ at line 10
@@ -29,11 +28,11 @@ After the step $i$, we use the model to construct $cex$, i.e., $m(x_i) = v'_i$.
   will be $val^{v_0}_{ij}$, which contradicts the earlier inequality.  
 \end{proof}
 
-Furthermore, we also prove that our method always terminates.
+Further, we prove that our method always terminates.
 %
 Theorems \ref{th:progress1} and \ref{th:progress2} imply that in every
 iteration $\textsc{getMarkedNeurons}$
-returns a non empty set of unmarked neurons, which we will now be marked. In worst case the algorithms marked all 
+returns a nonempty set of unmarked neurons, which we will now be marked. In worst case the algorithm marked all 
 the neurons of the network, and encode them in the exact behavior. 
 
 % Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
@@ -64,20 +63,18 @@ ${val_k^{{v_0}}} \models Q$, which is a contradiction.
 \begin{theorem}
   \label{th:progress2}
   In every refinement iteration $\textsc{getMarkedNeurons}$
-  returns the marked neurons, which was not marked in the previous iterations. 
+  returns marked neurons, which were not marked in previous iterations. 
 \end{theorem}
 
 \begin{proof}
-We will show, if a neurons $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not marked again 
-in any iteration greater than $t$.
+We will show that if a neuron $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not be marked again in any iteration greater than $t$.
 Consider an iteration $t' > t$, if we get the marked neurons from layer other
 than $l_i$ then $n_{ij}$ can not be part of it because $n_{ij}$ is in layer $l_i$. 
 Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ iteration. 
 Since we have made $n_{ij}$ exact in line 6 of Algorithm~\ref{algo:refine2},
-its behavior in constraints optimization will be same as the exact \relu{}. 
+its behavior while optimizing constraints will be same as the exact \relu{}. 
 Moreover, $v'_{ij} = val_{ij}^{v_0}$, 
-which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occurs in 
-marked neurons as per the criteria of marked neurons in line 11 of Algorithm~\ref{algo:refine2}.   
+which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occur as a marked neuron as per the criteria of marked neurons in line 11 of Algorithm~\ref{algo:refine2}.   \todo{check last line.}
 \end{proof}
 
 

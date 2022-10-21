@@ -14,7 +14,7 @@ one lower constraint and an upper and lower bound for each neuron.
 For a neuron of the affine layer, the upper and lower constraint is 
 the same, which is the weighted sum of the input neurons i.e. $x_3$'s upper and lower constraint is $x_1+x_2$.
 For an activation neuron, the upper and lower expression is computed using triangle approximation~\cite{singh2019abstract}, 
-which is briefly explained in section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
+which is briefly explained in Section~\ref{sec:deeppoly}. To verify the property $x_7 \leq x_8$, \deeppoly{} creates a 
 new expression $x_9 = x_7 - x_8$ and computes the upper bound of $x_9$. The upper bound of $x_9$ should not be greater
 than $0$. \deeppoly{} computes the upper bound of $x_9$ by back substituting the expression of $x_7$ and $x_8$ 
 from the previous layer.
@@ -65,7 +65,7 @@ between the neurons. In this example, neurons $x_3$ and $x_4$ have the same expr
 get the same value. However, in the \deeppoly{} analysis process, it may fail to get the same value. Second, it uses triangle
 approximation on \relu{} neurons.
 We take the conjunction of upper and lower expressions of each neuron with the negation of the property
-as shown in equation (2)%~\ref{eq:conjunction},
+as shown in equation (2) %~\ref{eq:conjunction},
  and use the \milp{} solver to check satisfiability, thus addressing the first issue.  
 The second issue can be resolved either by splitting the bound at zero of the 
 affine node or by using the exact encoding (eq~\ref{eq:reluexact}) 
@@ -138,7 +138,7 @@ The green and black points are the same for the input layer, i.e., $[1,1]$. On t
 also, the black point $v_1$ is the same as the green point $v'_1$ since the affine layer does not introduce any spurious information. 
 For $l_2$, we try to make $v''_2$ close to $v'_2$, such that $v''_2$ reaches to the $v_3$. We do that by encoding 
 them as soft constraints (i.e.,  $\{x_5=2, x_6=2\}$) 
-while maintaining that the rest of the hard constraints are satisfied (see Equation~\ref{eq:opt1})
+while maintaining that the rest of the hard constraints are satisfied (see equation~\ref{eq:opt1})
 e.g., input points $v_0=v''_0$ and output points $v_3=v''_3$ remain same. 
 We mark the neurons of the layer where the blue line starts diverging from the green line, i.e., $l_2$. 
 The divergence we find by the \maxsat{} query. If \maxsat{} returns all the soft constraints as satisfied, it means
@@ -171,7 +171,7 @@ less number of marked neurons.
 %\textbf{Refinement} \\
 %We have an approach for the refinement named as {\em MILP-based approach}.
 Once we have  $x_6$ as the marked neuron, we use an {\em MILP based approach}, and add the exact encoding of the marked neuron ($x_6$) in addition to the constraints in equation (2) %~\ref{eq:conjunction}
-and check the satisfiability, now it becomes \unsat{}, hence, the property verified (see Eq. equation~\ref{eq:reluexact} for more details).
+and check the satisfiability, now it becomes \unsat{}, hence, the property verified (see equation~\ref{eq:reluexact} for more details).
 %The exact constraint of a $\relu${} neuron is explained in 
 \end{minipage}
 

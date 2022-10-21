@@ -10,16 +10,16 @@ The first line of Algorithm~\ref{algo:main} generates all the abstract constrain
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
   \textbf{Output: } UNSAT or SAT
   \begin{algorithmic}[1]
-    \State $A := deeppoly(N,P)$\Comment{deeppoly generate the abstract constraints}
-    \State marked := \{\}
+    \State $A := \deeppoly{(N,P)}$\Comment{use \deeppoly{} to generate abstract constraints.}
+    \State $marked$ := \{\}
     \While{True}
-      \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$ , A, marked)
+      \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$, $A$, $marked$)
       \If{result = CEX(${v_0}, {v_1} ... {v_k}$)}
         \If{$N({v_0}) \models \lnot Q$}
           \State \textbf{return} Failed(${v_0}$)
         \Else
-        \State markedNt := $\textsc{getMarkedNeurons}$($N$ , $A$, $marked$, ${v_0}, {v_1} ... {v_k}$)
-          \State marked := marked $\union$ markedNt
+        \State $markedNt$ := $\textsc{getMarkedNeurons}$($N$, $A$, $marked$, ${v_0}, {v_1} ... {v_k}$)
+          \State $marked$ := $marked$ $\union$ $markedNt$
         \EndIf
       \Else
         \State \textbf{return} verified
@@ -31,11 +31,11 @@ The first line of Algorithm~\ref{algo:main} generates all the abstract constrain
 \end{algorithm}
 \begin{algorithm}[t]
   \textbf{Name: } $\textsc{isVerified}$ \\
-  \textbf{Input: } Verification query $\langle N,P,Q \rangle$, abstract constraints $A$, and marked $\subseteq ~ N.neurons$ \\
+  \textbf{Input: } Verification query $\langle N,P,Q \rangle$, abstract constraints $A$, $marked \subseteq ~ N.neurons$ \\
   \textbf{Output: } verified or an abstract counterexample. 
   \begin{algorithmic}[1]
     \State $constr := P \land (\Land_{i=1}^k A.lc_i)\land \neg Q$
-    \State $constr := constr \land (\Land_{x \in markedNeurons} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
+    \State $constr := constr \land (\Land_{x \in marked} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
     \State isSat = checkSat(constr)
     \If{isSat}
       \State m := getModel(constr)
@@ -67,7 +67,7 @@ The first line of Algorithm~\ref{algo:main} generates all the abstract constrain
         \If{$newMarked$ is empty}
           \State \textbf{continue}
         \Else
-          \State \textbf{return} newMarked
+          \State \textbf{return} $newMarked$
         \EndIf 
       \EndIf
     \EndFor
@@ -181,16 +181,15 @@ We identify a set of
 marked neurons whose exact encoding will eliminate the counterexample
 in the future analysis.
 %
-
+%
 As we have also defined earlier, let ${val_i^{{v_0}}}$ represent the value vector
 on layer $l_i$, if we execute the neural network on input ${v_0}$.
 %
 Let us say ${v_0}, {v_1}, ... ,{v_k}$ is an abstract spurious counterexample.
-We iterative modify the counterexample such that it becomes more and more
-like ${val_i^{{v_0}}}$.
+We iteratively modify the counterexample such that its values coincides with ${val_i^{{v_0}}}$.
 Initially, ${val_0^{{v_0}}}$ is equal to $v_0$.
 Since we encode the affine layer exactly in $A.lc_i$, the following
-theorem is trivially true.
+theorem follows.
 
 % % 
 % ${v_0}$ is a counterexample if ${val_k^{{v_0}}}$ 
@@ -198,8 +197,7 @@ theorem is trivially true.
 
 \begin{theorem}
   \label{th:marked2}
-  Let us say ${v_0}, {v_1}, ... {v_k}$ is an abstract execution. 
-  If $Type_i = \affine$, ${val_i^{{v_0}}} = {v_i}$ if ${val_{i-1}^{{v_0}}} = {v_{i-1}}$.  
+  Let us say ${v_0}, {v_1}, ... {v_k}$ is an abstract execution. For all $1\leq i\leq k$, if $Type_i = \affine$ and ${val_{i-1}^{{v_0}}} = {v_{i-1}}$, then ${val_i^{{v_0}}} = {v_i}$.
 \end{theorem}
 % \begin{proof}
 %   Since affine layer's constraints are exact.
@@ -213,9 +211,9 @@ We measure closeness by the number of elements of ${v'_2}$ are equal to the
 corresponding element of vector ${val_2^{v_0}}$.
 \begin{enumerate}
 \item If ${v'_2}$ is equal to ${val_2^{v_0}}$ then ${v'_3}$ will also become 
-  equal to ${val_3^{v_0}}$ due to theorem \ref{th:marked2}. 
+  equal to ${val_3^{v_0}}$ due to Theorem \ref{th:marked2}. 
   Now we move on to the next $\relu${} layer $l_4$ and try to find the similar point ${v'_4}$, such that 
-  ${v_0}, {v_1}, {v_2}, {v_3},{v''_4}... {v''_{k-1}},{v_k}$ is an . 
+  ${v_0}, {v_1}, {v_2}, {v_3},{v''_4}... {v''_{k-1}},{v_k}$ is an abstract spurious counterexample. 
   We repeat this process until the following case occurs. 
 \item If at some $i$, we can not make ${v'_i}$ equal to ${val_i^{v_0}}$ then we collect the neurons
   whose values are different in ${v'_i}$ and ${val_i^{v_0}}$. We call them marked neurons.
@@ -235,8 +233,7 @@ The solver will also return a subset $softsatSet$ of the soft constraints.
 At line 10, we check which soft constraints are missing in $softsatSet$.
 The corresponding neurons are added in $newMarked$.
 If $newMarked$ is empty, we have managed to find a spurious
-abstract counterexample from $val^{v_0}_{i}$.
-We need to go to the next layer.
+abstract counterexample from $val^{v_0}_{i}$ and we go to the next layer.
 Otherwise, we return the new set of marked neurons.
 
 %% \begin{figure}

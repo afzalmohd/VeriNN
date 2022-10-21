@@ -1,4 +1,4 @@
-We have implemented our approach in a prototype and compared it to three types of related approaches 
+We have implemented our approach in a prototype and compared it to three types of approaches 
 (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, 
 (ii) other cegar based approaches, and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
@@ -7,30 +7,30 @@ We have implemented our approach in a prototype and compared it to three types o
 and \marabou~\cite{katz2019marabou}. 
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. 
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} achieved the 1st, 3rd, and 5th rank, 
-respectively\footnote{We could not compare with 2nd rank tool \textsc{VeriNet}, since we had difficulties installing its external solver's (\textsc{Xpress}) license. Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, so we skip to compare with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21}, 
+respectively\footnote{We could not compare with 2nd rank tool \textsc{VeriNet}, as we had difficulties with its external solver's (\textsc{Xpress}) license. Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
 in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
+\medskip
+
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
-\subsection{Implementation}
-We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.  
+%\subsection{Implementation}
+\noindent{\bf Implementation.}
+We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.
 
-\subsection{Benchmarks}
-We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We are using 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in Table~\ref{tb:nndetail}.
-These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}.  The input and output dimensions of each network are $784$ and $10$, respectively. 
-The authors of \deeppoly{} used projected gradient descent (PGD)~\cite{dong2018boosting}
+%\subsection{Benchmarks}
+\noindent{\bf Benchmarks.}
+We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We use 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in Table~\ref{tb:nndetail}.
+These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}.  The input and output dimensions of each network are $784$ and $10$, respectively.  The authors of \deeppoly{} used projected gradient descent (PGD)~\cite{dong2018boosting}
 and DiffAI~\cite{mirman2018differentiable} for adversarial training. Table \ref{tb:nndetail} contains the defended network i.e.
-trained with adversarial training, as well as the undefended network. The last column of table \ref{tb:nndetail} shows how the defended networks were trained.  
+trained with adversarial training, as well as the undefended network. The last column of Table \ref{tb:nndetail} shows how the defended networks were trained.  
 
-The predicate $P$ on the input layer is created using the input image $\boldsymbol{im}$ and user-defined parameter $\epsilon$.  We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create  $P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel should not exceed $0$ and $1$, respectively. The predicate $Q$ on the output layer is created using the network's output.     Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$.  One query instance $\langle N,P,Q \rangle$ is created for one network, one image, and one epsilon value.  In our evaluation, we took $11$ different networks, 8 different epsilons, and 100 different images. The 
-total number of instances is $8800$. However, there are 128 instances for which the network's predicted label differs from the image's actual label. We avoided such instances, so there is a total of $8672$ benchmark instances
-under consideration.    Whenever our tool found a counter-example on $\langle N,P,Q \rangle$, it denormalizes it into an image by rounding the float values 
+The predicate $P$ on the input layer is created using the input image $\boldsymbol{im}$ and user-defined parameter $\epsilon$.  We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, then create  $P = \Land_{i=1}^{|l_0|} im(i)-\epsilon \leq x_{0i}\leq im(i)+\epsilon$, such that the lower and upper bound of each pixel should not exceed $0$ and $1$, respectively. The predicate $Q$ on the output layer is created using the network's output.     Suppose the predicted label of $\boldsymbol{im}$ on network $N$ is $y$, then $Q = \Land_{i=1}^{|l_k|} x_{ki} < y$, where $i \neq y$.  One query instance $\langle N,P,Q \rangle$ is created for one network, one image, and one epsilon value.  In our evaluation, we took $11$ different networks, 8 different epsilons, and 100 different images. The total number of instances is $8800$. However, there are 128 instances for which the network's predicted label differs from the image's actual label. We avoided such instances and consider a total of $8672$ benchmark instances.    Whenever our tool found a counter-example on $\langle N,P,Q \rangle$, it denormalizes it into an image by rounding the float values 
 and checks for counter-example by executing $N$ on the denormalized image.
 If a counter-example is found then the tool reports it, otherwise, the tool reports unknown.
 
-
-
 \begin{table}[t]
-    \centering
-    \begin{tabular}{c|c|c|c}
+\centering
+\scalebox{0.8}{
+\begin{tabular}{c|c|c|c}
         \hline
         \textbf{Neural Network} & \textbf{\#hidden layers} & \textbf{\#activation units} & \textbf{Defensive training} \\
         \hline
@@ -47,22 +47,26 @@ If a counter-example is found then the tool reports it, otherwise, the tool repo
         $4\times 1024$ & 3 & 3072 & None  \\
         \hline
     \end{tabular}
+    }
     \caption{Neural networks details}
     \label{tb:nndetail}
 \end{table}
+
 
 \subsection{Results}
 We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
 To make a fair comparison between the tools, we provide only a single \textsc{CPU} for each instance for each tool. 
-We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp}, which compares wrt epsilon, the robustness parameter.
+We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved for the most related techniques (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp}, which compares wrt epsilon, the robustness parameter.
 %represents the verified cases while the column represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the  156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
 
 \paragraph{Comparison with the most related techniques:}
 In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deepsrgr{} to compare with ours. 
-We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and counter-example. We note that we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
+We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and counter-example. Hence, we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
 
-It can be seen that our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and significantly more: $\sim 3700$ for the first two and $\sim 1000$ for the third), except $14$ instances where \kpoly{} succeeds and our tool times out.
+Our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and in fact around $\sim 700$ more), %\todo{check this number - was written 3700) for \deeppoly{} and \kpoly{} and $\sim 1000$ for \deepsrgr),
+\todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
+except $14$ instances where \kpoly{} succeeds and our tool times out.
 
 \begin{figure}[t]
     % \centering
@@ -101,7 +105,7 @@ It can be seen that our technique outperforms the others in terms of the verifie
 
 
 \paragraph{Comparison with cegar based techniques: }
-\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different in comparison to the  \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Table~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
+\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different from \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Table~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. %Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
 
 
 \paragraph{Comparison with state-of-the-art solvers: }
@@ -110,7 +114,7 @@ The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wa
 and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}.
 The authors of \marabou{} implement the technique~\cite{katz2019marabou}. 
 Table~\ref{tb:matrix} shows that all three tools indeed solve about 1000 (out of 8672) more than 
-we do\footnote{\alphabeta{} outperforms compared to \marabou{} in VNN-COMP'21, while in our experiment \marabou{} is doing better than \alphabeta{}, a potential reason could be \alphabeta{} uses \textsc{GPU}, while \marabou{} uses \textsc{CPU} in VNN-COMP'21.}. 
+we do\footnote{\alphabeta{} outperforms \marabou{} in VNN-COMP'21, while in our experiments \marabou{} performs better; potential reasons could be difference in benchmarks and that \alphabeta{} uses \textsc{GPU}, while \marabou{} uses \textsc{CPU} in VNN-COMP'21.}. 
 However, we found around $180$ benchmarks instances where \alphabeta{} fails, and our tool works, 
 and around $190$ benchmarks on which \ovaltool{} fails and our tool works. 
 Also, around $655$ benchmarks where \marabou{} fails and our tool works; see Table~\ref{tb:matrix} for more details. 
@@ -118,18 +122,12 @@ In total, we are solving $59$ unique benchmarks where all three tools fail to so
 Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. 
 % We also note that in terms of total time, both tools take more time than our tool. 
 
-\begin{figure}[t]
-%    \centering
-\input{fig/ep_plot.tex}
-    \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
-    \label{res:ep:milp_with_milp}
-\end{figure}
 
 % \definecolor{Gray}{gray}{0.6}
 % \definecolor{LightRed}{rgb}{0.6,0,0}
 % \definecolor{Lightgreen}{rgb}{0.88,1,1}
 
-\newcolumntype{g}{>{\columncolor{red}}c}
+\newcolumntype{g}{>{\columncolor{red!20}}c}
 
 \begin{table}[t]
   \scriptsize
@@ -152,24 +150,30 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
         \hline
         \tiny \textbf{\ovaltool} & 902 & 4789 & 1622 & 1466 & 1568 & 31 & \textbf{0} & 1052 & 6189  \\
         \hline
-        \rowcolor{green}
+        \rowcolor{green!20}
         \tiny \textbf{\drefine} & 655 & 4106 & 694 & 552 & 640 & 180 & 190 & \textbf{0} & 5327 \\
         \hline
     \end{tabular}
-    \caption{Pairwise comparison of tools, e.g. the entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row represents the number of solved benchmark instances by \drefine{} and not by other, the red column represents green's opposite.}
+    \caption{Pairwise comparison of tools, e.g. entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
     \label{tb:matrix}
 \end{table}
 
 \paragraph{Epsilon vs. performance: }
-For sanity checks, we analyzed the effect of perturbation size and the performance of the tools.
-In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as the size of epsilon values grow from $0.005$ to $0.05$. 
+As a sanity check, we analyzed the effect of perturbation size and the performance of the tools.
+In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as epsilon grows from $0.005$ to $0.05$. 
 At $\epsilon=0.005$, the performance of all the tools is almost the same except \cegarnn{} and \marabou{}.
-As the value of epsilon increases, the success rate of the tools drops consistently except \cegarnn{} and \marabou{}.
-Here also, we perform better than the approaches \deeppoly{}, 
+As epsilon increases, the success rate of tools drops consistently except \cegarnn{} and \marabou{}. Here also, we perform better than \deeppoly{}, 
 \kpoly{}, \deepsrgr{}, and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
 We are performing better compared to \marabou{} only when $\epsilon$ is less than $0.015$. 
 
 
+\begin{figure}[]    \centering
+\scalebox{0.8}{
+  \input{fig/ep_plot.tex}
+  }
+    \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
+    \label{res:ep:milp_with_milp}
+\end{figure}
 
 \paragraph{Number of marked neurons: }
 On average, \drefine{} marks $9.8\%$ of neurons, whenever it needs to refine. 
