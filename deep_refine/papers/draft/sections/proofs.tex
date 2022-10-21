@@ -74,7 +74,7 @@ Consider the case where marked neurons are from the layer $l_i$ in $t'^{th}$ ite
 Since we have made $n_{ij}$ exact in line 6 of Algorithm~\ref{algo:refine2},
 its behavior while optimizing constraints will be same as the exact \relu{}. 
 Moreover, $v'_{ij} = val_{ij}^{v_0}$, 
-which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occur as a marked neuron as per the criteria of marked neurons in line 11 of Algorithm~\ref{algo:refine2}.   \todo{check last line.}
+which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occur as a marked neuron as per the criteria of new marked neurons in line 10 of Algorithm~\ref{algo:refine2}.   %\todo{check last line.}
 \end{proof}
 
 
