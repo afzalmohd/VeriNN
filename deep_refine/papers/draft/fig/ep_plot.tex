@@ -9,20 +9,13 @@
         xtick={0.005,0.01,0.015,0.02,0.025,0.03,0.04,0.05},
         ytick={0,20,40,60,80,100},
         legend pos=north east,
-        legend entries={\tiny \drefine{}, \tiny \textsc{deeppoly}, \tiny \textsc{drefine\_verified}, \tiny \textsc{deep\_srgr}, \tiny \textsc{kpoly}, \tiny \textsc{$\alpha\beta$-crown}, \tiny \textsc{oval}, \tiny \cegarnn{}, \tiny \marabou{}},
+        legend entries={\tiny \textsc{deeppoly}, \tiny \textsc{kpoly}, \tiny \textsc{deep\_srgr}, \tiny \cegarnn{}, \tiny \textsc{$\alpha\beta$-crown}, \tiny \textsc{oval}, \tiny \marabou{}, \tiny \textsc{drefine\_verified}, \tiny \drefine{}},
         ymajorgrids=true,
         grid style=dashed,
     ]
-    \addplot+[
-        color=blue,
-        mark=*,
-    ]
-    coordinates {
-        (0.005,99.72)(0.01,89.39)(0.015,73.98)(0.02,65.03)(0.025,51.84)(0.03,45.01)(0.04,32.38)(0.05,30.9)
-    };
 
     \addplot[
-        color=gray,
+        color=cyan,
         mark=*,
     ]
     coordinates {
@@ -30,11 +23,11 @@
     };
 
     \addplot[
-        color=violet,
+        color=green,
         mark=*,
     ]
     coordinates {
-        (0.005,99.07)(0.01,87.73)(0.015,71.58)(0.02,61.62)(0.025,50.92)(0.03,40.12)(0.04,25.55)(0.05,20.84)
+        (0.005,99.26)(0.01,87.08)(0.015,70.94)(0.02,60.42)(0.025,46.67)(0.03,37.63)(0.04,21.78)(0.05,17.99)
     };
 
     \addplot[
@@ -46,11 +39,11 @@
     };
 
     \addplot[
-        color=green,
+        color=gray,
         mark=*,
     ]
     coordinates {
-        (0.005,99.26)(0.01,87.08)(0.015,70.94)(0.02,60.42)(0.025,46.67)(0.03,37.63)(0.04,21.78)(0.05,17.99)
+        (0.005,17.98)(0.01,18.45)(0.015,19.71)(0.02,19.92)(0.025,21.22)(0.03,19.92)(0.04,17.95)(0.05,16.23)
     };
 
     \addplot[
@@ -70,19 +63,27 @@
     };
 
     \addplot[
-        color=gray,
-        mark=*,
-    ]
-    coordinates {
-        (0.005,17.98)(0.01,18.45)(0.015,19.71)(0.02,19.92)(0.025,21.22)(0.03,19.92)(0.04,17.95)(0.05,16.23)
-    };
-
-    \addplot[
         color=black,
         mark=*,
     ]
     coordinates {
         (0.005,86.27)(0.01,85.63)(0.015,76.15)(0.02,70.34)(0.025,73.20)(0.03,69.06)(0.04,60.31)(0.05,58.37)
+    };
+
+    \addplot[
+        color=violet,
+        mark=*,
+    ]
+    coordinates {
+        (0.005,99.07)(0.01,87.73)(0.015,71.58)(0.02,61.62)(0.025,50.92)(0.03,40.12)(0.04,25.55)(0.05,20.84)
+    };
+
+    \addplot[
+        color=blue,
+        mark=*,
+    ]
+    coordinates {
+        (0.005,99.72)(0.01,89.39)(0.015,73.98)(0.02,65.03)(0.025,51.84)(0.03,45.01)(0.04,32.38)(0.05,30.9)
     };
 
 
