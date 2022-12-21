@@ -18,7 +18,7 @@
 #define NUM_GUROBI_THREAD 2
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
-#define MAX_NUM_MARKED_NEURONS 5
+#define MAX_NUM_MARKED_NEURONS 200
 
 enum drefine_status {Failed, Verified, Unknown};
 
