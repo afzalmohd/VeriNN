@@ -1,6 +1,3 @@
-//#include "../../deeppoly/configuration.hh"
-#include "../../deeppoly/deeppoly_driver.hh"
-#include "../../deeppoly/deeppoly_configuration.hh"
 #include "../../deeppoly/helper.hh"
 #include "../../deeppoly/vnnlib.hh"
 #include "drefine_driver.hh"
@@ -12,6 +9,11 @@
 #include<fstream>
 #include<iostream>
 #include<chrono>
+#include<queue>
+
+size_t ITER_COUNTS = 0; //to count the number cegar iterations
+size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
+size_t NUM_MARKED_NEURONS = 0;
 
 int run_refine_poly(int num_args, char* params[]){
     int is_help = deeppoly_set_params(num_args, params);
@@ -34,10 +36,17 @@ int run_refine_poly(int num_args, char* params[]){
     if(!is_same_label){
         return 0;
     }
-    run_refine_poly_for_one_task(net, start_time);
+    create_input_prop(net);
+    std::queue<Network_t*> work_q;
+    work_q.push(net);
+    drefine_status status = run_refine_poly(work_q, start_time);
+    size_t image_index = Configuration_deeppoly::image_index;
+    std::string tool_name = Configuration_deeppoly::tool;
+    if(status == DEEPPOLY_VERIFIED){
+        tool_name = "deeppoly";
+    }
+    print_status_string(net, status, tool_name, image_index, 0, start_time);
 
-
-    
     return 0;
 }
 
@@ -62,57 +71,197 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     return true;
 }
 
-int run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time){
-    size_t image_index = Configuration_deeppoly::image_index;
-    // bool is_ce = is_ce_cheap_check(net);
-    // if(is_ce){
-    //     std::cout<<"Got counter example!!!"<<std::endl;
-    //     print_status_string(net, 2, "pre-check", image_index, 0, start_time);
-    //     return 0;
-    // }
+drefine_status run_refine_poly(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time){
+    bool verified_by_deeppoly = false;
+    while(!work_q.empty()){
+        Network_t* net = work_q.front();
+        work_q.pop();
+        drefine_status status = run_refine_poly_for_one_task(net);
+        size_t num_marked_nt = num_marked_neurons(net);
+        NUM_MARKED_NEURONS += num_marked_nt;
+        SUB_PROB_COUNTS += 1;
 
-    Configuration_deeppoly::is_unmarked_deeppoly = true;
-    // std::string tool_name = Configuration_deeppoly::tool;
-    // Configuration_deeppoly::tool = "deeppoly";
-    bool is_verified = run_deeppoly(net);
-    // Configuration_deeppoly::tool = tool_name;
-    Configuration_deeppoly::is_unmarked_deeppoly = false;
-    if(is_verified){
-        print_status_string(net, 1, "deeppoly", image_index, 0, start_time);
-        return 1;
+        if(status == DEEPPOLY_VERIFIED && SUB_PROB_COUNTS == 1){
+            verified_by_deeppoly = true;
+        }
+        if(status == VERIFIED || status == DEEPPOLY_VERIFIED){
+            continue;
+        }
+        else if(status == FAILED){
+            return FAILED;
+        }
+        else{ // status is unknown
+            if(Configuration_deeppoly::is_input_split){
+                create_problem_instances(net, work_q);
+            }
+            else{
+                return UNKNOWN;
+            }
+            
+        }
+    }
+    if(verified_by_deeppoly){
+        return DEEPPOLY_VERIFIED;
     }
     else{
-        std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
-        // return 0;
-        if(Configuration_deeppoly::tool == "deeppoly"){
-            print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
-            return 0;
-        }
-        // remove_non_essential_neurons(net);
-        // is_verified = run_deeppoly(net);
-        // if(is_verified){
-        //     print_status_string(net, 1, "drefine", image_index, 0, start_time);
-        //     return 1;
-        // }
-
-        if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
-            run_milp_refine_with_milp_mark(net, image_index, start_time);
-        }
-        else if(!Configuration_deeppoly::is_milp_based_mark && !Configuration_deeppoly::is_milp_based_refine){
-            run_path_split_with_pullback(net, image_index, start_time);
-        }
-        else if(!Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
-            std::cout<<"Pull back with milp based refinement not workable"<<std::endl;
-            return 0;
-        }
-        else if(Configuration_deeppoly::is_milp_based_mark && !Configuration_deeppoly::is_milp_based_refine){
-            std::cout<<"Optimization marked with path spliting not yet implemented"<<std::endl;
-            return 0;
-        }
-        
+        return VERIFIED;
     }
-    return 0;
 }
+
+void set_dims_to_split(Network_t* net){
+    size_t index_with_max_err;
+    double max_val = -INFINITY;
+    for(auto itr = net->index_vs_err.begin(); itr != net->index_vs_err.end(); itr++){
+        if(max_val < itr->second){
+            index_with_max_err = itr->first;
+            max_val = itr->second;
+        }
+    }
+    net->dims_to_split = net->index_map_dims_to_split[index_with_max_err];
+}
+
+void create_problem_instances(Network_t* net, std::queue<Network_t*>& work_q){
+    set_dims_to_split(net);
+    size_t num_dims_to_split = net->dims_to_split.size();
+    size_t a[num_dims_to_split];
+    create_problem_instances_recursive(net, work_q, num_dims_to_split, a, 0);
+}
+
+void create_problem_instances_recursive(Network_t* net, std::queue<Network_t*>& work_q, size_t n, size_t a[], size_t i){
+    if(n == i){
+        create_one_problem_instances_input_split(net, work_q, n, a);
+        return;
+    }
+    a[i] = 0;
+    create_problem_instances_recursive(net, work_q, n, a, i+1);
+
+    a[i] = 1;
+    create_problem_instances_recursive(net, work_q, n, a, i+1);
+}
+
+void create_one_problem_instances_input_split(Network_t* net, std::queue<Network_t*>& work_q, size_t n, size_t a[]){
+    Network_t* net1 = new Network_t();
+    copy_network(net1, net);
+    net1->verified_out_dims = net->verified_out_dims;
+    Layer_t* input_layer = net1->input_layer;
+    size_t j=0;
+    for(size_t i=0; i<input_layer->dims; i++){
+        Neuron_t* nt = input_layer->neurons[i];
+        Neuron_t* old_nt = net->input_layer->neurons[i];
+        nt->lb = old_nt->lb;
+        nt->ub = old_nt->ub;
+        if(is_dim_to_split(i, net->dims_to_split)){
+            double lb = -nt->lb;
+            double ub = nt->ub;
+            double mid = (lb+ub)/2;
+            if(a[j] == 0){
+                nt->ub = mid;
+            }
+            else{
+                nt->lb = -mid;
+            }
+            j++;
+        }
+    }
+    work_q.push(net1);
+}
+
+bool is_dim_to_split(size_t i, std::vector<size_t> dims){
+    for(size_t val : dims){
+        if(i == val){
+            return true;
+        }
+    }
+    return false;
+}
+
+drefine_status run_refine_poly_for_one_task(Network_t* net){
+    bool is_verified = run_deeppoly(net);
+    if(is_verified){
+        return DEEPPOLY_VERIFIED;
+    }
+
+    if(Configuration_deeppoly::tool == "deeppoly"){
+        return UNKNOWN;
+    }
+
+    drefine_status status = run_milp_refine_with_milp_mark_input_split(net);
+    return status;
+}
+
+drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
+    net->counter_class_dim = net->actual_label;
+    size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+    size_t loop_counter = 0;
+    while(loop_counter < loop_upper_bound){
+        bool is_ce = run_milp_mark_with_milp_refine(net);
+        if(is_ce){
+            return FAILED;
+        }
+        else{
+            bool is_image_verified = is_image_verified_by_milp(net);
+            if(is_image_verified){
+               return VERIFIED;
+            }
+        }
+        loop_counter++;
+        ITER_COUNTS += 1;
+    }
+    return UNKNOWN;
+}
+
+// drefine_status run_refine_poly_for_one_task(Network_t* net, std::chrono::_V2::system_clock::time_point start_time){
+//     size_t image_index = Configuration_deeppoly::image_index;
+//     // bool is_ce = is_ce_cheap_check(net);
+//     // if(is_ce){
+//     //     std::cout<<"Got counter example!!!"<<std::endl;
+//     //     print_status_string(net, 2, "pre-check", image_index, 0, start_time);
+//     //     return 0;
+//     // }
+
+//     Configuration_deeppoly::is_unmarked_deeppoly = true;
+//     // std::string tool_name = Configuration_deeppoly::tool;
+//     // Configuration_deeppoly::tool = "deeppoly";
+//     // create_input_prop(net);
+//     bool is_verified = run_deeppoly(net);
+//     // Configuration_deeppoly::tool = tool_name;
+//     Configuration_deeppoly::is_unmarked_deeppoly = false;
+//     if(is_verified){
+//         print_status_string(net, 1, "deeppoly", image_index, 0, start_time);
+//         return VERIFIED;
+//     }
+//     else{
+//         std::cout<<"Image: "<<net->pred_label<<" not verified!\n";
+//         // return 0;
+//         if(Configuration_deeppoly::tool == "deeppoly"){
+//             print_status_string(net, 2, "deeppoly", image_index, 0, start_time);
+//             return UNKNOWN;
+//         }
+//         // remove_non_essential_neurons(net);
+//         // is_verified = run_deeppoly(net);
+//         // if(is_verified){
+//         //     print_status_string(net, 1, "drefine", image_index, 0, start_time);
+//         //     return 1;
+//         // }
+
+//         if(Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
+//             run_milp_refine_with_milp_mark(net, image_index, start_time);
+//         }
+//         else if(!Configuration_deeppoly::is_milp_based_mark && !Configuration_deeppoly::is_milp_based_refine){
+//             run_path_split_with_pullback(net, image_index, start_time);
+//         }
+//         else if(!Configuration_deeppoly::is_milp_based_mark && Configuration_deeppoly::is_milp_based_refine){
+//             std::cout<<"Pull back with milp based refinement not workable"<<std::endl;
+//             return UNKNOWN;
+//         }
+//         else if(Configuration_deeppoly::is_milp_based_mark && !Configuration_deeppoly::is_milp_based_refine){
+//             std::cout<<"Optimization marked with path spliting not yet implemented"<<std::endl;
+//             return UNKNOWN;
+//         }
+        
+//     }
+//     return UNKNOWN;
+// }
 
 std::string get_image_str(std::string& image_path, size_t image_index){
     std::fstream newfile;
@@ -148,11 +297,11 @@ int run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::c
                 std::cout<<"Found counter example!!"<<std::endl;
                 print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
                 is_ce = true;
-                status = Failed;
+                status = FAILED;
             }
             else{ //status unknown
                 print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
-                status = Unknown;
+                status = UNKNOWN;
             }
             break;
         }
@@ -160,14 +309,14 @@ int run_milp_refinement_with_pullback(Network_t* net, size_t image_index, std::c
             is_verified = is_image_verified_by_milp(net);
             if(is_verified){
                 print_status_string(net, 1, "drefine", image_index, loop_counter, start_time);
-                status = Verified;
+                status = VERIFIED;
                 break;
             }
         }
         loop_counter++;
         if(loop_counter >= upper_iter_limit){ //status unknown
             print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
-            status = Unknown;
+            status = UNKNOWN;
             break;
         }
     }
@@ -184,11 +333,11 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
             std::cout<<"Found counter example!!"<<std::endl;
             print_status_string(net, 0, "drefine", image_index, counter, start_time);
             is_ce = true;
-            status = Failed;
+            status = FAILED;
         }
         else{
            print_status_string(net, 2, "drefine", image_index, counter, start_time);
-            status = Unknown;
+            status = UNKNOWN;
         }
     }
     else{
@@ -213,11 +362,11 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
                         std::cout<<"Found counter example!!"<<std::endl;
                         print_status_string(net, 0, "drefine", image_index, counter, start_time);
                         is_ce = true;
-                        status = Failed;
+                        status = FAILED;
                     }
                     else{
                         print_status_string(net, 2, "drefine", image_index, counter, start_time);
-                        status = Unknown;
+                        status = UNKNOWN;
                     }
                     break;
                 }
@@ -229,11 +378,11 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
         }
         if(!is_path_available){
             print_status_string(net, 1, "drefine", image_index, counter, start_time);
-            status = Verified;
+            status = VERIFIED;
         }
         else if(!is_ce){
             print_status_string(net, 2, "drefine", image_index, counter, start_time);
-            status = Unknown;
+            status = UNKNOWN;
         }
     }
 
@@ -251,33 +400,36 @@ int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chro
         bool is_ce = run_milp_mark_with_milp_refine(net);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
-            bool is_real_ce = is_real_ce_mnist_cifar10(net);
-            if(is_real_ce){
-                std::cout<<"Found counter example!!"<<std::endl;
-                print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
-                status = Failed;
-            }
-            else{//unknown
-                print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
-                status = Unknown;
-            }
+            // bool is_real_ce = is_real_ce_mnist_cifar10(net);
+            // if(is_real_ce){
+            //     std::cout<<"Found counter example!!"<<std::endl;
+            //     print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
+            //     status = FAILED;
+            // }
+            // else{//unknown
+            //     print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
+            //     status = UNKNOWN;
+            // }
+            std::cout<<"Found counter example!!"<<std::endl;
+            print_status_string(net, FAILED, "drefine", image_index, loop_counter, start_time);
+            status = FAILED;
             is_bound_exceeded = false;
             break;
         }
         else{
             bool is_image_verified = is_image_verified_by_milp(net);
             if(is_image_verified){
-                print_status_string(net, 1, "drefine", image_index, loop_counter, start_time);
+                print_status_string(net, VERIFIED, "drefine", image_index, loop_counter, start_time);
                 is_bound_exceeded = false;
-                status = Verified;
+                status = VERIFIED;
                 break;
             }
         }
         loop_counter++;
     }
     if(is_bound_exceeded){ //unknown
-        print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
-        status = Unknown;
+        print_status_string(net, UNKNOWN, "drefine", image_index, loop_counter, start_time);
+        status = UNKNOWN;
     }
     return status;
 }
@@ -333,10 +485,10 @@ void write_to_file(std::string& file_path, std::string& s){
 void print_status_string(Network_t* net, size_t tool_status, std::string tool_name, size_t image_index, size_t loop_counter, std::chrono::_V2::system_clock::time_point start_time){
     auto end_time = std::chrono::high_resolution_clock::now();
     std::string status_string;
-    if(tool_status == 0){
+    if(tool_status == FAILED){
         status_string = "failed";
     }
-    else if(tool_status == 1){
+    else if(tool_status == VERIFIED || tool_status == DEEPPOLY_VERIFIED){
         status_string = "verified";
     }
     else{
@@ -345,12 +497,13 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
-    size_t num_marked_nt = num_marked_neurons(net);
+    // size_t num_marked_nt = num_marked_neurons(net);
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(loop_counter)+","+std::to_string(num_marked_nt)+","+std::to_string(duration.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(ITER_COUNTS)+","+std::to_string(NUM_MARKED_NEURONS)+","+std::to_string(duration.count());
     write_to_file(Configuration_deeppoly::result_file, str);
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(ITER_COUNTS)+",num_marked_neurons="+std::to_string(NUM_MARKED_NEURONS)+",total_time="+std::to_string(duration.count());
     std::cout<<str<<std::endl;
 }
 
@@ -561,7 +714,7 @@ void denormalize_image(Network_t* net){
 
 int run_drefine_vnnlib(Network_t* net){
     VnnLib_t* vnn_lib = net->vnn_lib;
-    int status = Verified;
+    int status = VERIFIED;
     size_t loop_counter=0;
     bool is_verified_by_deeppoly = false;
     bool is_verified_by_drefine = false;
@@ -575,7 +728,7 @@ int run_drefine_vnnlib(Network_t* net){
             std::tuple<int, size_t> ret_val = run_milp_refine_with_milp_mark_vnnlib(net);
             int ret = std::get<0>(ret_val);
             loop_counter = std::get<1>(ret_val);
-            if(ret == Failed || ret == Unknown){
+            if(ret == FAILED || ret == UNKNOWN){
                 status = ret;
                 break;
             }
@@ -587,10 +740,10 @@ int run_drefine_vnnlib(Network_t* net){
             is_verified_by_deeppoly = true;
         }
     }
-    if(status == Failed){
+    if(status == FAILED){
         print_status_string(net, 0, "drefine", 0, loop_counter, start_time);
     }
-    else if(status == Unknown){
+    else if(status == UNKNOWN){
         print_status_string(net, 2, "drefine", 0, loop_counter, start_time);
     }
     else{
@@ -600,7 +753,7 @@ int run_drefine_vnnlib(Network_t* net){
         else{
             print_status_string(net, 1, "drefine", 0, loop_counter, start_time);
         }
-        status = Verified;
+        status = VERIFIED;
     }
     return status;
 }
@@ -615,21 +768,21 @@ std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
             is_bound_exceeded = false;
-            status = Failed;
+            status = FAILED;
             break;
         }
         else{
             bool is_verified = is_prp_verified_by_milp(net);
             if(is_verified){
                 is_bound_exceeded = false;
-                status = Verified;
+                status = VERIFIED;
                 break;
             }
         }
         loop_counter++;
     }
     if(is_bound_exceeded){
-        status = Unknown;
+        status = UNKNOWN;
     }
     std::tuple<int, size_t> tup1(status, loop_counter);
     return tup1;
@@ -820,5 +973,67 @@ void remove_non_essential_neurons(Network_t* net){
         if(!layer->is_activation){
             std::cout<<"Layer index: "<<layer->layer_index<<", weight: "<<xt::adapt(layer->w.shape())<<" , bias: "<<xt::adapt(layer->b.shape())<<std::endl;
         }
+    }
+}
+
+void create_input_prop(Network_t* net){
+    Layer_t* layer = net->input_layer;
+    double ep = Configuration_deeppoly::epsilon;
+    for(size_t i=0; i < layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        nt->ub = layer->res[i] + ep;
+        nt->lb = layer->res[i] - ep;
+        if(nt->ub > 1.0){
+            nt->ub = 1.0;
+        }
+        if(nt->lb < 0.0){
+            nt->lb = 0.0;
+        }
+        nt->lb = -nt->lb;
+    }
+    if(Configuration_deeppoly::is_small_ex){
+        for(size_t i=0; i< layer->dims; i++){
+            Neuron_t* nt = layer->neurons[i];
+            nt->ub = 1;
+            nt->lb = 1;//actual is -1
+        }
+    }
+}
+
+void copy_network(Network_t* net1, Network_t* net){
+    net1->numlayers = net->numlayers;
+    net1->input_dim = net->input_dim;
+    net1->actual_label = net->actual_label;
+    net1->pred_label = net->pred_label;
+    net1->stds = net->stds;
+    net1->means = net->means;
+    net1->input_layer = new Layer_t();
+    copy_layer(net1->input_layer, net->input_layer);
+    for(size_t i=0; i<net1->numlayers; i++){
+        Layer_t* layer1 = new Layer_t();
+        copy_layer(layer1, net->layer_vec[i]);
+        net1->layer_vec.push_back(layer1);
+    }
+}
+
+void copy_layer(Layer_t* layer1, Layer_t* layer){
+    layer1->activation = layer->activation;
+    layer1->dims = layer->dims;
+    layer1->is_activation = layer->is_activation;
+    layer1->layer_index = layer->layer_index;
+    layer1->layer_type = layer->layer_type;
+    if(layer1->layer_index == -1){ // input layer
+        layer1->res = layer->res;
+    }
+    else{
+        layer1->b = layer->b;
+        layer1->w = layer->w;
+        layer1->w_shape = layer->w_shape;
+    }
+    for(size_t i=0; i<layer1->dims; i++){
+        Neuron_t* nt = new Neuron_t();
+        nt->neuron_index = i;
+        nt->layer_index = layer1->layer_index;
+        layer1->neurons.push_back(nt);
     }
 }

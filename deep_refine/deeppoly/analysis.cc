@@ -640,6 +640,7 @@ bool is_image_verified(Network_t* net){
                     }
                     else{
                         net->verified_out_dims.push_back(i);
+                        net->index_map_dims_to_split.erase(i);
                     }
                 }
                 else{
@@ -700,9 +701,12 @@ bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_gr
             return true;
         }
     }
+
+    std::cout<<"Expr size: "<<nt->lexpr_b->coeff_sup.size()<<std::endl;
     
     std::cout<<"Deeppoly error with ("<<index1<<", "<<index2<<") :"<<nt->lb<<std::endl;
-
+    std::vector<size_t> dims_to_split = get_max_elems_indexes_vec(nt->lexpr_b->coeff_sup);
+    net->index_map_dims_to_split[index2] = dims_to_split;
     return false;
 }
 
@@ -1168,3 +1172,36 @@ void print_xt_array(xt::xarray<double> x_arr, size_t size){
     std::cout<<std::endl;
 }
 
+std::vector<size_t> get_max_elems_indexes_vec(std::vector<double>& vec){
+    std::vector<size_t> index_vec;
+    std::vector<double> max_vals_vec;
+    for(size_t i=0; i<MAX_INPUT_DIMS_TO_SPLIT; i++){
+        double max_val = -INFINITY;
+        size_t index;
+        bool is_updated = false;
+        for(size_t j=0; j<vec.size(); j++){
+            if(vec[j] > max_val && !is_val_exist_in_vec_double(vec[j], max_vals_vec)){
+                max_val = vec[j];
+                index = j;
+                is_updated = true;
+            }
+        }
+        if(is_updated){
+            index_vec.push_back(index);
+            max_vals_vec.push_back(max_val);
+        }
+    }
+
+    return index_vec;
+}
+
+
+bool is_val_exist_in_vec_double(double val, std::vector<double>& vec){
+    for(double val1 : vec){
+        if(val == val1){
+            return true;
+        }
+    }
+
+    return false;
+}

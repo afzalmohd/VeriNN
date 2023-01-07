@@ -46,6 +46,8 @@ bool is_prop_sat_vnnlib_conj(Network_t* net, Vnnlib_post_cond_t* prop);
 bool is_basic_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond);
 bool is_rel_prop_sat(Network_t* net, Basic_post_cond_t* basic_cond);
 void print_xt_array(xt::xarray<double> x_arr, size_t size);
+std::vector<size_t> get_max_elems_indexes_vec(std::vector<double>& vec);
+bool is_val_exist_in_vec_double(double val, std::vector<double>& vec);
 
 
 #endif

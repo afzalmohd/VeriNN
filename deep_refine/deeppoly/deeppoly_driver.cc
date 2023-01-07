@@ -35,7 +35,7 @@ Network_t* deeppoly_initialize_network(){
 
 void deeppoly_parse_input_image_string(Network_t* net, std::string & image_str){
     parse_image_string_to_xarray_one(net,image_str);
-    create_input_layer_expr(net);
+    // create_input_layer_expr(net);
 }
 
 void deeppoly_reset_network(Network_t* net){

@@ -27,7 +27,7 @@
                 "--tool",
                 "drefine",
                 "--image-index",
-                "14",
+                "1",
                 "--vnnlib-prp-file",
                 "/home/u1411251/Documents/Phd/tools/vnncomp2021/benchmarks/acasxu/prop_6.vnnlib"
             ],

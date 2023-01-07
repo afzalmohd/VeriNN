@@ -4,6 +4,7 @@
 //#include<z3++.h>
 #include<vector>
 #include<math.h>
+#include<map>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xsort.hpp>
 #include <xtensor-blas/xlinalg.hpp>
@@ -136,6 +137,10 @@ class Network_t{
 		double min_denormal = ldexpl(1.0,-1074);
     	double ulp = ldexpl(1.0,-52);
 		VnnLib_t* vnn_lib;
+		std::map<size_t, std::vector<size_t>> index_map_dims_to_split;
+		std::map<size_t, double> index_vs_err;
+		std::vector<size_t> dims_to_split;
+		
 
 		~Network_t(){
 			for(size_t i=0; i<layer_vec.size(); i++){

@@ -131,6 +131,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
         nt_counter->back_prop_ub = nt_counter->back_prop_lb;
         update_sat_vals(net, var_vector);
     }
+    net->index_vs_err[counter_class_index] = -obj_val;
     return false;
 } 
 

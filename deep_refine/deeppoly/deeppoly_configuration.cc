@@ -4,8 +4,8 @@
 namespace Configuration_deeppoly{
     po::options_description desc("Options");
     po::variables_map vm;
-    std::string default_root_path = "/home/u1411251/Documents/Phd/tools/VeriNN/deep_refine";
-    std::string default_net_path = "/home/u1411251/Documents/Phd/tools/networks/tf/mnist/mnist_relu_3_50.tf";
+    std::string default_root_path = "/home/u1411251/Documents/tools/VeriNN/deep_refine";
+    std::string default_net_path = "/home/u1411251/Documents/tools/network/tf/mnist/mnist_relu_3_50.tf";
     std::string default_dataset_path = default_root_path+"/benchmarks/dataset/mnist/mnist_test.csv";
     std::string default_result_file = default_root_path+"/outfiles/result.txt";
     std::string default_dataset = "MNIST";
@@ -28,6 +28,7 @@ namespace Configuration_deeppoly{
     size_t image_index;
     std::string tool;
     std::string vnnlib_prp_file_path;
+    bool is_input_split;
 
     int init_options(int num_of_params, char* params[]){
         try{
@@ -46,6 +47,7 @@ namespace Configuration_deeppoly{
             ("image-index", po::value<size_t>(&image_index)->default_value(1), "Image index to be verify")
             ("tool", po::value<std::string>(&tool)->default_value(default_tool), "tool name drefine/deeppoly")
             ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
+            ("is-input-split", po::value<bool>(&is_input_split)->default_value(true), "run with heuristic input space split")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
@@ -117,6 +119,15 @@ namespace Configuration_deeppoly{
             }
             else{
                 std::cout<<"Is small test case: False" << std::endl;
+            }
+        }
+
+        if(vm.count("is-input-split")){
+            if(vm["is-input-split"].as<bool>()){
+                std::cout<<"Is input split: True"<< std::endl;
+            }
+            else{
+                std::cout<<"Is input split: False"<< std::endl;
             }
         }
 

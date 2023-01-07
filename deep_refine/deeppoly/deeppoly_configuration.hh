@@ -12,15 +12,16 @@
 
 #define IMAGE_DELIMETER ','
 #define NUM_TEST_IMAGES 30
-#define MILP_WITH_MILP_LIMIT 5000
+#define MILP_WITH_MILP_LIMIT 2
 #define PULL_BACK_WITH_MILP_LIMIT 100
 #define PULL_BACK_WITH_PATH_SPLIT 5000
 #define NUM_GUROBI_THREAD 2
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
 #define MAX_NUM_MARKED_NEURONS 200
+#define MAX_INPUT_DIMS_TO_SPLIT 3
 
-enum drefine_status {Failed, Verified, Unknown};
+enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
 
 
@@ -57,6 +58,7 @@ namespace Configuration_deeppoly{
     extern size_t image_index;
     extern std::string tool;
     extern std::string vnnlib_prp_file_path;
+    extern bool is_input_split;
 
 }
 
