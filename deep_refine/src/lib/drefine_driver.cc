@@ -74,6 +74,7 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
 drefine_status run_refine_poly(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time){
     bool verified_by_deeppoly = false;
     while(!work_q.empty()){
+        std::cout<<"work_q size: "<<work_q.size()<<std::endl;
         Network_t* net = work_q.front();
         work_q.pop();
         drefine_status status = run_refine_poly_for_one_task(net);
@@ -123,6 +124,11 @@ void set_dims_to_split(Network_t* net){
 void create_problem_instances(Network_t* net, std::queue<Network_t*>& work_q){
     set_dims_to_split(net);
     size_t num_dims_to_split = net->dims_to_split.size();
+    std::cout<<"Dims to split: ";
+    for(size_t val : net->dims_to_split){
+        std::cout<<val<<" ";
+    }
+    std::cout<<std::endl;
     size_t a[num_dims_to_split];
     create_problem_instances_recursive(net, work_q, num_dims_to_split, a, 0);
 }
@@ -192,6 +198,9 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
 drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+    if(Configuration_deeppoly::is_input_split){
+        loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
+    }
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){
         bool is_ce = run_milp_mark_with_milp_refine(net);
@@ -1003,6 +1012,7 @@ void create_input_prop(Network_t* net){
 void copy_network(Network_t* net1, Network_t* net){
     net1->numlayers = net->numlayers;
     net1->input_dim = net->input_dim;
+    net1->output_dim = net->output_dim;
     net1->actual_label = net->actual_label;
     net1->pred_label = net->pred_label;
     net1->stds = net->stds;
@@ -1013,6 +1023,12 @@ void copy_network(Network_t* net1, Network_t* net){
         Layer_t* layer1 = new Layer_t();
         copy_layer(layer1, net->layer_vec[i]);
         net1->layer_vec.push_back(layer1);
+        if(i==0){
+            layer1->pred_layer = net1->input_layer;
+        }
+        else{
+            layer1->pred_layer = net1->layer_vec[i-1];
+        }
     }
 }
 

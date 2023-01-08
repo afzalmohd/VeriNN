@@ -626,7 +626,7 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
 bool is_image_verified(Network_t* net){
     bool is_verified = true;
     bool is_first= true;
-    net->verified_out_dims.clear();
+    // net->verified_out_dims.clear();
     std::vector<GRBVar> var_vector;
     GRBModel model = create_env_model_constr(net, var_vector);
     for(size_t i=0; i<net->output_dim; i++){
