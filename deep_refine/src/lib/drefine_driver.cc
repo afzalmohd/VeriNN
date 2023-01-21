@@ -39,7 +39,7 @@ int run_refine_poly(int num_args, char* params[]){
     create_input_prop(net);
     std::queue<Network_t*> work_q;
     work_q.push(net);
-    drefine_status status = run_refine_poly(work_q, start_time);
+    drefine_status status = run_refine_poly1(work_q, start_time);
     size_t image_index = Configuration_deeppoly::image_index;
     std::string tool_name = Configuration_deeppoly::tool;
     if(status == DEEPPOLY_VERIFIED){
@@ -71,9 +71,12 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     return true;
 }
 
-drefine_status run_refine_poly(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time){
+drefine_status run_refine_poly1(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time){
     bool verified_by_deeppoly = false;
+    size_t counter = 0;
     while(!work_q.empty()){
+        counter++;
+        std::cout<<"Queue iteration: "<<counter<<std::endl;
         std::cout<<"work_q size: "<<work_q.size()<<std::endl;
         Network_t* net = work_q.front();
         work_q.pop();
@@ -110,6 +113,8 @@ drefine_status run_refine_poly(std::queue<Network_t*>& work_q, std::chrono::_V2:
 }
 
 void set_dims_to_split(Network_t* net){
+    /* 
+    //Taking output dim which has max error
     size_t index_with_max_err;
     double max_val = -INFINITY;
     for(auto itr = net->index_vs_err.begin(); itr != net->index_vs_err.end(); itr++){
@@ -119,17 +124,28 @@ void set_dims_to_split(Network_t* net){
         }
     }
     net->dims_to_split = net->index_map_dims_to_split[index_with_max_err];
+    */
+    net->dims_to_split = net->index_map_dims_to_split[net->counter_class_dim]; //Take dims where fails only
 }
 
 void create_problem_instances(Network_t* net, std::queue<Network_t*>& work_q){
     set_dims_to_split(net);
     size_t num_dims_to_split = net->dims_to_split.size();
-    std::cout<<"Dims to split: ";
-    for(size_t val : net->dims_to_split){
-        std::cout<<val<<" ";
+    // std::cout<<"Dims to split: ";
+    // for(size_t val : net->dims_to_split){
+    //     std::cout<<val<<" ";
+    // }
+    // std::cout<<std::endl;
+    size_t a[num_dims_to_split];
+
+    std::cout<<"Parantes net splitted dims: ";
+    for(size_t i=0; i<net->input_layer->dims; i++){
+        if(is_dim_to_split(i, net->dims_to_split)){
+            Neuron_t* nt = net->input_layer->neurons[i];
+            std::cout<<i<<": ("<<-nt->lb<<","<<nt->ub<<") ";
+        }
     }
     std::cout<<std::endl;
-    size_t a[num_dims_to_split];
     create_problem_instances_recursive(net, work_q, num_dims_to_split, a, 0);
 }
 
@@ -169,6 +185,14 @@ void create_one_problem_instances_input_split(Network_t* net, std::queue<Network
             j++;
         }
     }
+    std::cout<<"Splitted dims: ";
+    for(size_t i=0; i<net1->input_layer->dims; i++){
+        if(is_dim_to_split(i, net->dims_to_split)){
+            Neuron_t* nt = net1->input_layer->neurons[i];
+            std::cout<<i<<": ("<<-nt->lb<<","<<nt->ub<<") ";
+        }
+    }
+    std::cout<<std::endl;
     work_q.push(net1);
 }
 
@@ -196,9 +220,9 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
 }
 
 drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
-    net->counter_class_dim = net->actual_label;
+    // net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
-    if(Configuration_deeppoly::is_input_split){
+    if(Configuration_deeppoly::is_input_split && SUB_PROB_COUNTS < 3){
         loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
     }
     size_t loop_counter = 0;
@@ -398,50 +422,50 @@ int run_path_split_with_pullback(Network_t* net, size_t image_index, std::chrono
     return status;
 }
 
-int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
-    //net->verified_out_dims.clear();
-    int status;
-    net->counter_class_dim = net->actual_label;
-    size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
-    size_t loop_counter = 0;
-    bool is_bound_exceeded = true;
-    while(loop_counter < loop_upper_bound){
-        bool is_ce = run_milp_mark_with_milp_refine(net);
-        std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
-        if(is_ce){
-            // bool is_real_ce = is_real_ce_mnist_cifar10(net);
-            // if(is_real_ce){
-            //     std::cout<<"Found counter example!!"<<std::endl;
-            //     print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
-            //     status = FAILED;
-            // }
-            // else{//unknown
-            //     print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
-            //     status = UNKNOWN;
-            // }
-            std::cout<<"Found counter example!!"<<std::endl;
-            print_status_string(net, FAILED, "drefine", image_index, loop_counter, start_time);
-            status = FAILED;
-            is_bound_exceeded = false;
-            break;
-        }
-        else{
-            bool is_image_verified = is_image_verified_by_milp(net);
-            if(is_image_verified){
-                print_status_string(net, VERIFIED, "drefine", image_index, loop_counter, start_time);
-                is_bound_exceeded = false;
-                status = VERIFIED;
-                break;
-            }
-        }
-        loop_counter++;
-    }
-    if(is_bound_exceeded){ //unknown
-        print_status_string(net, UNKNOWN, "drefine", image_index, loop_counter, start_time);
-        status = UNKNOWN;
-    }
-    return status;
-}
+// int run_milp_refine_with_milp_mark(Network_t* net, size_t image_index, std::chrono::_V2::system_clock::time_point start_time){
+//     //net->verified_out_dims.clear();
+//     int status;
+//     net->counter_class_dim = net->actual_label;
+//     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+//     size_t loop_counter = 0;
+//     bool is_bound_exceeded = true;
+//     while(loop_counter < loop_upper_bound){
+//         bool is_ce = run_milp_mark_with_milp_refine(net);
+//         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
+//         if(is_ce){
+//             // bool is_real_ce = is_real_ce_mnist_cifar10(net);
+//             // if(is_real_ce){
+//             //     std::cout<<"Found counter example!!"<<std::endl;
+//             //     print_status_string(net, 0, "drefine", image_index, loop_counter, start_time);
+//             //     status = FAILED;
+//             // }
+//             // else{//unknown
+//             //     print_status_string(net, 2, "drefine", image_index, loop_counter, start_time);
+//             //     status = UNKNOWN;
+//             // }
+//             std::cout<<"Found counter example!!"<<std::endl;
+//             print_status_string(net, FAILED, "drefine", image_index, loop_counter, start_time);
+//             status = FAILED;
+//             is_bound_exceeded = false;
+//             break;
+//         }
+//         else{
+//             bool is_image_verified = is_image_verified_by_milp(net);
+//             if(is_image_verified){
+//                 print_status_string(net, VERIFIED, "drefine", image_index, loop_counter, start_time);
+//                 is_bound_exceeded = false;
+//                 status = VERIFIED;
+//                 break;
+//             }
+//         }
+//         loop_counter++;
+//     }
+//     if(is_bound_exceeded){ //unknown
+//         print_status_string(net, UNKNOWN, "drefine", image_index, loop_counter, start_time);
+//         status = UNKNOWN;
+//     }
+//     return status;
+// }
 
 void create_ce_and_run_nn(Network_t* net){
     xt::xarray<double> res;

@@ -86,7 +86,8 @@
         "semaphore": "cpp",
         "span": "cpp",
         "stop_token": "cpp",
-        "syncstream": "cpp"
+        "syncstream": "cpp",
+        "stack": "cpp"
     },
     "cmake.configureOnOpen": false
 }

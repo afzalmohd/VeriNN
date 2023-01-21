@@ -242,12 +242,12 @@ void create_satvals_to_image(Layer_t* layer){
     layer->res = xt::adapt(vec,shape);
 }
 
-void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
-    size_t var_counter = curr_layer->pred_layer->dims;
-    int numlayer = net->layer_vec.size();
-    for(int i=curr_layer->layer_index; i<numlayer-1; i++){
-        var_counter += net->layer_vec[i]->dims;
-    }
-    GRBLinExpr grb_expr = var_vector[var_counter + net->counter_class_dim] - var_vector[var_counter + net->actual_label];
-    model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
-}
+// void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
+//     size_t var_counter = curr_layer->pred_layer->dims;
+//     int numlayer = net->layer_vec.size();
+//     for(int i=curr_layer->layer_index; i<numlayer-1; i++){
+//         var_counter += net->layer_vec[i]->dims;
+//     }
+//     GRBLinExpr grb_expr = var_vector[var_counter + net->counter_class_dim] - var_vector[var_counter + net->actual_label];
+//     model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
+// }

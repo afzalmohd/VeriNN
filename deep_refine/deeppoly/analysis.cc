@@ -627,28 +627,45 @@ bool is_image_verified(Network_t* net){
     bool is_verified = true;
     bool is_first= true;
     // net->verified_out_dims.clear();
+    std::cout<<"Verified dims: ";
+    for(size_t val : net->verified_out_dims){
+        std::cout<<val<<" ";
+    }
+    std::cout<<std::endl;
     std::vector<GRBVar> var_vector;
     GRBModel model = create_env_model_constr(net, var_vector);
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
-            if(!is_greater(net, net->actual_label, i, true)){
-                if(Configuration_deeppoly::tool == "drefine"){
-                    if(!verify_by_milp(net, model, var_vector, i, is_first)){
-                        //return false;
-                        is_first = false;
-                        is_verified = false;
-                    }
-                    else{
-                        net->verified_out_dims.push_back(i);
-                        net->index_map_dims_to_split.erase(i);
-                    }
-                }
-                else{
-                    return false;
+            bool is_already_verified = false;
+            for(size_t val : net->verified_out_dims){
+                if(val == i){
+                    is_already_verified = true;
                 }
             }
-            else if(Configuration_deeppoly::tool == "drefine"){
-                net->verified_out_dims.push_back(i);
+            if(!is_already_verified){
+                if(!is_greater(net, net->actual_label, i, true)){
+                    if(Configuration_deeppoly::tool == "drefine"){
+                        if(!verify_by_milp(net, model, var_vector, i, is_first)){
+                            //return false;
+                            if(is_first){
+                                net->counter_class_dim = i;
+                            }
+                            is_first = false;
+                            is_verified = false;
+                        }
+                        else{
+                            net->verified_out_dims.push_back(i);
+                            net->index_map_dims_to_split.erase(i);
+                        }
+                    }
+                    else{
+                        net->counter_class_dim = i;
+                        return false;
+                    }
+                }
+                else if(Configuration_deeppoly::tool == "drefine"){
+                    net->verified_out_dims.push_back(i);
+                }
             }
         }
     }
@@ -702,10 +719,22 @@ bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_gr
         }
     }
 
-    std::cout<<"Expr size: "<<nt->lexpr_b->coeff_sup.size()<<std::endl;
+    // std::cout<<"Expr size: "<<nt->lexpr_b->coeff_sup.size()<<std::endl;
     
     std::cout<<"Deeppoly error with ("<<index1<<", "<<index2<<") :"<<nt->lb<<std::endl;
-    std::vector<size_t> dims_to_split = get_max_elems_indexes_vec(nt->lexpr_b->coeff_sup);
+    std::vector<size_t> dims_to_split = get_max_elems_indexes_vec(net, nt->lexpr_b->coeff_sup);
+    // std::cout<<"Dims: ";
+    // for(size_t val : dims_to_split){
+    //     std::cout<<val<<" ";
+    // }
+    // std::cout<<std::endl;
+
+    // std::cout<<"Coeffs values: ";
+    // for(size_t val : dims_to_split){
+    //     std::cout<<nt->lexpr_b->coeff_sup[val]<<" ";
+    // }
+    // std::cout<<std::endl;
+
     net->index_map_dims_to_split[index2] = dims_to_split;
     return false;
 }
@@ -1172,16 +1201,22 @@ void print_xt_array(xt::xarray<double> x_arr, size_t size){
     std::cout<<std::endl;
 }
 
-std::vector<size_t> get_max_elems_indexes_vec(std::vector<double>& vec){
+std::vector<size_t> get_max_elems_indexes_vec(Network_t* net, std::vector<double>& vec){
     std::vector<size_t> index_vec;
     std::vector<double> max_vals_vec;
+    Layer_t* input_layer = net->input_layer;
     for(size_t i=0; i<MAX_INPUT_DIMS_TO_SPLIT; i++){
         double max_val = -INFINITY;
         size_t index;
         bool is_updated = false;
         for(size_t j=0; j<vec.size(); j++){
-            if(vec[j] > max_val && !is_val_exist_in_vec_double(vec[j], max_vals_vec)){
-                max_val = vec[j];
+            double val = abs(vec[j]);
+            Neuron_t* nt = input_layer->neurons[j];
+            double lb = -nt->lb;
+            double delta = nt->ub - lb;
+            val = delta*val;
+            if(val > max_val && !is_val_exist_in_vec_double(val, max_vals_vec)){
+                max_val = val;
                 index = j;
                 is_updated = true;
             }
