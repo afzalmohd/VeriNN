@@ -21,25 +21,32 @@ int run_refine_poly(int num_args, char* params[]){
         return 1;
     }
 
+    Network_t* net;
+    std::chrono::_V2::system_clock::time_point start_time;
+    drefine_status status;
+    
     if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         VnnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
-        Network_t* net = deeppoly_initialize_network();
+        net = deeppoly_initialize_network();
         net->vnn_lib = verinn_lib;
-        int status = run_drefine_vnnlib(net);
-        return status;
+        start_time =  std::chrono::high_resolution_clock::now();
+        status = run_drefine_vnnlib(net);
+        // return status;
     }
-    Network_t* net = deeppoly_initialize_network();
-    set_stds_means(net);
-
-    auto start_time =  std::chrono::high_resolution_clock::now();
-    bool is_same_label = is_actual_and_pred_label_same(net, Configuration_deeppoly::image_index);
-    if(!is_same_label){
-        return 0;
+    else{
+        net = deeppoly_initialize_network();
+        set_stds_means(net);
+        start_time =  std::chrono::high_resolution_clock::now();
+        bool is_same_label = is_actual_and_pred_label_same(net, Configuration_deeppoly::image_index);
+        if(!is_same_label){
+            return 0;
+        }
+        create_input_prop(net);
+        std::queue<Network_t*> work_q;
+        work_q.push(net);
+        status = run_refine_poly1(work_q);
     }
-    create_input_prop(net);
-    std::queue<Network_t*> work_q;
-    work_q.push(net);
-    drefine_status status = run_refine_poly1(work_q, start_time);
+      
     size_t image_index = Configuration_deeppoly::image_index;
     std::string tool_name = Configuration_deeppoly::tool;
     if(status == DEEPPOLY_VERIFIED){
@@ -71,7 +78,7 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     return true;
 }
 
-drefine_status run_refine_poly1(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time){
+drefine_status run_refine_poly1(std::queue<Network_t*>& work_q){
     bool verified_by_deeppoly = false;
     size_t counter = 0;
     while(!work_q.empty()){
@@ -112,6 +119,15 @@ drefine_status run_refine_poly1(std::queue<Network_t*>& work_q, std::chrono::_V2
     }
 }
 
+bool is_val_exist_in_vec_size_t(size_t val, std::vector<size_t>& vec){
+    for(size_t v : vec){
+        if(v == val){
+            return true;
+        }
+    }
+    return false;
+}
+
 void set_dims_to_split(Network_t* net){
     /* 
     //Taking output dim which has max error
@@ -126,11 +142,33 @@ void set_dims_to_split(Network_t* net){
     net->dims_to_split = net->index_map_dims_to_split[index_with_max_err];
     */
     net->dims_to_split = net->index_map_dims_to_split[net->counter_class_dim]; //Take dims where fails only
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        Layer_t* input_layer = net->input_layer;
+        std::vector<size_t> index_vec;
+        for(size_t i=0; i<MAX_INPUT_DIMS_TO_SPLIT; i++){
+            double max_val = -INFINITY;
+            size_t max_val_index;
+            for(size_t j=0; j<input_layer->dims; j++){
+                Neuron_t* nt = input_layer->neurons[j];
+                double lb = -nt->lb;
+                double delta = nt->ub - lb;
+                if(max_val <= delta && !is_val_exist_in_vec_size_t(j, index_vec)){
+                    max_val_index = j;
+                    max_val = delta;
+                }
+            }
+            index_vec.push_back(max_val_index);
+        }
+        net->dims_to_split = index_vec;
+    }
 }
 
 void create_problem_instances(Network_t* net, std::queue<Network_t*>& work_q){
     set_dims_to_split(net);
     size_t num_dims_to_split = net->dims_to_split.size();
+    if(num_dims_to_split <= 0){
+        return;
+    }
     // std::cout<<"Dims to split: ";
     // for(size_t val : net->dims_to_split){
     //     std::cout<<val<<" ";
@@ -214,8 +252,13 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
     if(Configuration_deeppoly::tool == "deeppoly"){
         return UNKNOWN;
     }
-
-    drefine_status status = run_milp_refine_with_milp_mark_input_split(net);
+    drefine_status status;
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        status = run_milp_refine_with_milp_mark_vnnlib(net);
+    }
+    else{
+        status = run_milp_refine_with_milp_mark_input_split(net);
+    }
     return status;
 }
 
@@ -745,55 +788,50 @@ void denormalize_image(Network_t* net){
     }
 }
 
-int run_drefine_vnnlib(Network_t* net){
+// drefine_status run_milp_refine_with_milp_mark_vnnlib_input_split(Network_t* net){
+//     std::queue<Network_t*> work_q;
+//     work_q.push(net);
+//     drefine_status status = run_refine_poly1(work_q);
+//     return status;
+// }
+
+drefine_status run_drefine_vnnlib(Network_t* net){
     VnnLib_t* vnn_lib = net->vnn_lib;
-    int status = VERIFIED;
-    size_t loop_counter=0;
-    bool is_verified_by_deeppoly = false;
+    drefine_status status = VERIFIED;
+    // bool is_verified_by_deeppoly = false;
     bool is_verified_by_drefine = false;
-    auto start_time =  std::chrono::high_resolution_clock::now();
     for(Basic_pre_cond_t* pre_cond : vnn_lib->pre_cond_vec){
-        is_verified_by_deeppoly = false;
         vnn_lib->out_prp->verified_sub_prp.clear();
         create_input_property_vnnlib(net, pre_cond);
-        bool is_verified = run_deeppoly(net);
-        if(!is_verified){
-            std::tuple<int, size_t> ret_val = run_milp_refine_with_milp_mark_vnnlib(net);
-            int ret = std::get<0>(ret_val);
-            loop_counter = std::get<1>(ret_val);
-            if(ret == FAILED || ret == UNKNOWN){
-                status = ret;
-                break;
-            }
-            else{
-                is_verified_by_drefine = true;
-            }
+        std::queue<Network_t*> work_q;
+        work_q.push(net);
+        status = run_refine_poly1(work_q);
+        if(status == FAILED || status == UNKNOWN){
+            break;
         }
-        else if(!is_verified_by_drefine){
-            is_verified_by_deeppoly = true;
+        else if(status == VERIFIED){
+            is_verified_by_drefine = true;
         }
     }
-    if(status == FAILED){
-        print_status_string(net, 0, "drefine", 0, loop_counter, start_time);
-    }
-    else if(status == UNKNOWN){
-        print_status_string(net, 2, "drefine", 0, loop_counter, start_time);
-    }
-    else{
-        if(is_verified_by_deeppoly){
-            print_status_string(net, 1, "deeppoly", 0, loop_counter, start_time);
+    if(status == VERIFIED || status == DEEPPOLY_VERIFIED){
+        if(is_verified_by_drefine){
+            return VERIFIED;
         }
         else{
-            print_status_string(net, 1, "drefine", 0, loop_counter, start_time);
+            return DEEPPOLY_VERIFIED;
         }
-        status = VERIFIED;
     }
     return status;
 }
 
-std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
-    int status;
+drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
+    drefine_status status;
+
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+    if(Configuration_deeppoly::is_input_split){
+        loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
+    }
+
     size_t loop_counter = 1;
     bool is_bound_exceeded = true;
     while(loop_counter < loop_upper_bound){
@@ -813,12 +851,13 @@ std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
             }
         }
         loop_counter++;
+        ITER_COUNTS += 1;
     }
     if(is_bound_exceeded){
         status = UNKNOWN;
     }
-    std::tuple<int, size_t> tup1(status, loop_counter);
-    return tup1;
+    // std::tuple<int, size_t> tup1(status, loop_counter);
+    return status;
 }
 
 double get_random_val(double low, double high){
@@ -1041,6 +1080,7 @@ void copy_network(Network_t* net1, Network_t* net){
     net1->pred_label = net->pred_label;
     net1->stds = net->stds;
     net1->means = net->means;
+    net1->vnn_lib = net->vnn_lib;
     net1->input_layer = new Layer_t();
     copy_layer(net1->input_layer, net->input_layer);
     for(size_t i=0; i<net1->numlayers; i++){

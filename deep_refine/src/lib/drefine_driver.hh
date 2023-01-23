@@ -24,14 +24,14 @@ void set_stds_means(Network_t* net);
 void normalize_input_image(Network_t* net); //use for the first time
 void normalize_image(Network_t* net); //use in between of the execution of the tool
 void denormalize_image(Network_t* net);
-int run_drefine_vnnlib(Network_t* net);
-std::tuple<int, size_t> run_milp_refine_with_milp_mark_vnnlib(Network_t* net);
+drefine_status run_drefine_vnnlib(Network_t* net);
+drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net);
 size_t num_marked_neurons(Network_t* net);
 void remove_non_essential_neurons(Network_t* net);
 void create_input_prop(Network_t* net);
 void copy_network(Network_t* net1, Network_t* net);
 void copy_layer(Layer_t* layer1, Layer_t* layer);
-drefine_status run_refine_poly1(std::queue<Network_t*>& work_q, std::chrono::_V2::system_clock::time_point start_time);
+drefine_status run_refine_poly1(std::queue<Network_t*>& work_q);
 void create_problem_instances(Network_t* net, std::queue<Network_t*>& work_q);
 void create_problem_instances_recursive(Network_t* net, std::queue<Network_t*>& work_q, size_t n, size_t a[], size_t i);
 void create_one_problem_instances_input_split(Network_t* net, std::queue<Network_t*>& work_q, size_t n, size_t a[]);
