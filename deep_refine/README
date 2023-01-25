@@ -1,4 +1,4 @@
-To run and build the tool got to directory VeriNN/deep_refine
+To run and build the tool go to directory VeriNN/deep_refine
 
 Instructions to build the tool:
     Install blas and lapack: 
