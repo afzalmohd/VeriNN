@@ -10,11 +10,11 @@ Instructions to build the tool:
         
         
 Instructions to run the tool:
-    1. Download the benchmarks from  https://drive.google.com/drive/folders/1aV6A8X1naFioCzcamKY3MBX87H_F4uVh?usp=sharing
+    1. Download the network from  https://drive.google.com/drive/folders/1aV6A8X1naFioCzcamKY3MBX87H_F4uVh?usp=sharing
     2. run ./drefine --help
     
 Sample command: 
-    ./drefine --network .../tf/mnist/mnist_relu_3_50.tf --dataset-file benchmarks/dataset/mnist/mnist_test.csv --result-file res.txt 
+    ./drefine --network ..path../tf/mnist/mnist_relu_3_50.tf --dataset-file benchmarks/dataset/mnist/mnist_test.csv --result-file res.txt 
     
 To run tool on VNNCOMP benchmarks please follow the following sample command: 
     1. First convert the network onnx to tf by using converter/onnx2tf.py script. 
