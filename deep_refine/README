@@ -14,7 +14,7 @@ Instructions to run the tool:
     2. run ./drefine --help
     
 Sample command: 
-    ./drefine --network ..path../tf/mnist/mnist_relu_3_50.tf --dataset-file benchmarks/dataset/mnist/mnist_test.csv --result-file res.txt 
+    ./drefine --network .../tf/mnist/mnist_relu_3_50.tf --dataset-file benchmarks/dataset/mnist/mnist_test.csv --result-file res.txt 
     
 To run tool on VNNCOMP benchmarks please follow the following sample command: 
     1. First convert the network onnx to tf by using converter/onnx2tf.py script. 
