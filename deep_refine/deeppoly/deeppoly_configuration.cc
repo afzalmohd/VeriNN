@@ -47,7 +47,7 @@ namespace Configuration_deeppoly{
             ("image-index", po::value<size_t>(&image_index)->default_value(1), "Image index to be verify")
             ("tool", po::value<std::string>(&tool)->default_value(default_tool), "tool name drefine/deeppoly")
             ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
-            ("is-input-split", po::value<bool>(&is_input_split)->default_value(true), "run with heuristic input space split")
+            ("is-input-split", po::value<bool>(&is_input_split)->default_value(false), "run with heuristic input space split")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
