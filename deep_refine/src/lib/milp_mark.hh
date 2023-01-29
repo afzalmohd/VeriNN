@@ -4,6 +4,7 @@
 #include "gurobi_c++.h"
 
 bool run_milp_mark_with_milp_refine(Network_t* net);
+bool mark_neurons_with_light_analysis(Network_t* net);
 bool is_layer_marked(Network_t* net, Layer_t* start_layer);
 void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 void creating_vars_with_constant_vars(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t start_layer_index);

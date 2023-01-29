@@ -32,6 +32,42 @@ bool run_milp_mark_with_milp_refine(Network_t* net){
     return false;
 }
 
+bool mark_neurons_with_light_analysis(Network_t* net){
+    bool is_ce = is_sat_val_ce(net);
+    if(is_ce){
+        return true;
+    }
+
+    for(size_t i=0; i<MAX_NUM_MARKED_NEURONS; i++){
+        double max_val = -INFINITY;
+        size_t marked_layer_idx;
+        size_t marked_nt_idx;
+        for(size_t j=0; j<net->numlayers; j++){
+            Layer_t* layer = net->layer_vec[j];
+            if(layer->is_activation){
+                for(size_t k=0; k<layer->dims; k++){
+                    Neuron_t* nt = layer->neurons[k];
+                    Neuron_t* pred_nt = layer->pred_layer->neurons[k];
+                    double diff = abs(nt->sat_val - layer->res[k]);
+                    if(diff > max_val && diff != 0 && (!pred_nt->is_marked)){
+                        max_val = diff;
+                        marked_layer_idx = j;
+                        marked_nt_idx = k;
+                    }
+                }
+            }
+        }
+        if(max_val != -INFINITY){
+            Layer_t* marked_layer = net->layer_vec[marked_layer_idx];
+            marked_layer->pred_layer->is_marked = true;
+            marked_layer->pred_layer->neurons[marked_nt_idx]->is_marked = true;
+            std::cout<<"Layer index, neuron_index, diff: ("<<marked_layer_idx-1<<","<<marked_nt_idx<<","<<max_val<<")"<<std::endl;
+        }
+    }
+
+    return false;
+}
+
 Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m){
     assert(m.size() > 0 && "Map is empty");
     std::map<Neuron_t*, double>::iterator itr;

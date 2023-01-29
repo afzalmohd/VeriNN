@@ -270,7 +270,13 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     }
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){
-        bool is_ce = run_milp_mark_with_milp_refine(net);
+        bool is_ce;
+        if(IS_LIGHT_WEIGHT_MARKED_ANALYSIS){
+            is_ce = mark_neurons_with_light_analysis(net);
+        }
+        else{
+            is_ce = run_milp_mark_with_milp_refine(net);
+        }
         if(is_ce){
             return FAILED;
         }
