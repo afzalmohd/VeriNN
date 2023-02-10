@@ -41,6 +41,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
+        return 0;
         create_input_prop(net);
         std::queue<Network_t*> work_q;
         work_q.push(net);
@@ -61,6 +62,7 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     std::cout<<"Image index: "<<image_index<<std::endl;
     std::string image_str = get_image_str(Configuration_deeppoly::dataset_path, image_index);
     deeppoly_parse_input_image_string(net, image_str);
+    // normalize_image(net);
     normalize_input_image(net);
     net->pred_label = execute_network(net);
     for(size_t i=0; i<net->output_dim; i++){
@@ -729,6 +731,19 @@ void normalize_input_image(Network_t* net){
             net->input_layer->res[i+2048] = temp[count];
             count += 1;
         }
+
+        // count = 0;
+        // for(size_t i=0; i<3072; i++){
+        //     if(count < 1024){
+        //         net->input_layer->res[i] = (im[i] - means[0])/stds[0];
+        //     }
+        //     else if(count >= 1024 && count < 2048){
+        //         net->input_layer->res[i] = (im[i] - means[1])/stds[1];
+        //     }
+        //     else{
+        //         net->input_layer->res[i] = (im[i] - means[2])/stds[2];
+        //     }
+        // }
     }
     else if(dataset == "ACASXU"){
         for(size_t i=0; i<means.size(); i++){
