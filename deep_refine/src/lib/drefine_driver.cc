@@ -41,7 +41,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
-        return 0;
+        // return 0;
         create_input_prop(net);
         std::queue<Network_t*> work_q;
         work_q.push(net);
