@@ -12,6 +12,7 @@ void create_constant_vars_satval_layer(Network_t* net, Layer_t* layer, GRBModel&
 void create_relu_constr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 bool is_sat_val_ce(Network_t* net);
 void create_satvals_to_image(Layer_t* layer);
+void get_images_from_satval(xt::xarray<double>& res, Layer_t* layer);
 // void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer);
 
 #endif

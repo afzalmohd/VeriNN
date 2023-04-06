@@ -41,7 +41,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
-        return 0;
+        // return 0;
         create_input_prop(net);
         std::queue<Network_t*> work_q;
         work_q.push(net);
@@ -270,6 +270,8 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     if(Configuration_deeppoly::is_input_split && SUB_PROB_COUNTS < 3){
         loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
     }
+    bool generate_data = true;
+    xt::xarray<double> prev_input_point = net->input_layer->res;
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){
         bool is_ce;
@@ -280,9 +282,13 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             is_ce = run_milp_mark_with_milp_refine(net);
         }
         if(is_ce){
+            if(generate_data){
+                print_image_with_label(net, prev_input_point);
+            }
             return FAILED;
         }
         else{
+            get_images_from_satval(prev_input_point, net->input_layer);
             bool is_image_verified = is_image_verified_by_milp(net);
             if(is_image_verified){
                return VERIFIED;
@@ -1137,4 +1143,28 @@ void copy_layer(Layer_t* layer1, Layer_t* layer){
         nt->layer_index = layer1->layer_index;
         layer1->neurons.push_back(nt);
     }
+}
+
+void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point){
+    std::string file_path = "/home/u1411251/Documents/tools/VeriNN/deep_refine/gen_data.csv";
+    double ep = 0;
+    Layer_t* input_layer = net->input_layer;
+    for(size_t i=0; i<net->input_dim; i++){
+        double satval = input_layer->neurons[i]->sat_val;
+        double diff = abs(satval - prev_input_point[i]);
+        if(diff > ep){
+            ep = diff;
+        }
+    }
+    std::cout<<"Epsilon: "<<ep<<std::endl;
+    prev_input_point = prev_input_point * 255;
+    prev_input_point = xt::round(prev_input_point);
+    std::string data = std::to_string(net->actual_label);
+    for(size_t i=0; i<net->input_dim; i++){
+        size_t val = (size_t)prev_input_point[i];
+        data += ","+std::to_string(val);
+    }
+    std::cout<<"Data: "<<std::endl;
+    std::cout<<data<<std::endl;
+    write_to_file(file_path, data);
 }

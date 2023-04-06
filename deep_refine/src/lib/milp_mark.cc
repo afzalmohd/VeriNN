@@ -278,6 +278,17 @@ void create_satvals_to_image(Layer_t* layer){
     layer->res = xt::adapt(vec,shape);
 }
 
+void get_images_from_satval(xt::xarray<double>& res, Layer_t* layer){
+    std::vector<double> vec;
+    vec.reserve(layer->dims);
+    for(size_t i=0; i<layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        vec.push_back(nt->sat_val);
+    }
+    std::vector<size_t> shape = {layer->dims};
+    res = xt::adapt(vec,shape);
+}
+
 // void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
 //     size_t var_counter = curr_layer->pred_layer->dims;
 //     int numlayer = net->layer_vec.size();

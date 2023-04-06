@@ -38,5 +38,6 @@ void create_one_problem_instances_input_split(Network_t* net, std::queue<Network
 bool is_dim_to_split(size_t i, std::vector<size_t> dims);
 drefine_status run_refine_poly_for_one_task(Network_t* net);
 drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net);
+void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point);
 
 #endif
