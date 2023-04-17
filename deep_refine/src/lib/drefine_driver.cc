@@ -14,6 +14,8 @@
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
 size_t NUM_MARKED_NEURONS = 0;
+std::chrono::seconds MARK_NEURONS_TIME = std::chrono::seconds(0);
+std::chrono::seconds REFINEMENT_TIME = std::chrono::seconds(0);
 
 int run_refine_poly(int num_args, char* params[]){
     int is_help = deeppoly_set_params(num_args, params);
@@ -275,12 +277,15 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){
         bool is_ce;
+        auto start_time = std::chrono::high_resolution_clock::now();
         if(IS_LIGHT_WEIGHT_MARKED_ANALYSIS){
             is_ce = mark_neurons_with_light_analysis(net);
         }
         else{
             is_ce = run_milp_mark_with_milp_refine(net);
         }
+        auto end_time = std::chrono::high_resolution_clock::now();
+        MARK_NEURONS_TIME += std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
         if(is_ce){
             if(generate_data){
                 print_image_with_label(net, prev_input_point);
@@ -292,7 +297,11 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             if(loop_counter > 0 && generate_data){
                  print_image_with_label(net, prev_input_point);
             }
+            start_time = std::chrono::high_resolution_clock::now();
             bool is_image_verified = is_image_verified_by_milp(net);
+            end_time = std::chrono::high_resolution_clock::now();
+            REFINEMENT_TIME += std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+            std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(MARK_NEURONS_TIME.count())<<" , REFINEMENT_TIME: "<<std::to_string(REFINEMENT_TIME.count())<<std::endl;
             if(is_image_verified){
                return VERIFIED;
             }
@@ -594,9 +603,9 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(ITER_COUNTS)+","+std::to_string(NUM_MARKED_NEURONS)+","+std::to_string(duration.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(ITER_COUNTS)+","+std::to_string(NUM_MARKED_NEURONS)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
     write_to_file(Configuration_deeppoly::result_file, str);
-    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(ITER_COUNTS)+",num_marked_neurons="+std::to_string(NUM_MARKED_NEURONS)+",total_time="+std::to_string(duration.count());
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(ITER_COUNTS)+",num_marked_neurons="+std::to_string(NUM_MARKED_NEURONS)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
     std::cout<<str<<std::endl;
 }
 
