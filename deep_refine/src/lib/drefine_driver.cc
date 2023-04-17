@@ -270,7 +270,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     if(Configuration_deeppoly::is_input_split && SUB_PROB_COUNTS < 3){
         loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
     }
-    bool generate_data = true;
+    bool generate_data = false;
     xt::xarray<double> prev_input_point = net->input_layer->res;
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){
@@ -289,6 +289,9 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
         }
         else{
             get_images_from_satval(prev_input_point, net->input_layer);
+            if(loop_counter > 0 && generate_data){
+                 print_image_with_label(net, prev_input_point);
+            }
             bool is_image_verified = is_image_verified_by_milp(net);
             if(is_image_verified){
                return VERIFIED;
@@ -1146,7 +1149,8 @@ void copy_layer(Layer_t* layer1, Layer_t* layer){
 }
 
 void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point){
-    std::string file_path = "/home/u1411251/Documents/tools/VeriNN/deep_refine/gen_data.csv";
+    std::string file_path = "/users/rs/afzal/tools/VeriNN/deep_refine/gen_data_ab_unsolved.csv";
+    std::string file_path1 = "/users/rs/afzal/tools/VeriNN/deep_refine/seq_ab_unsolved.csv";
     double ep = 0;
     Layer_t* input_layer = net->input_layer;
     for(size_t i=0; i<net->input_dim; i++){
@@ -1157,14 +1161,27 @@ void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point
         }
     }
     std::cout<<"Epsilon: "<<ep<<std::endl;
-    prev_input_point = prev_input_point * 255;
-    prev_input_point = xt::round(prev_input_point);
+    // prev_input_point = prev_input_point * 255;
+    // prev_input_point = xt::round(prev_input_point);
+    // std::string data = std::to_string(net->actual_label);
+    // for(size_t i=0; i<net->input_dim; i++){
+    //     size_t val = (size_t)prev_input_point[i];
+    //     data += ","+std::to_string(val);
+    // }
+
+    net->forward_propgate_network(0, prev_input_point);
+    for(size_t i=0; i<net->output_dim; i++){
+        std::cout<<net->layer_vec.back()->res[i]<<" "<<std::endl;
+    }
+
     std::string data = std::to_string(net->actual_label);
     for(size_t i=0; i<net->input_dim; i++){
-        size_t val = (size_t)prev_input_point[i];
-        data += ","+std::to_string(val);
+        // size_t val = (size_t)prev_input_point[i];
+        data += ","+std::to_string(prev_input_point[i]);
     }
     std::cout<<"Data: "<<std::endl;
     std::cout<<data<<std::endl;
     write_to_file(file_path, data);
+    data = Configuration_deeppoly::net_path+","+std::to_string(Configuration_deeppoly::epsilon);
+    write_to_file(file_path1, data);
 }

@@ -186,7 +186,8 @@ void parse_image_string_to_xarray_one(Network_t* net, std::string &image_str){
     }
     assert(pixel_counter == net->input_dim && "Pixel count mismatch");
     std::vector<size_t> shape = {net->input_dim};
-    net->input_layer->res = xt::adapt(vec,shape) / 255;
+    // net->input_layer->res = xt::adapt(vec,shape) / 255;
+    net->input_layer->res = xt::adapt(vec,shape);
 }
 
 Layer_t* create_layer(bool is_activation, std::string activation, std::string layer_type){
