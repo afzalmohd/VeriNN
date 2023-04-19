@@ -5,6 +5,16 @@ We have implemented our approach in a prototype and compared it to three types o
 (iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 \ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, 
 and \marabou~\cite{katz2019marabou}. 
+{\color{red}
+Our tool is built upon \deeppoly{}, so we compare it with \deeppoly{} to establish a baseline. 
+Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsrgr{}, 
+which are other refinement tools based on \deeppoly{}. 
+We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
+As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
+We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
+Our results show that our tool is capable of solving unique benchmarks 
+that are beyond the reach of current state-of-the-art tools.
+}
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. 
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} achieved the 1st, 3rd, and 5th rank, 
 respectively\footnote{We could not compare with 2nd rank tool \textsc{VeriNet}, as we had difficulties with its external solver's (\textsc{Xpress}) license. Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
@@ -56,7 +66,7 @@ If a counter-example is found then the tool reports it, otherwise, the tool repo
 \subsection{Results}
 We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
-To make a fair comparison between the tools, we provide only a single \textsc{CPU} for each instance for each tool. 
+To make a fair comparison between the tools, we provide only a single \textsc{CPU}, and $2000$ seconds timeout for each instance for each tool. 
 We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved for the most related techniques (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp}, which compares wrt epsilon, the robustness parameter.
 %represents the verified cases while the column represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the  156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
 
@@ -204,9 +214,37 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
     \label{res:ep:milp_with_milp}
 \end{figure}
 
-\paragraph{Number of marked neurons: }
-On average, \drefine{} marks $9.8\%$ of neurons, whenever it needs to refine. 
-Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. 
+% \paragraph{Number of marked neurons: }
+% On average, \drefine{} marks $9.8\%$ of neurons, whenever it needs to refine. 
+% Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. 
+
+
+\paragraph{Comparison with aversarially trained networks: }
+{\color{red} I will add the seperate comparison with \alphabeta{} on adversarially generated network. I will also add a paragraph to 
+explain the newly generated benchmarks and results on them.}
+
+\paragraph{Subroutine time: }
+
+{\color{red} I will add the time breakdown for getmarkneuron and refinement procedure 
+once complete the experiment with split time logs.}
+
+{\color{red}
+Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques.\todo{I tried to summarize the reviews related to experiments. } 
+Specifically, we utilize counterexamples to identify the intrinsic cause of spuriousness, 
+such as marked or branching neurons, whereas existing methods do not analyze counterexamples to identify the neurons to branch. 
+Consequently, it is challenging to identify the exact patterns or features present in the unique benchmarks that 
+\drefine{} solves and that current state-of-the-art methods cannot solve.
+
+The neural network verification currently works only on small networks. However, similar to software verification, 
+where each paper contributed a small amount towards practical software verification technology, 
+we expect to make gradual progress towards practical neural network verification technology. 
+The process of discovering new methods to solve the problem and identifying which ones will lead 
+to a push-button technology is hard to predict. 
+However, as with software verification, we may develop techniques that can solve sub-problems or neighboring problems, 
+which can make significant contributions to the area.
+Experience in SAT-solving suggests that one stack of techniques is unlikely to solve all instances. 
+Therefore, we need portfolio solvers, and we contend that our technique contributes to building such a solver.
+}
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 

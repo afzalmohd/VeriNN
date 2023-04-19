@@ -114,7 +114,7 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
   the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.
   Since $P$ of the verification query has lower and upper bounds of the input layer,
   we can compute the bounds for $x_{ij}$.
-
+{\color{red}
 \item If $Type_i= \relu$ and $y=\relu(x)$, we consider the following three cases\todo{I tried to simplify the notation, please have a look}:
   \begin{enumerate}
   \item If $A(x).lb \geq 0$ then $\relu$ is in active phase and
@@ -130,7 +130,8 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
     And $A(y).lexpr := \lambda . x$, where $\lambda \in \{0,1\}$. 
     We can choose any value of $\lambda$ dynamically.
     We compute $A(y).lb$ and $A(y).ub$ by doing the backsubtitution similar to the \affine{} layer's neuron.
-  \end{enumerate} 
+  \end{enumerate}
+} 
 
 
 

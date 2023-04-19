@@ -52,11 +52,40 @@ In this paper, we consider the basic abstraction framework provided by \deeppoly
 \medskip
 
 \noindent{\em Related work.}
-{A different but very successful line of research has been to revisit the branching heuristics for refinement and use ideas from convex optimization instead of linear or mixed integer linear programming. Starting from a slightly different abstraction/bound propagation method CROWN~\cite{zhang2018efficient}, the work in \cite{wang2021beta} adopts this approach. This is amenable to parallelizing and hence good for GPU implementations~\cite{xu2020fast}. Recently, techniques based on cutting planes have been used to further improve the refinement analysis, solving more benchmarks at the cost of speed~\cite{zhang2022general}. The success of this line of research can be seen by the fact that the state-of-the-art tool \alphabeta{}~\cite{alphabetacrown} (a highly optimized solver that uses a collection of different parametrized algorithms) has won the 2nd and 3rd international Verification of Neural Networks Competition (VNNCOMP'21,'22) in a field of leading tools for robustness verification. \ovaltool{}~\cite{bunel2020branch}, another leading tool, uses multiple optimized techniques, which at its core perform an effective branch and bound on the \relu{} activation function. They attempt to compute the rough estimate on the improvement on objective function by splitting a particular neuron, and split neurons with the highest estimated improvement. Finally, in \marabou{}~\cite{katz2019marabou}, another leading complete tool, the authors search for an assignment that satisfies the constraints. They treat the non-linear constraints lazily with the hope that some non-linear constraints will not be needed to satisfy. Despite the enormous progress made by these tools in just the last 2-3 years, there still many benchmarks that are out of their reach. %One reason is that they often focus on techniques to fix the imprecisions caused by abstractions.
-Our focus is in this paper is orthogonal to these approaches, as we use counterexamples to guide the identification the source of imprecision. In our experiments in Section~\ref{sec:experiments}, we show that this allows us to solve many benchmarks which these cannot. Integrating our counterexample guided approach for imprecision-identification with these optimized tools (e.g., \alphabeta{}'s convex optimization based refinement strategy) would be the next step towards wider coverage and performance.
+{A different but very successful line of research has been to revisit the branching heuristics for refinement and 
+use ideas from convex optimization instead of linear or mixed integer linear programming. Starting from a slightly 
+different abstraction/bound propagation method CROWN~\cite{zhang2018efficient}, the work in \cite{wang2021beta} 
+adopts this approach. This is amenable to parallelizing and hence good for GPU implementations~\cite{xu2020fast}. 
+Recently, techniques based on cutting planes have been used to further improve the refinement analysis, solving more benchmarks 
+at the cost of speed~\cite{zhang2022general}. The success of this line of research can be seen by the fact that the 
+state-of-the-art tool \alphabeta{}~\cite{alphabetacrown} (a highly optimized solver that uses a collection of different 
+parametrized algorithms) has won the 2nd and 3rd international Verification of Neural Networks Competition (VNNCOMP'21,'22) 
+in a field of leading tools for robustness verification. \ovaltool{}~\cite{bunel2020branch}, 
+another leading tool, uses multiple optimized techniques, which at its core perform an effective branch and bound on 
+the \relu{} activation function. They attempt to compute the rough estimate on the improvement on objective function by 
+splitting a particular neuron, and split neurons with the highest estimated improvement. 
+Finally, in \marabou{}~\cite{katz2019marabou}, another leading complete tool, the authors search for an assignment that 
+satisfies the constraints. They treat the non-linear constraints lazily with the hope that some non-linear constraints 
+will not be needed to satisfy. Despite the enormous progress made by these tools in just the last 2-3 years, 
+there still many benchmarks that are out of their reach. %One reason is that they often focus on techniques to fix the imprecisions caused by abstractions.
+Our focus is in this paper is orthogonal to these approaches, as we use counterexamples to guide the identification 
+the source of imprecision. In our experiments in Section~\ref{sec:experiments}, 
+we show that this allows us to solve many benchmarks which these cannot. 
+{\color{red}
+Integrating our counterexample guided approach \todo{This paragraph may remove depends on our integration with abcrown} for imprecision-identification with these optimized 
+tools (e.g., \alphabeta{}'s branch and bound strategy) would be the next step 
+towards wider coverage and performance. Although, it requires more effort. For instance, the constraints solved by 
+alpha-beta-crown, which also uses branch-and-bound, are from a dual space, and hence it is a priori unclear how to derive 
+our maxSAT query from the failure of a run.
+}
 %Surprisingly, we show that 180 benchmarks that cannot be solved by \alphabeta{} can be solved by our tool.
 
-As mentioned earlier, \deepsrgr{}~\cite{yang2021improving} and \kpoly{}~\cite{singh2019beyond} use refinement of \deeppoly{}, but they are not counterexample guided. Elboher et al~\cite{elboher2020abstraction} does perform counterexample guided abstraction refinement, but their abstraction technique is orthogonal to \deeppoly{}.  They reduce the network size by merging similar  neurons with over-approximation, while \deeppoly{} maintains the linear constraints for each neuron without changing the structure of the network. These approaches also suffer from scalability issues on large-scale networks.
+As mentioned earlier, \deepsrgr{}~\cite{yang2021improving} and \kpoly{}~\cite{singh2019beyond} use refinement of \deeppoly{}, 
+but they are not counterexample guided. Elboher et al~\cite{elboher2020abstraction} does perform 
+counterexample guided abstraction refinement, but their abstraction technique is orthogonal to \deeppoly{}.  
+They reduce the network size by merging similar  neurons with over-approximation, while \deeppoly{} maintains 
+the linear constraints for each neuron without changing the structure of the network. 
+These approaches also suffer from scalability issues on large-scale networks.
 
 }
 
