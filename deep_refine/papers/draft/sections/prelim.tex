@@ -34,10 +34,10 @@ We also write matrix $B_i \in \reals^{|l_i|\times 1}$ to denote the bias matrix 
 To define the semantics of $N$, we will use vectors ${val_i} = [val_{i1}, val_{i2}, ... val_{i|l_i|}]$ that represent the values of each neuron in the layer $l_i$. Let $f_i$ be a function that computes the output vector of values at layer $i$ using the values at layer $i-1$ as $val_i = f_i(val_{i-1})$. For each type the layer the functions are defined as follows: if $Type_i = \affine$, then $f_{i}(val_{i-1}) = W_i * val_{i-1} + B_i$; if $Type_i = \relu$, then $f_{i}(val_{i-1})_j =  max(val_{{(i-1)}j},0)$. Then, the semantics of a neural network $N$ is a function (we abuse notation and also denote this function as $N$) which takes an input, an $|l_0|$-dimensional vector of reals and gives as output an $|l_k|$-dimensional vector of reals, as a composition of functions $f_k \circ ... \circ f_1$. Thus, for an input $v\in \mathbb{R}^{|l_0|}$, we write its value computed by $N$ at layer $i$ as $val^v_{i}=f_i \circ ... \circ f_1(v)$.
 
 Let us define 
-$Linexpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \text{ and } x_i \text{ is a real variable} \}$
+$LinExpr = \{ w_0 + \sum_{i} w_i x_i | w_i \in \reals \text{ and } x_i \text{ is a real variable} \}$
 and
-$Linconstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$.
-A {\em predicate} is a Boolean combination of $Linconstr$.
+$LinConstr = \{expr \text{ op } 0 | expr \in LinExpr \land op \in \{\leq, = \}\}$.
+A {\em predicate} is a Boolean combination of $LinConstr$.
 We use real variable $x_{ij}$ to represent values of $n_{ij}$ in the predicates.
 Let $P$ and $Q$ be predicates over input and output layers respectively.
 A {\em verification query} is a triple $\langle N, P, Q \rangle$.
@@ -114,27 +114,46 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
   the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.
   Since $P$ of the verification query has lower and upper bounds of the input layer,
   we can compute the bounds for $x_{ij}$.
-  
-\item If $Type_i= \relu$, we consider the following three cases:
+
+\item If $Type_i= \relu$ and $y=\relu(x)$, we consider the following three cases\todo{I tried to simplify the notation, please have a look}:
   \begin{enumerate}
-  \item If $A(x_{(i-1)j}).lb \geq 0$ then $\relu$ is in active phase and
-    $A(x_{ij}).lexpr := A(x_{ij}).uexpr := A(x_{(i-1)j}).lexpr $,
-    and $A(x_{ij}).lb := A(x_{(i-1)j}).lb$ and $A(x_{ij}).ub := A(x_{(i-1)j}).ub$
-  \item If $A(x_{(i-1)j}).ub \leq 0$ then $\relu$ is in passive phase and
-    $A(x_{ij}).lexpr := A(x_{ij}).uexpr := 0$, 
-    and $A(x_{ij}).lb := A(x_{ij}).ub := 0$.
-  \item  If $A(x_{(i-1)j}).lb < 0$ and $A(x_{(i-1)j}).ub > 0$,
+  \item If $A(x).lb \geq 0$ then $\relu$ is in active phase and
+    $A(y).lexpr := A(y).uexpr := x$,
+    and $A(y).lb := A(x).lb$ and $A(y).ub := A(x).ub$
+  \item If $A(x).ub \leq 0$ then $\relu$ is in passive phase and
+    $A(y).lexpr := A(y).uexpr := 0$, 
+    and $A(y).lb := A(y).ub := 0$.
+  \item  If $A(x).lb < 0$ and $A(x).ub > 0$,
     the behavior of $\relu$ is uncertain, and we need to apply
-    over-approximation. We set $A(x_{ij}).uexpr := u(x_{(i-1)j} - l) / (u - l)$, 
-    where $u = A(x_{(i-1)j}).ub \text{ and } l = A(x_{(i-1)j}).lb$.
-    And $A(x_{ij}).lexpr := \lambda . x_{(i-1)j}$, where $\lambda \in \{0,1\}$. 
-    We can choose any value of $\lambda$ in a run.
-    We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ in the same way as
-    in the case of \affine{} neurons.
-    % They compute the value of $A(x_{ij}).lb$ and $A(x_{ij}).ub$ 
-    % by back substituting the variables in $A(x_{ij}).lexpr$ and
-    % $A(x_{ij}).uexpr$ respectively up to the input layer. 
+    over-approximation. We set $A(y).uexpr := u(x - l) / (u - l)$, 
+    where $u = A(x).ub \text{ and } l = A(x).lb$.
+    And $A(y).lexpr := \lambda . x$, where $\lambda \in \{0,1\}$. 
+    We can choose any value of $\lambda$ dynamically.
+    We compute $A(y).lb$ and $A(y).ub$ by doing the backsubtitution similar to the \affine{} layer's neuron.
   \end{enumerate} 
+
+
+
+% \item If $Type_i= \relu$, we consider the following three cases:
+%   \begin{enumerate}
+%   \item If $A(x_{(i-1)j}).lb \geq 0$ then $\relu$ is in active phase and
+%     $A(x_{ij}).lexpr := A(x_{ij}).uexpr := A(x_{(i-1)j}).lexpr $,
+%     and $A(x_{ij}).lb := A(x_{(i-1)j}).lb$ and $A(x_{ij}).ub := A(x_{(i-1)j}).ub$
+%   \item If $A(x_{(i-1)j}).ub \leq 0$ then $\relu$ is in passive phase and
+%     $A(x_{ij}).lexpr := A(x_{ij}).uexpr := 0$, 
+%     and $A(x_{ij}).lb := A(x_{ij}).ub := 0$.
+%   \item  If $A(x_{(i-1)j}).lb < 0$ and $A(x_{(i-1)j}).ub > 0$,
+%     the behavior of $\relu$ is uncertain, and we need to apply
+%     over-approximation. We set $A(x_{ij}).uexpr := u(x_{(i-1)j} - l) / (u - l)$, 
+%     where $u = A(x_{(i-1)j}).ub \text{ and } l = A(x_{(i-1)j}).lb$.
+%     And $A(x_{ij}).lexpr := \lambda . x_{(i-1)j}$, where $\lambda \in \{0,1\}$. 
+%     We can choose any value of $\lambda$ in a run.
+%     We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ in the same way as
+%     in the case of \affine{} neurons.
+%     % They compute the value of $A(x_{ij}).lb$ and $A(x_{ij}).ub$ 
+%     % by back substituting the variables in $A(x_{ij}).lexpr$ and
+%     % $A(x_{ij}).uexpr$ respectively up to the input layer. 
+%   \end{enumerate} 
 \end{itemize}
 
 The constraints for an \affine{} neuron are exact because it is just an \affine{}

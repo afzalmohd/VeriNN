@@ -54,7 +54,7 @@ hence, the \deeppoly{} fails to verify the property.
          x_7 & > x_8 \text{ (negation of property)}&&\\
         & \hspace*{2cm}(2) &&
     \end{aligned}
-%\label{eq:conjunction}
+\label{eq:conjunction}
 \end{equation*}
 
 \end{minipage}
@@ -77,7 +77,7 @@ So, the main hurdle toward efficiency is to find the set of important neurons (w
 and only repair these.  For this, we crucially use the satisfying assignment obtained from the \milp{} solver.
 %When \deeppoly{} fails to verify the network, we use an \milp{} solver to check the satisfiability of equation~\ref{eq:conjunction}. 
 %If it returns \unsat{} it means the property is verified otherwise we get the satisfying assignment of each variable. 
-For instance, a possible satisfying assignment of equation~(2)%\ref{eq:conjunction}
+For instance, a possible satisfying assignment of equation~\ref{eq:conjunction}
 is in equation~\ref{eq:sat1}. We execute the neural network with the inputs $x_1=1,x_2=1$ and get the values 
 on each neuron as shown in equation~\ref{eq:sat2}. 
 Then we observe that the output values $x'_7=2, x'_8=3$ satisfy the property, 
@@ -133,6 +133,7 @@ The green line represents the exact execution of the input point of spurious cou
 which is denoted by equation~\ref{eq:sat2}. 
 Our goal is to make the black line as close as possible to the green line from the first layer to the last layer, but the 
 first and last points should remain the same i.e., $x_1=1,x_2=1,$ and $x_7=2, x_8=1$, the closest line is the blue line.
+The blue line is also the abstract execution but it is closest to the exact execution of the spurious counter example. 
 Here the closeness measures in terms of the equality of the neurons. 
 The green and black points are the same for the input layer, i.e., $[1,1]$. On the first affine layer, $l_1$ 
 also, the black point $v_1$ is the same as the green point $v'_1$ since the affine layer does not introduce any spurious information. 
@@ -144,7 +145,7 @@ We mark the neurons of the layer where the blue line starts diverging from the g
 The divergence we find by the \maxsat{} query. If \maxsat{} returns all the soft constraints as satisfied, it means
 the blue point becomes equal to the green point. If \maxsat{} returns partial soft constraints as satisfied, 
 we mark the neurons whose soft constraints are not satisfied. In our example, \maxsat{} returns 
-soft constraints $\{x_5=2\}$, soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
+soft constraints $\{x_5=2\}$ as satisfied, it means soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
 The blue and black lines are the same for our motivating example since it contains only one \relu{} layer. 
 However, in general, it may or may not be the same. We are finding the blue line (the closest to the green line) to mark the 
 less number of marked neurons. 
