@@ -14,8 +14,8 @@
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
 size_t NUM_MARKED_NEURONS = 0;
-std::chrono::seconds MARK_NEURONS_TIME = std::chrono::seconds(0);
-std::chrono::seconds REFINEMENT_TIME = std::chrono::seconds(0);
+std::chrono::duration<double> MARK_NEURONS_TIME = std::chrono::seconds(0);
+std::chrono::duration<double> REFINEMENT_TIME = std::chrono::seconds(0);
 
 int run_refine_poly(int num_args, char* params[]){
     int is_help = deeppoly_set_params(num_args, params);
@@ -285,7 +285,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             is_ce = run_milp_mark_with_milp_refine(net);
         }
         auto end_time = std::chrono::high_resolution_clock::now();
-        MARK_NEURONS_TIME += std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
         if(is_ce){
             if(generate_data){
                 print_image_with_label(net, prev_input_point);
@@ -300,7 +300,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             start_time = std::chrono::high_resolution_clock::now();
             bool is_image_verified = is_image_verified_by_milp(net);
             end_time = std::chrono::high_resolution_clock::now();
-            REFINEMENT_TIME += std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+            REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
             std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(MARK_NEURONS_TIME.count())<<" , REFINEMENT_TIME: "<<std::to_string(REFINEMENT_TIME.count())<<std::endl;
             if(is_image_verified){
                return VERIFIED;
@@ -596,7 +596,7 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     else{
         status_string = "unknown";
     }
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+    std::chrono::duration<double> duration = std::chrono::duration<double>(end_time - start_time);
     std::string base_net_name = get_absolute_file_name_from_path(Configuration_deeppoly::net_path);
     std::string base_prp_name = get_absolute_file_name_from_path(Configuration_deeppoly::vnnlib_prp_file_path);
     // size_t num_marked_nt = num_marked_neurons(net);
