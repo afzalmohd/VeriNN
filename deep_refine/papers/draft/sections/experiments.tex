@@ -224,9 +224,43 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
 explain the newly generated benchmarks and results on them.}
 
 \paragraph{Subroutine time: }
+{\color{red}
+Table~\ref{tb:subroutine} presents the average time required by the \textsc{getmarkneuron} and \textsc{refinement} 
+subroutines, as well as the average number of marked neurons and refinement iterations in our experiments. 
+Each row in the table displays the average number for all benchmarks instances for a specific neural network. 
+The total average time taken by the \textsc{getmarkneuron} subroutine is $15.66$ seconds, while the \textsc{refinement}
+subroutine takes $89.69$ seconds. In comparison to the average \textsc{refinement} time, the \textsc{getmarkneuron} 
+subroutine takes up only $14.86\%$ of the total time, which is a small fraction. 
+The average number of marked neurons and refinement iterations are also relatively small, 
+indicating that integrating our \textsc{getmarkneuron} method with an efficient refinement procedure could significantly 
+improve overall performance. 
+}
 
-{\color{red} I will add the time breakdown for getmarkneuron and refinement procedure 
-once complete the experiment with split time logs.}
+\begin{table}[t]
+  \centering
+  \scalebox{0.8}{
+  \begin{tabular}{c|c|c|c|c}
+          \hline
+          \textbf{Neural Network} & \textbf{Avg marking time} & \textbf{Avg refinement time} & \textbf{\#Mark Neurons} & \textbf{\#Refinement iterations} \\
+          \hline
+          $3\times 50$ & 0.39 & 112.50 & 22.17 & 4.63 \\
+          $3\times 100$ & 0.56 & 149.50 & 20.60 & 3.67  \\
+          $5\times 100$ & 1.97 & 6.10 & 5.23 & 1.5  \\
+          $6\times 100$ & 5.86 & 218.87 & 23.27 & 4.55 \\
+          $9\times 100$ & 66.90 & 109.32 & 38.1 & 8.80  \\
+          $6\times 200$ & 16.08 & 54.16 & 15.23 & 3  \\
+          $9\times 200$ & 42.32 & 58.72 & 11.17 & 2.17  \\
+          $6\times 500$ & 6.50 & 30.75 & 1.97 & 1.4  \\
+          $6\times 500$ & 7.5 & 133.20 & 5.45 & 1.2 \\
+          $4\times 1024$ & 8.56 & 23.80 & 5 & 1 \\
+          \hline
+          \textbf{Total average} & 15.66 & 89.69 & 14.81 & 3.19 \\
+          \hline
+      \end{tabular}
+      }
+      \caption{Avrage marking, refinement time and average number of marked neurons and refinement iterations}
+      \label{tb:subroutine}
+  \end{table}
 
 {\color{red}
 Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques.\todo{I tried to summarize the reviews related to experiments. } 
