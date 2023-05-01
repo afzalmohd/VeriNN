@@ -219,9 +219,37 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
 % Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. 
 
 
-\paragraph{Comparison with aversarially trained networks: }
-{\color{red} I will add the seperate comparison with \alphabeta{} on adversarially generated network. I will also add a paragraph to 
-explain the newly generated benchmarks and results on them.}
+\paragraph{Comparison with defended networks: }
+
+{\color{red}
+\begin{table}[t]
+  \scriptsize
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|g||c|}
+        \hline
+        \diagbox{\tiny Verified}{\tiny \mbox{}\hspace{-2mm}Unverified} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
+        \hline
+        \tiny \textbf{\deeppoly} & \textbf{0} & 0 & 0 & 3 & 3 & 0 & 1626 \\
+        \hline
+        \tiny \textbf{\kpoly} & 9 & \textbf{0} & 9 & 5 & 4 & 2 &  1635 \\ 
+        \hline
+        \tiny \textbf{\deepsrgr} & 2 & 2 & \textbf{0} & 3 & 3 & 0 & 1628 \\ 
+        \hline
+        \tiny \textbf{\alphabeta} & 302 & 295 & 302 & \textbf{0} & 1 & 205 & 1925 \\ 
+        \hline
+        \tiny \textbf{\ovaltool} & 312 & 304 & 310 & 11 & \textbf{0} & 214 & 1935 \\
+        \hline
+        \rowcolor{green!20}
+        \tiny \textbf{\drefine} & 170 & 163 & 168 & 76 & 75 & \textbf{0} & 1796 \\
+        \hline
+    \end{tabular}
+    \caption{Pairwise comparison of tools on defended networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
+    \label{tb:matrix1}
+\end{table}
+
+Table~\ref{tb:matrix1} shows the pairwise comparison of the verifiers on defended networks, the total number of benchmarks for 
+defended networks are $2223$.
+}
 
 \paragraph{Subroutine time: }
 {\color{red}
