@@ -884,7 +884,10 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
     size_t loop_counter = 1;
     bool is_bound_exceeded = true;
     while(loop_counter < loop_upper_bound){
+        auto start_time = std::chrono::high_resolution_clock::now();
         bool is_ce = run_milp_mark_with_milp_refine(net);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
             is_bound_exceeded = false;
@@ -892,7 +895,10 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
             break;
         }
         else{
+            start_time = std::chrono::high_resolution_clock::now();
             bool is_verified = is_prp_verified_by_milp(net);
+            end_time = std::chrono::high_resolution_clock::now();
+            REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
             if(is_verified){
                 is_bound_exceeded = false;
                 status = VERIFIED;
