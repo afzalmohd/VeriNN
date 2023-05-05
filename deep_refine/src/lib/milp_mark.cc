@@ -104,7 +104,12 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
             create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
-            create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+            if(IS_AB_CROWN){
+                create_milp_constr_FC_without_marked_ab(layer, model, var_vector, var_counter);
+            }
+            else{
+                create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+            }
         }
         var_counter += layer->dims;
     }
@@ -197,7 +202,20 @@ void creating_vars_with_constant_vars(Network_t* net, GRBModel& model, std::vect
 
 void create_constant_vars_satval_layer(Network_t* net, Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector){
     int numlayer = net->layer_vec.size();
-    if(layer->layer_index == -1 || layer->layer_index == numlayer-1){//input or output layer
+    if(IS_AB_CROWN && layer->layer_index == numlayer-1){
+        for(Neuron_t* nt : layer->neurons){
+            std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+            if(nt->neuron_index == net->dim_under_analysis){
+                GRBVar x = model.addVar(nt->sat_val, nt->sat_val, 0.0, GRB_CONTINUOUS, var_str);
+                var_vector.push_back(x);
+            }
+            else{
+                GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
+                var_vector.push_back(x);
+            }
+        }
+    }
+    else if(layer->layer_index == -1 || layer->layer_index == numlayer-1){//input or output layer
         for(Neuron_t* nt : layer->neurons){
             std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
             GRBVar x = model.addVar(nt->sat_val, nt->sat_val, 0.0, GRB_CONTINUOUS, var_str);
@@ -246,7 +264,7 @@ bool is_sat_val_ce(Network_t* net){
     create_satvals_to_image(net->input_layer);
     //std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
     net->forward_propgate_network(0, net->input_layer->res);
-    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && !IS_AB_CROWN){
         bool is_sat = is_prop_sat_vnnlib(net);
         // if(is_sat){
         //     std::cout<<"input values"<<std::endl;
@@ -257,6 +275,17 @@ bool is_sat_val_ce(Network_t* net){
         //     print_xt_array(net->layer_vec.back()->res, net->output_dim);
         // }
         return is_sat;
+    }
+    if(IS_AB_CROWN){
+        Layer_t* last_layer = net->layer_vec.back();
+        for(size_t i=0; i<last_layer->dims; i++){
+            double val = last_layer->res[i];
+            if(val <= 0){
+                std::cout<<last_layer->res<<std::endl;
+                return true;
+            }
+        }
+        return false;
     }
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];

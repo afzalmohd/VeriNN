@@ -132,3 +132,83 @@ bool is_prp_verified_by_milp(Network_t* net){
     return !is_sat;
 }
 
+
+
+
+
+
+
+void create_milp_constr_FC_without_marked_ab(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){    
+    assert(layer->layer_type == "FC" && "Layer type is not FC");
+    size_t start_index = var_counter - layer->pred_layer->dims;
+    size_t end_index = var_counter;
+    std::vector<GRBVar> new_vec;
+    new_vec.reserve(layer->pred_layer->dims);
+    copy_vector_by_index(var_vector, new_vec, start_index, end_index);
+    for(size_t i=0; i<layer->dims; i++){
+        auto coll = xt::col(layer->w,i);
+        std::vector<double> vec(coll.begin(), coll.end());
+        double cst = layer->b[i];
+        Neuron_t* nt = layer->neurons[i];
+        GRBLinExpr grb_expr;// = -1*var_vector[end_index+i];
+        grb_expr.addTerms(&vec[0], &new_vec[0], new_vec.size());
+        grb_expr += cst;
+        grb_expr += -1*var_vector[var_counter+nt->neuron_index];
+        model.addConstr(grb_expr, GRB_EQUAL, 0);
+    }
+}
+
+
+
+void create_milp_mark_milp_refine_constr_ab(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
+    creating_vars_milp(net, model, var_vector);
+    size_t var_counter = net->input_layer->dims;
+    for(auto layer : net->layer_vec){
+        if(layer->is_activation){
+            create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
+        }
+        else{
+            create_milp_constr_FC_without_marked_ab(layer, model, var_vector, var_counter);
+        }
+        var_counter += layer->dims;
+    }
+
+}
+
+bool is_prp_verified_ab(Network_t* net){
+    GRBModel model = create_grb_env_and_model();
+    std::vector<GRBVar> var_vector;
+    create_milp_mark_milp_refine_constr_ab(net, model, var_vector);
+    size_t var_counter = net->input_layer->dims;
+    for(size_t i=0; i<net->layer_vec.size()-1; i++){
+        var_counter += net->layer_vec[i]->dims;
+    }
+    Layer_t* last_layer = net->layer_vec.back();
+    for(Neuron_t* nt : last_layer->neurons){
+        double lb = -nt->lb;
+        if(lb <= 0){
+            GRBVar var = var_vector[var_counter+nt->neuron_index];
+            GRBLinExpr obj = var;
+            model.setObjective(obj, GRB_MINIMIZE);
+            model.optimize();
+            int status = model.get(GRB_IntAttr_Status);
+            if(status == GRB_OPTIMAL){
+                double obj_val = model.get(GRB_DoubleAttr_ObjVal);
+                if(obj_val > 0){
+                    nt->lb = -obj_val;
+                }
+                else{
+                    if(obj_val > lb){
+                        nt->lb = -obj_val;
+                    }
+                    update_sat_vals(net,var_vector);
+                    nt->sat_val = obj_val;
+                    net->dim_under_analysis = nt->neuron_index;
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}

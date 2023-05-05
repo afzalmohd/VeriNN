@@ -130,6 +130,7 @@ class Network_t{
 		size_t output_dim=0;
         size_t actual_label;
 		size_t pred_label;
+		size_t dim_under_analysis;
 		std::vector<size_t> verified_out_dims;
 		std::vector<double> stds;
 		std::vector<double> means;

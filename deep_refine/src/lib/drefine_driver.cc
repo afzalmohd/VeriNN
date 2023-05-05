@@ -1,5 +1,6 @@
 #include "../../deeppoly/helper.hh"
 #include "../../deeppoly/vnnlib.hh"
+#include "../../deeppoly/parser.hh"
 #include "drefine_driver.hh"
 #include "pullback.hh"
 #include "decision_making.hh"
@@ -27,13 +28,22 @@ int run_refine_poly(int num_args, char* params[]){
     std::chrono::_V2::system_clock::time_point start_time;
     drefine_status status;
     
-    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && IS_AB_CROWN){
+        std::string bounds_path = "/home/u1411251/Documents/tools/alpha-beta-CROWN/dumb_bounds/mnist-net_256x2+prop_0_0.05+68.51027536392212";
+        net = deeppoly_initialize_network();
+        parse_vnnlib_simplified_mnist(net, Configuration_deeppoly::vnnlib_prp_file_path);
+        update_last_layer(net);
+        bounds_parser(net, bounds_path);
+        start_time =  std::chrono::high_resolution_clock::now();
+        status = run_milp_refine_with_milp_mark_ab(net);
+        // return status;
+    }
+    else if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         VnnLib_t* verinn_lib = parse_vnnlib(Configuration_deeppoly::vnnlib_prp_file_path);
         net = deeppoly_initialize_network();
         net->vnn_lib = verinn_lib;
         start_time =  std::chrono::high_resolution_clock::now();
         status = run_drefine_vnnlib(net);
-        // return status;
     }
     else{
         net = deeppoly_initialize_network();
@@ -896,6 +906,48 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
         status = UNKNOWN;
     }
     // std::tuple<int, size_t> tup1(status, loop_counter);
+    return status;
+}
+
+drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net){
+    drefine_status status;
+
+    size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
+    if(Configuration_deeppoly::is_input_split){
+        loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
+    }
+
+    size_t loop_counter = 1;
+    bool is_bound_exceeded = true;
+    while(loop_counter < loop_upper_bound){
+        auto start_time = std::chrono::high_resolution_clock::now();
+        bool is_verified = is_prp_verified_ab(net);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
+        if(is_verified){
+            is_bound_exceeded = false;
+            status = VERIFIED;
+            break;
+        }
+        start_time = std::chrono::high_resolution_clock::now();
+        bool is_ce = run_milp_mark_with_milp_refine(net);
+        end_time = std::chrono::high_resolution_clock::now();
+        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
+        std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
+        ITER_COUNTS += 1;
+
+        if(is_ce){
+            is_bound_exceeded = false;
+            status = FAILED;
+            break;
+        }
+        loop_counter++;
+    }
+    if(is_bound_exceeded){
+        status = UNKNOWN;
+    }
+    // std::tuple<int, size_t> tup1(status, loop_counter);
+    NUM_MARKED_NEURONS = num_marked_neurons(net);
     return status;
 }
 
