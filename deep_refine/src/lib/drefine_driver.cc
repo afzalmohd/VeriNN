@@ -28,12 +28,11 @@ int run_refine_poly(int num_args, char* params[]){
     std::chrono::_V2::system_clock::time_point start_time;
     drefine_status status;
     
-    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && IS_AB_CROWN){
-        std::string bounds_path = "/home/u1411251/Documents/tools/alpha-beta-CROWN/dumb_bounds/mnist-net_256x2+prop_0_0.05+68.51027536392212";
+    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && Configuration_deeppoly::bounds_path != ""){
         net = deeppoly_initialize_network();
         parse_vnnlib_simplified_mnist(net, Configuration_deeppoly::vnnlib_prp_file_path);
         update_last_layer(net);
-        bounds_parser(net, bounds_path);
+        bounds_parser(net, Configuration_deeppoly::bounds_path);
         start_time =  std::chrono::high_resolution_clock::now();
         status = run_milp_refine_with_milp_mark_ab(net);
         // return status;

@@ -22,7 +22,6 @@
 #define MAX_NUM_MARKED_NEURONS 5
 #define MAX_INPUT_DIMS_TO_SPLIT 2
 #define IS_LIGHT_WEIGHT_MARKED_ANALYSIS false
-#define IS_AB_CROWN false
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
@@ -62,6 +61,7 @@ namespace Configuration_deeppoly{
     extern std::string tool;
     extern std::string vnnlib_prp_file_path;
     extern bool is_input_split;
+    extern std::string bounds_path;
 
 }
 
