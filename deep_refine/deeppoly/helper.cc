@@ -425,39 +425,64 @@ void update_last_layer(Network_t* net){
     std::vector<size_t> shape = {out_size, out_size-1};
     xt::xarray<double> aux_layer_w = xt::adapt(vec1,shape);
     // std::cout<<last_layer_w<<std::endl;
-
     Layer_t* last_layer = net->layer_vec.back();
-    xt::xarray<double> new_w = xt::linalg::dot(last_layer->w, aux_layer_w);
-    xt::xarray<double> new_b = xt::linalg::dot(last_layer->b, aux_layer_w);
-    // std::cout<<last_layer->w<<std::endl;
-    // std::cout<<aux_layer_w<<std::endl;
-    // std::cout<<last_layer->b<<std::endl;
+    std::string s1 = "ffnn";
+    std::string s2 = "4_1024";
 
-    // std::cout<<"After multiplication: "<<std::endl;
-    // std::cout<<new_w<<std::endl;
-    // std::cout<<new_b<<std::endl;
-
-    Layer_t* new_layer = new Layer_t();
-    new_layer->is_activation = false;
-    new_layer->dims = out_size -1;
-    new_layer->layer_index = last_layer->layer_index;
-    new_layer->pred_layer = last_layer->pred_layer;
-    new_layer->w = new_w;
-    new_layer->b = new_b;
-    new_layer->w_shape = {last_layer->w_shape[0], out_size-1};
-    new_layer->layer_type = "FC";
-    net->output_dim = out_size-1;
-    
-    for(size_t i=0; i<new_layer->dims; i++){
-        Neuron_t* nt = new Neuron_t();
-        nt->neuron_index = i;
-        nt->layer_index = new_layer->layer_index;
-        new_layer->neurons.push_back(nt);
+    std::string net_name = Configuration_deeppoly::net_path;
+    bool is_last_relu = (net_name.find(s1) == std::string::npos) || (net_name.find(s2) == std::string::npos);
+    if(is_last_relu){
+        std::vector<size_t> shape = {out_size -1};
+        std::vector<double> v;
+        for(size_t i=0; i<out_size-1; i++){
+            v.push_back(0);
+        }
+        xt::xarray<double> aux_layer_b = xt::adapt(v, shape);
+        Layer_t* new_layer = new Layer_t();
+        new_layer->is_activation = false;
+        new_layer->dims = out_size -1;
+        new_layer->layer_index = last_layer->layer_index + 1;
+        new_layer->pred_layer = last_layer;
+        new_layer->w = aux_layer_w;
+        new_layer->b = aux_layer_b;
+        new_layer->w_shape = {last_layer->dims, out_size-1};
+        new_layer->layer_type = "FC";
+        net->output_dim = out_size-1;
+        
+        for(size_t i=0; i<new_layer->dims; i++){
+            Neuron_t* nt = new Neuron_t();
+            nt->neuron_index = i;
+            nt->layer_index = new_layer->layer_index;
+            new_layer->neurons.push_back(nt);
+        }
+        net->layer_vec.push_back(new_layer);
+        net->numlayers = net->numlayers + 1;
     }
+    else{
+        xt::xarray<double> new_w = xt::linalg::dot(last_layer->w, aux_layer_w);
+        xt::xarray<double> new_b = xt::linalg::dot(last_layer->b, aux_layer_w);
 
-    net->layer_vec[net->layer_vec.size()-1] = new_layer;
-    delete last_layer;
+        Layer_t* new_layer = new Layer_t();
+        new_layer->is_activation = false;
+        new_layer->dims = out_size -1;
+        new_layer->layer_index = last_layer->layer_index;
+        new_layer->pred_layer = last_layer->pred_layer;
+        new_layer->w = new_w;
+        new_layer->b = new_b;
+        new_layer->w_shape = {last_layer->w_shape[0], out_size-1};
+        new_layer->layer_type = "FC";
+        net->output_dim = out_size-1;
+        
+        for(size_t i=0; i<new_layer->dims; i++){
+            Neuron_t* nt = new Neuron_t();
+            nt->neuron_index = i;
+            nt->layer_index = new_layer->layer_index;
+            new_layer->neurons.push_back(nt);
+        }
 
-   
+        net->layer_vec[net->layer_vec.size()-1] = new_layer;
+        delete last_layer;
+
+    }
 }
 
