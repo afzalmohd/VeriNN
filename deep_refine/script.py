@@ -18,7 +18,7 @@ TIMEOUT = 2000
 DATASET = "MNIST"
 NUM_IMAGES = 100
 
-root_dir = '/home/afzal/Documents/tools/VeriNN/deep_refine'
+root_dir = os.getcwd()
 TOOL = os.path.join(root_dir, 'drefine')
 result_dir = os.path.join(root_dir, 'outfiles')
 dataset_file = os.path.join(root_dir, 'benchmarks/dataset/mnist/mnist_test.csv')
@@ -35,9 +35,9 @@ def write_script_file(file_name, cmds):
         file.close()
 
 def get_bounds_tasks():
-    bounds_dir = '/home/afzal/Documents/tools/alpha-beta-CROWN/dumb_bounds'
-    net_dir = '/home/afzal/Documents/tools/networks/tf/mnist'
-    prp_dir = '/home/afzal/Documents/tools/networks/props/mnist'
+    bounds_dir = '/home/namrita/afzal/alpha-beta-CROWN/dumb_bounds'
+    net_dir = '/home/namrita/afzal/networks/tf/mnist'
+    prp_dir = '/home/namrita/afzal/networks/props/mnist'
     tasks = []
     for file_name in os.listdir(bounds_dir):
         file_path_s = file_name.split('+')

@@ -9,7 +9,7 @@ rm -rf $log_dir
 python script.py $num_cpu $log_dir
 chmod -R u+x $log_dir/
 
-# for((i=0; i<$num_cpu; i++))
-# do
-#     $log_dir"/script_$i.sh" &
-# done
+for((i=0; i<$num_cpu; i++))
+do
+    $log_dir"/script_$i.sh" &
+done
