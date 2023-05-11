@@ -121,7 +121,7 @@ which is defined as follows.
 \end{df}
 
 If these algorithms return verified, we are done, otherwise we analyze the abstract counterexample $CEX(v_0,...,v_k)$.
-At line 6, we first check if executing the neural network $N$ on input $v_0$
+At line 8, we first check if executing the neural network $N$ on input $v_0$
 violates the predicate $Q$.
 If yes, we report input $v_0$ for which the verification query is not true.
 Otherwise, we declare the abstract counterexample to be spurious.
