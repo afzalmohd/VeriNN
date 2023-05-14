@@ -3,23 +3,24 @@ In this section, we present our method to refine \deeppoly{}. \deeppoly{} is a s
 \subsection{The top level algorithm}
 \label{sec:toplevelalgo}
 We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. 
-The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, 
-otherwise returns a counterexample to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and 
-$\textsc{isVerified}$ (described subsequently) to get more marked neurons to refine and check the validity of the verification query 
-after refinement.
+The algorithm takes a verification query $\langle N,P,Q \rangle$ as input, where $N$ is a neural network and $P,Q$ are predicates over input and output layers respectively, and returns success if the verification is successful.
+Otherwise it returns a counterexample to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and 
+$\textsc{isVerified}$ (described subsequently) to get more marked neurons to refine and check the validity of the verification query  after refinement.
 
 
-The first line of the algorithm do preprocessing steps these steps are similar to \alphabeta{} tools, which include 
-PGD attack, followed by Crown which is an incomplete tool followed by MIP to tigheting the bounds.
-More explainations are in Experiment section~\ref{sec:experiments}. 
+The first line of the algorithm performs preprocessing steps similar to \alphabeta{} tools, which include 
+PGD attack, followed by Crown which is an incomplete tool followed by MIP to tighten the bounds.\todo{these are not defined anywhere. what is PGD attack? why does preproc return a cex?}
+More explanations are in Experiment section~\ref{sec:experiments}. ~\todo{explanations missing}
 The fourth line of Algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{}, 
 as described in Section~\ref{sec:deeppoly}. 
 For a node $n_{ij} \in N.neurons$, the abstract constraints consist of the lower and upper constraints as well as the lower and upper bounds. 
 Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a conjunction of upper and lower 
 constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$. 
 The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
-If the bounds provied in the \deeppoly{} call at line number $4$ are tighter than vanilla \deeppoly{} then it keeps the 
-tighter bounds and generate the $lexpr$ and $uexpr$ accordingly. 
+If the bounds provided in the \deeppoly{} call at line number $4$ are tighter than vanilla \deeppoly{} \todo{what is the vanilla deeppoly?} then it keeps the 
+tighter bounds and generate the $lexpr$ and $uexpr$ accordingly. \todo{why is this not written in the algo itself?}
+
+\todo{do you use the cex returned by preproc in line 8?}
 
 
 % We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, otherwise returns a counterexample to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and $\textsc{isVerified}$ (described subsequently) to get more marked neurons to refine and check the validity of the verification query after refinement.
@@ -33,7 +34,7 @@ tighter bounds and generate the $lexpr$ and $uexpr$ accordingly.
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
   \textbf{Output: } UNSAT or SAT
   \begin{algorithmic}[1]
-    \State $cex, bounds = preprocessing(N,P,Q)$
+    \State $\mathsf{cex}, bounds = preprocessing(N,P,Q)$
     \If{cex is not None}
       \State \textbf{return} Failed(cex)
     \EndIf
