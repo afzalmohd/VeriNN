@@ -19,13 +19,14 @@ in performance. Moreover, we conducted a detailed comparison with \alphabeta{},
 utilizing the same preprocessing steps employed by the \alphabeta{} tool.
 
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations.
-The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22
+The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22.
 The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
 respectively\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
 could not compare with MN-BaB since it required GPU to run.  
 Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
-in VNN-COMP'21.
+in VNN-COMP'21. We use the same configuration to run \alphabeta{} and \ovaltool{}, which these tools
+used in VNN-COMP for mnist benchmarks.   
 
 % We have implemented our approach in a prototype. We have presented out experiments in two subcategories. 
 % In first category we compared our tool with most related state of the art tools. We created three types of approaches in this category, 
@@ -341,6 +342,10 @@ suggesting that our approach performs
 well for such networks as PGD attack is not very effective on these benchmarks. 
 These results indicate that the majority of the benchmarks ($1095$) solved by \alphabeta{} and not by our approach, 
 as shown in Table~\ref{tb:matrix}, are likely solved by preprocessing steps rather than the refinement procedure.
+The combination of benchmarks solved by both tools results in a total of 937 benchmarks, 
+demonstrating an improvement in the benchmarks solved by \alphabeta{}. 
+This highlights the significant contribution of our tool in the context of portfolio verifiers, 
+as it complements and enhances the overall performance when integrated with other verification tools.
 
 
 \paragraph{Subroutine time: }
