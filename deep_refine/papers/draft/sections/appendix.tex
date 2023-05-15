@@ -4,6 +4,51 @@
     \Large{\bf{Appendix}}    
 \end{center}
 
+\section{Experiments}
+\subsection{Comparison with PGD's adversarially trained network}
+\label{ap:exp:1}
+
+The networks considered for evaluation in this study are the ones corresponding to the 9th, and 10th 
+rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
+where adversarial examples were generated using PGD attack, and the network was subsequently 
+trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix2} presents a 
+pairwise comparison of verifiers on these adversarially trained networks, 
+encompassing a total of 1456 benchmark instances. 
+Our approach demonstrates significant superiority over \deeppoly{}, \kpoly{}, and \deepsrgr{} in terms of 
+performance on these benchmarks. While \alphabeta{} and \ovaltool{} outperform our approach by approximately 
+90 benchmarks, we are still able to solve 75 unique benchmarks that remain unsolved by both of these tools. 
+Considering the total number of benchmarks is 1456, this indicates a notable number of benchmarks that our 
+approach successfully addresses.
+
+\begin{table}[t]
+  \scriptsize
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|g||c|}
+        \hline
+        \diagbox{\tiny Verified}{\tiny \mbox{}\hspace{-2mm}Unverified} & \tiny \textbf{\deeppoly} & \tiny \textbf{\kpoly} & \tiny \textbf{\deepsrgr} & \tiny \textbf{\alphabeta} & \tiny \textbf{\ovaltool} & \tiny \textbf{\drefine} & \tiny \textbf{\textsc{total}} \\
+        \hline
+        \tiny \textbf{\deeppoly} & \textbf{0} & 0 & 0 & 3 & 3 & 0 & 913 \\
+        \hline
+        \tiny \textbf{\kpoly} & 9 & \textbf{0} & 9 & 5 & 4 & 2 &  922 \\ 
+        \hline
+        \tiny \textbf{\deepsrgr} & 2 & 2 & \textbf{0} & 3 & 3 & 0 & 915 \\ 
+        \hline
+        \tiny \textbf{\alphabeta} & 250 & 243 & 250 & \textbf{0} & 1 & 163 & 1160 \\ 
+        \hline
+        \tiny \textbf{\ovaltool} & 258 & 259 & 258 & 9 & \textbf{0} & 170 & 1168 \\
+        \hline
+        \rowcolor{green!20}
+        \tiny \textbf{\drefine} & 170 & 163 & 168 & 76 & 75 & \textbf{0} & 1073 \\
+        \hline
+    \end{tabular}
+    % \caption{Pairwise comparison of tools on adversarially trained networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
+    \caption{Pairwise comparison of tools on adversarially trained networks}
+    \label{tb:matrix2}
+\end{table}
+
+
+
+
 
 \subsubsection{Pullback approach: }
 
@@ -199,3 +244,5 @@ All the cases are explained as follows:
     \end{aligned}
     \label{eq:split2}
 \end{equation}
+
+

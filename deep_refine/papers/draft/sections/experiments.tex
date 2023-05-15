@@ -278,9 +278,9 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
 
 
 \paragraph{Comparison with adversarially trained networks: }
-The networks considered for evaluation in this study are the ones corresponding to the 1st, 9th, and 10th 
+The networks considered for evaluation in this study are the ones corresponding to the 4st, 9th, and 10th 
 rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
-where adversarial examples were generated using standard methods such as PGD, and the network was subsequently 
+where adversarial examples were generated using standard methods such as PGD/DiffAI, and the network was subsequently 
 trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix1} presents a 
 pairwise comparison of verifiers on these adversarially trained networks, 
 encompassing a total of 2223 benchmark instances. 
@@ -326,14 +326,17 @@ approach successfully addresses.
 \paragraph{Detailed comparison with \alphabeta{} with same preprocessing: } 
 To evaluate the effectiveness of our approach, we conducted a benchmark analysis on the instances where 
 refinement was applied. We applied the same preprocessing steps used by \alphabeta{} to filter the benchmarks.
-These preprocessing steps are PGD attack, CROWN, and MIP to tighten the crown bounds. 
-After preprocessing, the total number of benchmarks was reduced to $1825$, which were the benchmarks that were not 
-solved by preprocessing steps. Out of these benchmarks, \alphabeta{} was able to verify $397$, 
+
+These include the so-called PGD (Projected Gradient Descent) attack, followed by CROWN~\cite{zhang2018efficient} which is an incomplete technique. The PGD attack is a method that can generate counter examples. It works by iteratively updating the  perturbation in the direction of the gradient of the loss function with respect to the input data,  while constraining the magnitude of the perturbation to be within a predefined limit. The CROWN technique generates the over-approximated bounds. %These preprocessing steps are PGD attack and CROWN. PGD attack is to generate the counter example and if it fails then CROWN runs to generate the bounds.
+
+After preprocessing, the total number of benchmarks was reduced to $2362$, which were the benchmarks that were not 
+solved by preprocessing steps. Out of these benchmarks, \alphabeta{} was able to verify $626$, 
 while our approach verified 
-$303$ benchmarks. Notably, our approach was able to solve $64$ benchmarks that were not solved by \alphabeta{}, 
-while \alphabeta{} solved $160$ benchmarks that were not solved by our approach. 
-All $64$ benchmarks solved by our approach were from adversarially trained networks by PGD, 
-while only $4$ out of $160$ were from adversarially trained networks, suggesting that our approach performs 
+$570$ benchmarks. Notably, our approach was able to solve $311$ benchmarks that were not solved by \alphabeta{}, 
+while \alphabeta{} solved $366$ benchmarks that were not solved by our approach. 
+\textit{All $311$ benchmarks solved by our approach were from adversarially trained networks, while 
+not a single benchmarks out of $366$ solved by \alphabeta{} from adversarially trained networks}, 
+suggesting that our approach performs 
 well for such networks as PGD attack is not very effective on these benchmarks. 
 These results indicate that the majority of the benchmarks ($1095$) solved by \alphabeta{} and not by our approach, 
 as shown in Table~\ref{tb:matrix}, are likely solved by preprocessing steps rather than the refinement procedure.
@@ -388,22 +391,6 @@ procedure could yield significant enhancements in overall performance.
 %       \caption{Avrage marking, refinement time and average number of marked neurons and refinement iterations}
 %       \label{tb:subroutine}
 %   \end{table}
-
-Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques.\todo{I tried to summarize the reviews related to experiments. } 
-Specifically, we utilize counterexamples to identify the intrinsic cause of spuriousness, 
-such as marked or branching neurons, whereas existing methods do not analyze counterexamples to identify the neurons to branch. 
-Consequently, it is challenging to identify the exact patterns or features present in the unique benchmarks that 
-\drefine{} solves and that current state-of-the-art methods cannot solve.
-
-The neural network verification currently works only on small networks. However, similar to software verification, 
-where each paper contributed a small amount towards practical software verification technology, 
-we expect to make gradual progress towards practical neural network verification technology. 
-The process of discovering new methods to solve the problem and identifying which ones will lead 
-to a push-button technology is hard to predict. 
-However, as with software verification, we may develop techniques that can solve sub-problems or neighboring problems, 
-which can make significant contributions to the area.
-Experience in SAT-solving suggests that one stack of techniques is unlikely to solve all instances. 
-Therefore, we need portfolio solvers, and we contend that our technique contributes to building such a solver.
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 
