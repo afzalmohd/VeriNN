@@ -83,6 +83,7 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
 % float values and checks for counter-example by executing $N$ on the denormalized image.
 % If a counter-example is found then the tool reports it, otherwise, the tool reports unknown.
 
+
 \begin{table}[t]
 \centering
 \scalebox{0.8}{
@@ -107,6 +108,12 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
     \caption{Neural networks details}
     \label{tb:nndetail}
 \end{table}
+\begin{figure}[t]
+    % \centering
+    \input{fig/data_plot.tex}
+    \caption{Cactus plot with most related techniques}
+    \label{res:milp_with_milp}
+\end{figure}
 
 
 \subsection{Results}
@@ -140,12 +147,6 @@ Our technique outperforms the others in terms of the verified number of instance
 % \todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
 except $14$ instances where \kpoly{} succeeds and our tool times out.
 
-\begin{figure}[t]
-    % \centering
-    \input{fig/data_plot.tex}
-    \caption{Cactus plot with most related techniques}
-    \label{res:milp_with_milp}
-\end{figure}
 
 % The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
 % Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
