@@ -5,28 +5,23 @@ We have implemented our approach in a prototype and compared it to three types o
 (iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 \ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, 
 and \marabou~\cite{katz2019marabou}. 
-Our tool is built upon \deeppoly{}, so we compare it with \deeppoly{} to establish a baseline. 
-Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsrgr{}, 
-which are other refinement tools based on \deeppoly{}. 
-We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
-As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
-We also compare our tool with the latest version of \alphabeta{}, and 2021 version of \ovaltool{} and \marabou{}. 
-Our results show that our tool is capable of solving unique benchmarks 
-that are beyond the reach of current state-of-the-art tools.
+%Our tool is built upon \deeppoly{}, so we compare it with \deeppoly{} to establish a baseline.  Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsrgr{},  which are other refinement tools based on \deeppoly{}. 
+%We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
+%As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools.
+%We also compare our tool with the latest version of \alphabeta{}, and 2021 version of \ovaltool{} and \marabou{}. 
+%Our results show that our tool is capable of solving unique benchmarks  that are beyond the reach of current state-of-the-art tools.
 Furthermore, we conducted a comparison of performance across different epsilon values for all the tools employed. 
 We extended this analysis to focus specifically on adversarially trained networks and observed a significant improvement 
 in performance. Moreover, we conducted a detailed comparison with \alphabeta{}, 
 utilizing the same preprocessing steps employed by the \alphabeta{} tool.
 
-The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations.
-The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22.
-The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
-The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
-respectively\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
+The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. \alphabeta{} achieved the first rank consistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22. %The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
+%The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
+%respectively
+\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
 could not compare with MN-BaB since it required GPU to run.  
 Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
-in VNN-COMP'21. We use the same configuration to run \alphabeta{} and \ovaltool{}, which these tools
-used in VNN-COMP for mnist benchmarks.   
+in VNN-COMP'21. We use the same configuration to run \alphabeta{} and \ovaltool{}, which these tools used in VNN-COMP.
 
 % We have implemented our approach in a prototype. We have presented out experiments in two subcategories. 
 % In first category we compared our tool with most related state of the art tools. We created three types of approaches in this category, 
@@ -153,7 +148,7 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
       (b)    
     \end{center}
   \end{minipage}
-  \caption{(a) Neural networks details (b) Cactus plot with most related techniques}
+  \caption{(a) Neural networks details (b) Cactus plot with related techniques}
   \label{res:milp_with_milp}
   \label{tb:nndetail}
 \end{figure}  
@@ -163,7 +158,7 @@ We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(
 processor with CentOS Linux 7 operating system. 
 To make a fair comparison between the tools, we provide only a single \textsc{CPU}, and $2000$ seconds timeout for each instance for each tool. 
 We uses vanilla \deeppoly{}(\deeppoly{} without preprocessing in line 1 of algorithm~\ref{algo:main}) 
-to generate kthe abstract constraints of benchmarks instances.
+to generate the abstract constraints of benchmarks instances.
 Figure~\ref{res:milp_with_milp}(b) represents the cactus plot of (log of) time taken vs the number of benchmarks 
 solved for the most related techniques. Figure~\ref{tb:matrix} and \ref{tb:matrix1} represent a 
 pairwise comparison of the number of 
@@ -373,10 +368,10 @@ refinement was applied. We applied the same preprocessing steps used by \alphabe
 These include the so-called PGD (Projected Gradient Descent) attack, followed by CROWN~\cite{zhang2018efficient} which is an incomplete technique. The PGD attack is a method that can generate counter examples. It works by iteratively updating the  perturbation in the direction of the gradient of the loss function with respect to the input data,  while constraining the magnitude of the perturbation to be within a predefined limit. The CROWN technique generates the over-approximated bounds. %These preprocessing steps are PGD attack and CROWN. PGD attack is to generate the counter example and if it fails then CROWN runs to generate the bounds.
 
 After preprocessing, the total number of benchmarks was reduced to $2362$, which were the benchmarks that were not 
-solved by preprocessing steps. Out of these benchmarks, \alphabeta{} was able to verify $626$, 
+solved by preprocessing steps. \textit{Out of these benchmarks, \alphabeta{} was able to verify $626$, 
 while our approach verified 
 $570$ benchmarks. Notably, our approach was able to solve $311$ benchmarks that were not solved by \alphabeta{}, 
-while \alphabeta{} solved $366$ benchmarks that were not solved by our approach. 
+while \alphabeta{} solved $366$ benchmarks that were not solved by our approach. }
 \textit{All $311$ benchmarks solved by our approach were from adversarially trained networks, while 
 not a single benchmarks out of $366$ solved by \alphabeta{} from adversarially trained networks}, 
 suggesting that our approach performs 
