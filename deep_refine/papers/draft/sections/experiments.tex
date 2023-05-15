@@ -65,10 +65,10 @@ We have implemented our techniques in a tool, which we call \drefine{}, in \text
 
 %\subsection{Benchmarks}
 \noindent{\bf Benchmarks.}
-We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We use 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in Table~\ref{tb:nndetail}.
+We use the MNIST~\cite{deng2012mnist} dataset to check the effectiveness of our tool and comparisons. We use 11 different fully connected feedforward neural networks with $\relu${} activation, as shown in Figure~\ref{tb:nndetail}(a).
 These benchmarks are taken from the \deeppoly{}'s paper~\cite{singh2019abstract}.  The input and output dimensions of each network are $784$ and $10$, respectively.  The authors of \deeppoly{} used projected gradient descent (PGD)~\cite{dong2018boosting}
-and DiffAI~\cite{mirman2018differentiable} for adversarial training. Table \ref{tb:nndetail} contains the defended network i.e.
-trained with adversarial training, as well as the undefended network. The last column of Table \ref{tb:nndetail} shows how the defended networks were trained.  
+and DiffAI~\cite{mirman2018differentiable} for adversarial training. Figure~\ref{tb:nndetail}(a) contains the defended network i.e.
+trained with adversarial training, as well as the undefended network. The last column of Figure~\ref{tb:nndetail}(a) shows how the defended networks were trained.  
 
 The predicate $P$ on the input layer is created using the input image $\boldsymbol{im}$ and user-defined 
 parameter $\epsilon$.  We first normalize each pixel of $\boldsymbol{im}$ between $0$ and $1$, 
@@ -85,12 +85,48 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
 % If a counter-example is found then the tool reports it, otherwise, the tool reports unknown.
 
 
-\begin{table}[t]
-\centering
+
+% \begin{table}[t]
+% \centering
+% \scalebox{0.8}{
+%   \begin{tabular}{c|c|c|c}
+%         \hline
+%         \textbf{Neural Network} & \textbf{\#hidden layers} & \textbf{\#activation units} & \textbf{Defensive training} \\
+%         \hline
+%         $3\times 50$ & 2 & 110 & None \\
+%         $3\times 100$ & 2 & 210 & None  \\
+%         $5\times 100$ & 4 & 410 & None  \\
+%         $6\times 100$ & 5 & 510 & DiffAI \\
+%         $9\times 100$ & 8 & 810 & None  \\
+%         $6\times 200$ & 5 & 1010 & None  \\
+%         $9\times 200$ & 8 & 1610 & None  \\
+%         $6\times 500$ & 6 & 3000 & None  \\
+%         $6\times 500$ & 6 & 3000 & PGD, $\epsilon = 0.1$ \\
+%         $6\times 500$ & 6 & 3000 & PGD, $\epsilon = 0.3$ \\
+%         $4\times 1024$ & 3 & 3072 & None  \\
+%         \hline
+%     \end{tabular}
+%     }
+%     \caption{Neural networks details}
+%     \label{tb:nndetail}
+% \end{table}  
+% \begin{figure}[t]
+%     % \centering
+%     \input{fig/data_plot.tex}
+%     \caption{Cactus plot with most related techniques}
+%     \label{res:milp_with_milp}
+% \end{figure}  
+
+
+\begin{figure}[t]
+  % \centering
+  \begin{minipage}{0.48\linewidth}
+    \mbox{}
 \scalebox{0.8}{
-\begin{tabular}{c|c|c|c}
+  \begin{tabular}{c|c|c|c}
         \hline
-        \textbf{Neural Network} & \textbf{\#hidden layers} & \textbf{\#activation units} & \textbf{Defensive training} \\
+    \textbf{Neural} & \textbf{\#hidden} & \textbf{\#activation} & \textbf{Defensive} \\
+    \textbf{Network} & \textbf{layers} & \textbf{ units} & \textbf{training} \\
         \hline
         $3\times 50$ & 2 & 110 & None \\
         $3\times 100$ & 2 & 210 & None  \\
@@ -105,17 +141,22 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
         $4\times 1024$ & 3 & 3072 & None  \\
         \hline
     \end{tabular}
-    }
-    \caption{Neural networks details}
-    \label{tb:nndetail}
-\end{table}
-\begin{figure}[t]
-    % \centering
+  }\\
+  \begin{center}
+  (a)    
+  \end{center}
+  \end{minipage}
+  \begin{minipage}{0.48\linewidth}
+    \mbox{}
     \input{fig/data_plot.tex}
-    \caption{Cactus plot with most related techniques}
-    \label{res:milp_with_milp}
-\end{figure}
-
+    \begin{center}
+      (b)    
+    \end{center}
+  \end{minipage}
+  \caption{(a) Neural networks details (b) Cactus plot with most related techniques}
+  \label{res:milp_with_milp}
+  \label{tb:nndetail}
+\end{figure}  
 
 \subsection{Results}
 We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
@@ -123,8 +164,8 @@ processor with CentOS Linux 7 operating system.
 To make a fair comparison between the tools, we provide only a single \textsc{CPU}, and $2000$ seconds timeout for each instance for each tool. 
 We uses vanilla \deeppoly{}(\deeppoly{} without preprocessing in line 1 of algorithm~\ref{algo:main}) 
 to generate kthe abstract constraints of benchmarks instances.
-Figure~\ref{res:milp_with_milp} represents the cactus plot of (log of) time taken vs the number of benchmarks 
-solved for the most related techniques. Table~\ref{tb:matrix} and \ref{tb:matrix1} represent a 
+Figure~\ref{res:milp_with_milp}(b) represents the cactus plot of (log of) time taken vs the number of benchmarks 
+solved for the most related techniques. Figure~\ref{tb:matrix} and \ref{tb:matrix1} represent a 
 pairwise comparison of the number of 
 instances that a tool could solve which another couldn't  
 (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified 
@@ -142,9 +183,9 @@ by tool $i$ but not by tool $j$), and Figure~\ref{res:ep:milp_with_milp}, compar
 
 \paragraph{Comparison with the most related techniques:}
 In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deepsrgr{} to compare with ours. 
-We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and counter-example. Hence, we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}. 
+We consider \deeppoly{} because it is at the base of our technique, and the techniques \kpoly{} and \deepsrgr{} refine \deeppoly{} just as we do. These tools only report \verified{} instances, while our tool can report  \verified{} and counter-example. Hence, we compare these techniques with only \verified{}  instances of our technique in the line of \textsc{drefine\_verified} in cactus plot ~\ref{res:milp_with_milp}(b). 
 
-Our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Table~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and in fact around $\sim 700$ more), %\todo{check this number - was written 3700) for \deeppoly{} and \kpoly{} and $\sim 1000$ for \deepsrgr),
+Our technique outperforms the others in terms of the verified number of instances. One can also see that when they do verify, \deeppoly{} and \kpoly{} are often more efficient, which is not surprising, while our tool is more efficient than \deepsrgr{}. From Figure~\ref{tb:matrix}, we also see  that our tool solves all the benchmark instances which are solved by these three techniques (and in fact around $\sim 700$ more), %\todo{check this number - was written 3700) for \deeppoly{} and \kpoly{} and $\sim 1000$ for \deepsrgr),
 % \todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
 except $14$ instances where \kpoly{} succeeds and our tool times out.
 
@@ -179,7 +220,7 @@ except $14$ instances where \kpoly{} succeeds and our tool times out.
 
 
 \paragraph{Comparison with cegar based techniques: }
-\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different from \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Table~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Table~\ref{tb:matrix}. %Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
+\cegarnn{}~\cite{elboher2020abstraction} is a tool that also uses  counter example guided refinement. But the abstraction used is quite different from \deeppoly{}. This tool reduces the size of the network by merging similar neurons, such that they maintain the overapproximation and split back in the refinement process. We can conclude from Figure~\ref{tb:matrix} that \cegarnn{} verified only  $18.88\%$, while our tool verified $61.42\%$ of the total number of benchmark instances. Although, in total \cegarnn{} solves significantly fewer benchmarks, it is pertinent to note that this technique solves many unique benchmark instances as can be inferred from Figure~\ref{tb:matrix}. %Again this shows the orthogonal nature of this technique compared to the others.% the tool \texttt{cegar\_nn} is deployed completely different technique in comparison to others. 
 
 
 \paragraph{Comparison with state-of-the-art solvers: }
@@ -187,11 +228,11 @@ The tools \alphabeta{} and \ovaltool{} use several algorithms that are highly op
 The authors of \alphabeta{} implement the techniques~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
 and the authors of \ovaltool{} implement~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}.
 The authors of \marabou{} implement the technique~\cite{katz2019marabou}. 
-Table~\ref{tb:matrix} shows that all three tools indeed solve about 1000 (out of 8496) more than 
+Figure~\ref{tb:matrix} shows that all three tools indeed solve about 1000 (out of 8496) more than 
 we do\footnote{\alphabeta{} outperforms \marabou{} in VNN-COMP'22, while in our experiments \marabou{} performs better; potential reasons could be difference in benchmarks and that \alphabeta{} uses \textsc{GPU}, while \marabou{} uses \textsc{CPU} in VNN-COMP'22.}. 
 However, we found around $180$ benchmarks instances where \alphabeta{} fails, and our tool works, 
 and around $190$ benchmarks on which \ovaltool{} fails and our tool works. 
-Also, around $655$ benchmarks where \marabou{} fails and our tool works; see Table~\ref{tb:matrix} for more details. 
+Also, around $655$ benchmarks where \marabou{} fails and our tool works; see Figure~\ref{tb:matrix} for more details. 
 In total, we are solving $59$ unique benchmarks where all three tools fail to solve. 
 Thus we believe that these tools are truly orthogonal in their strengths and could potentially be combined. 
 % We also note that in terms of total time, both tools take more time than our tool. 
@@ -232,7 +273,7 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
 %     \label{tb:matrix}
 % \end{table}
 
-\begin{table}[t]
+\begin{figure}[t]
   \scriptsize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|c|c|g||c|}
@@ -259,7 +300,7 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
     \end{tabular}
     \caption{Pairwise comparison of tools, e.g. entry on row \kpoly{} and column \deeppoly{} represents 156 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
     \label{tb:matrix}
-\end{table}
+\end{figure}
 
 \paragraph{Epsilon vs. performance: }
 As a sanity check, we analyzed the effect of perturbation size and the performance of the tools.
@@ -281,9 +322,9 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
 
 \paragraph{Comparison with adversarially trained networks: }
 The networks considered for evaluation in this study are the ones corresponding to the 4st, 9th, and 10th 
-rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
+rows of Figure~\ref{tb:nndetail}(a). These networks have been trained using adversarial techniques, 
 where adversarial examples were generated using standard methods such as PGD/DiffAI, and the network was subsequently 
-trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix1} presents a 
+trained on these adversarial examples to enhance its robustness. Figure~\ref{tb:matrix1} presents a 
 pairwise comparison of verifiers on these adversarially trained networks, 
 encompassing a total of 2223 benchmark instances. 
 Our approach demonstrates significant superiority over \deeppoly{}, \kpoly{}, and \deepsrgr{} in terms of 
@@ -294,7 +335,7 @@ approach successfully addresses.
 
 
 {\color{red}
-\begin{table}[t]
+\begin{figure}[t]
   \scriptsize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|g||c|}
@@ -318,7 +359,7 @@ approach successfully addresses.
     % \caption{Pairwise comparison of tools on adversarially trained networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
     \caption{Pairwise comparison of tools on adversarially trained networks}
     \label{tb:matrix1}
-\end{table}
+\end{figure}
 }
 
 % \paragraph{Number of marked neurons: }
@@ -341,7 +382,7 @@ not a single benchmarks out of $366$ solved by \alphabeta{} from adversarially t
 suggesting that our approach performs 
 well for such networks as PGD attack is not very effective on these benchmarks. 
 These results indicate that the majority of the benchmarks ($1095$) solved by \alphabeta{} and not by our approach, 
-as shown in Table~\ref{tb:matrix}, are likely solved by preprocessing steps rather than the refinement procedure.
+as shown in Figure~\ref{tb:matrix}, are likely solved by preprocessing steps rather than the refinement procedure.
 The combination of benchmarks solved by both tools results in a total of 937 benchmarks, 
 demonstrating an improvement in the benchmarks solved by \alphabeta{}. 
 This highlights the significant contribution of our tool in the context of portfolio verifiers, 
