@@ -10,7 +10,7 @@ Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsr
 which are other refinement tools based on \deeppoly{}. 
 We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
 As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
-We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
+We also compare our tool with the latest version of \alphabeta{}, and 2021 version of \ovaltool{} and \marabou{}. 
 Our results show that our tool is capable of solving unique benchmarks 
 that are beyond the reach of current state-of-the-art tools.
 Furthermore, we conducted a comparison of performance across different epsilon values for all the tools employed. 
@@ -327,8 +327,9 @@ approach successfully addresses.
 \paragraph{Detailed comparison with \alphabeta{} with same preprocessing: } 
 To evaluate the effectiveness of our approach, we conducted a benchmark analysis on the instances where 
 refinement was applied. We applied the same preprocessing steps used by \alphabeta{} to filter the benchmarks.
-These preprocessing steps are PGD attack and CROWN. PGD attack is to generate the counter example
-and if it fails then CROWN runs to generate the bounds.  
+
+These include the so-called PGD (Projected Gradient Descent) attack, followed by CROWN~\cite{zhang2018efficient} which is an incomplete technique. The PGD attack is a method that can generate counter examples. It works by iteratively updating the  perturbation in the direction of the gradient of the loss function with respect to the input data,  while constraining the magnitude of the perturbation to be within a predefined limit. The CROWN technique generates the over-approximated bounds. %These preprocessing steps are PGD attack and CROWN. PGD attack is to generate the counter example and if it fails then CROWN runs to generate the bounds.
+
 After preprocessing, the total number of benchmarks was reduced to $2362$, which were the benchmarks that were not 
 solved by preprocessing steps. Out of these benchmarks, \alphabeta{} was able to verify $626$, 
 while our approach verified 
