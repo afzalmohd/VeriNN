@@ -280,7 +280,7 @@ We are performing better compared to \marabou{} only when $\epsilon$ is less tha
 \paragraph{Comparison with adversarially trained networks: }
 The networks considered for evaluation in this study are the ones corresponding to the 1st, 9th, and 10th 
 rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
-where adversarial examples were generated using standard methods such as PGD, and the network was subsequently 
+where adversarial examples were generated using standard methods such as PGD/DiffAI, and the network was subsequently 
 trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix1} presents a 
 pairwise comparison of verifiers on these adversarially trained networks, 
 encompassing a total of 2223 benchmark instances. 
@@ -388,22 +388,6 @@ procedure could yield significant enhancements in overall performance.
 %       \caption{Avrage marking, refinement time and average number of marked neurons and refinement iterations}
 %       \label{tb:subroutine}
 %   \end{table}
-
-Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques.\todo{I tried to summarize the reviews related to experiments. } 
-Specifically, we utilize counterexamples to identify the intrinsic cause of spuriousness, 
-such as marked or branching neurons, whereas existing methods do not analyze counterexamples to identify the neurons to branch. 
-Consequently, it is challenging to identify the exact patterns or features present in the unique benchmarks that 
-\drefine{} solves and that current state-of-the-art methods cannot solve.
-
-The neural network verification currently works only on small networks. However, similar to software verification, 
-where each paper contributed a small amount towards practical software verification technology, 
-we expect to make gradual progress towards practical neural network verification technology. 
-The process of discovering new methods to solve the problem and identifying which ones will lead 
-to a push-button technology is hard to predict. 
-However, as with software verification, we may develop techniques that can solve sub-problems or neighboring problems, 
-which can make significant contributions to the area.
-Experience in SAT-solving suggests that one stack of techniques is unlikely to solve all instances. 
-Therefore, we need portfolio solvers, and we contend that our technique contributes to building such a solver.
 
 % Figures \ref{res:milp_with_milp} and \ref{res:ep:milp_with_milp} shows that we are performing better in compare to
 % the most related techniques \deeppoly{}, \texttt{refinepoly} and \texttt{deepSRGR}. 

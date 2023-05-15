@@ -6,3 +6,20 @@ We are also verify several benchmarks that are beyond state of the art solvers, 
 As futurework, we plan to extend our technique/tool to make it independent of \deeppoly{} and applicable with other 
 abstraction based techniques and tools. %We believe this could lead to more benchmarks being solved overall.
  %Such that we can improve the results on top of the state of the arts.  
+
+Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques. 
+Specifically, we utilize counterexamples to identify the intrinsic cause of spuriousness, 
+such as marked or branching neurons, whereas existing methods do not analyze counterexamples to identify the neurons to branch. 
+Consequently, it is challenging to identify the exact patterns or features present in the unique benchmarks that 
+\drefine{} solves and that current state-of-the-art methods cannot solve.
+
+The neural network verification currently works only on small networks. However, similar to software verification, 
+where each paper contributed a small amount towards practical software verification technology, 
+we expect to make gradual progress towards practical neural network verification technology. 
+The process of discovering new methods to solve the problem and identifying which ones will lead 
+to a push-button technology is hard to predict. 
+However, as with software verification, we may develop techniques that can solve sub-problems or neighboring problems, 
+which can make significant contributions to the area.
+Experience in SAT-solving suggests that one stack of techniques is unlikely to solve all instances. 
+Therefore, we need portfolio solvers, and we contend that our technique contributes to building such a solver.
+
