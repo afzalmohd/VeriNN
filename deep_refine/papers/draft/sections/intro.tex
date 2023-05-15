@@ -24,9 +24,12 @@ In this paper, we consider the basic abstraction framework provided by \deeppoly
 \item We use these specially identified or {\em marked} neurons to split and refine. This ensures that, unlike earlier refinement methods, our method progresses at each iteration and eliminates spurious counterexamples.
 \item We adapt the existing refinement framework built on ideas from \milp{}-methods and implement this as a counterexample guided abstraction refinement algorithm on top of \deeppoly{}.
 \item We show that our technique outperforms to-the-best-of-our-knowledge all existing refinement strategies based on \deeppoly{}.
-\item We further demonstrate that our implementation is able to verify several benchmarks that are beyond the reach of state-of-the-art tools such as \alphabeta{}~\cite{alphabetacrown} and \ovaltool{}~\cite{bunel2020branch}.
 \item   We also identify a class of benchmarks coming from adversarially trained networks, where these state-of-the-art tools do not work well, because of the ineffectiveness of certain preprocessing steps (e.g., PGD attack~\cite{dong2018boosting})
-\item Incorporating such preprocessing techniques in our tool allows us to obtain a significant improvement in the overall performance of our tool.% matching the performance of these state-of-the-art tools.
+\item Incorporating such preprocessing techniques in our tool allows us to obtain a significant improvement in the overall performance of our tool.
+%\item We further demonstrate that
+ Our implementation is able to verify several benchmarks that are beyond the reach of state-of-the-art tools such as \alphabeta{}~\cite{alphabetacrown} and \ovaltool{}~\cite{bunel2020branch}.
+
+  % matching the performance of these state-of-the-art tools.
 %  ork do not well because some of the optimizations are ineffective against the benchmarks.
   % , as discussed next.
 \end{itemize}
