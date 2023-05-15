@@ -1,24 +1,22 @@
 \subsection{Proofs of progress and termination}
-Our refinement strategy ensures progress, i.e., the spurious counterexample does not
-repeat in the future
-iterations of Algorithm~\ref{algo:main}. Let us suppose the algorithm
+Our refinement strategy ensures progress, i.e., the spurious counterexample does not repeat in the future iterations of Algorithm~\ref{algo:main}. Let us suppose the algorithm
 $\textsc{getMarkedNeurons}$ gets the abstract spurious counterexample
 ${v_0}, {v_1}, ... {v_k}$ and
-returns marked neurons in $i$th iteration.
+returns marked neurons in some iteration of the while loop, say $i^{th}$-iteration.
 The call to $\maxsat{}$ at line 10
 declares that $constr \land softsatSet$ is satisfiable.
 We can extract an abstract spurious counterexample from a model
 of $constr \land softsatSet$.
 Let $m$ be the model.
 Let the abstract spurious counterexample be $cex = val_0^{v_0}, ...., val^{v_0}_{i-1},v'_{i},...,v'_{k-1},v_k$.
-Before the step $i$, $cex$ follows the execution of $N$ on input $v_0$.
-After the step $i$, we use the model to construct $cex$, i.e., $m(x_i) = v'_i$.
+Before the iteration $i$, $cex$ follows the execution of $N$ on input $v_0$.
+After the iteration $i$, we use the model to construct $cex$, i.e., $m(x_i) = v'_i$.
 
-\begin{theorem}
-  In the rest of the run of Algorithm~\ref{algo:main}, we will never find the abstract
-  spurious counterexample
-  $cex$ again.
-\end{theorem}
+%\begin{theorem}
+  \begin{lemma}
+  In the rest of run of Algorithm~\ref{algo:main}, i.e., future iterations of the while loop, $\textsc{IsVerified}$ will not return the abstract spurious counterexample  $cex$ again.
+  %\end{theorem}
+  \end{lemma}
 \begin{proof}
   For $n_{ij} \in newMarked$, the \maxsat{} query ensures that
   $val^{v_0}_{ij} \neq v'_{ij}$.
@@ -28,12 +26,7 @@ After the step $i$, we use the model to construct $cex$, i.e., $m(x_i) = v'_i$.
   will be $val^{v_0}_{ij}$, which contradicts the earlier inequality.  
 \end{proof}
 
-Further, we prove that our method always terminates.
-%
-Theorems \ref{th:progress1} and \ref{th:progress2} imply that in every
-iteration $\textsc{getMarkedNeurons}$
-returns a nonempty set of unmarked neurons, which we will now be marked. In worst case the algorithm marked all 
-the neurons of the network, and encode them in the exact behavior. 
+
 
 % Suppose the algorithm {\em getMarkedNeurons} get abstractCEX 
 % ${v_0}, {v_1}, ... {v_k}$ as input, 
@@ -41,13 +34,13 @@ the neurons of the network, and encode them in the exact behavior.
 % when we execute the neural network on input ${v_0}$.
 
 
+Next, we turn to termination of the algorithm. We have two lemmmas.
 
-
-\begin{theorem}
+\begin{lemma}
   \label{th:progress1}
   In every refinement iteration $\textsc{getMarkedNeurons}$
   returns a non-empty set of marked neurons. 
-\end{theorem}
+\end{lemma}
 
 \begin{proof}
 By the definition of abstract spurious counterexample, ${v_k} \models \lnot Q$. 
@@ -60,11 +53,11 @@ ${val_k^{{v_0}}} \models Q$, which is a contradiction.
 % {\em Proof by contradiction:} 
 
 
-\begin{theorem}
+\begin{lemma}
   \label{th:progress2}
   In every refinement iteration $\textsc{getMarkedNeurons}$
   returns marked neurons, which were not marked in previous iterations. 
-\end{theorem}
+\end{lemma}
 
 \begin{proof}
 We will show that if a neuron $n_{ij}$ got marked in $t^{th}$ iteration then $n_{ij}$ will not be marked again in any iteration greater than $t$.
@@ -76,6 +69,13 @@ its behavior while optimizing constraints will be same as the exact \relu{}.
 Moreover, $v'_{ij} = val_{ij}^{v_0}$, 
 which implies the soft constraint for neuron $n_{ij}$ will always be satisfied. Hence it will not occur as a marked neuron as per the criteria of new marked neurons in line 10 of Algorithm~\ref{algo:refine2}.   %\todo{check last line.}
 \end{proof}
+
+
+Lemmas \ref{th:progress1} and \ref{th:progress2} imply that in every iteration $\textsc{getMarkedNeurons}$ returns a nonempty set of unmarked neurons, which we will now be marked. In worst case, the algorithm will mark all the neurons of the network, and encode them in the exact behavior. Thus, we conclude,
+
+\begin{theorem}
+  Algorithm~\ref{algo:main} always terminates.
+\end{theorem}
 
 
 %%% Local Variables:

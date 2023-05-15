@@ -208,7 +208,7 @@ marked neurons whose exact encoding will eliminate the counterexample
 in the future analysis.
 %
 %
-As we have also defined earlier, let ${val_i^{{v_0}}}$ represent the value vector
+As we defined earlier, let ${val_i^{{v_0}}}$ represent the value vector
 on layer $l_i$, if we execute the neural network on input ${v_0}$.
 %
 Let us say ${v_0}, {v_1}, ... ,{v_k}$ is an abstract spurious counterexample.
@@ -223,7 +223,7 @@ theorem follows.
 
 \begin{theorem}
   \label{th:marked2}
-  Let us say ${v_0}, {v_1}, ... {v_k}$ is an abstract execution. For all $1\leq i\leq k$, if $Type_i = \affine$ and ${val_{i-1}^{{v_0}}} = {v_{i-1}}$, then ${val_i^{{v_0}}} = {v_i}$.
+  Let ${v_0}, {v_1}, ... {v_k}$ be an abstract execution. For all $1\leq i\leq k$, if $Type_i = \affine$ and ${val_{i-1}^{{v_0}}} = {v_{i-1}}$, then ${val_i^{{v_0}}} = {v_i}$.
 \end{theorem}
 % \begin{proof}
 %   Since affine layer's constraints are exact.
