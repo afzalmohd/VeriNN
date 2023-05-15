@@ -1,27 +1,4 @@
-% We have implemented our approach in a prototype and compared it to three types of approaches 
-% (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, 
-% (ii) other cegar based approaches, and 
-% %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
-% (iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
-% \ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, 
-% and \marabou~\cite{katz2019marabou}. 
-% {\color{red}
-% Our tool is built upon \deeppoly{}, so we compare it with \deeppoly{} to establish a baseline. 
-% Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsrgr{}, 
-% which are other refinement tools based on \deeppoly{}. 
-% We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
-% As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
-% We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
-% Our results show that our tool is capable of solving unique benchmarks 
-% that are beyond the reach of current state-of-the-art tools.
-% }
-% The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations. 
-% The tool~\alphabeta{}, \ovaltool{}, and \marabou{} achieved the 1st, 3rd, and 5th rank, 
-% respectively\footnote{We could not compare with 2nd rank tool \textsc{VeriNet}, as we had difficulties with its external solver's (\textsc{Xpress}) license. Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
-% in the 2nd International Verification of Neural Networks Competition (VNN-COMP'21).
-
-We have implemented our approach in a prototype. We have presented out experiments in two subcategories. 
-In first category we compared our tool with most related state of the art tools. We created three types of approaches in this category, 
+We have implemented our approach in a prototype and compared it to three types of approaches 
 (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, 
 (ii) other cegar based approaches, and 
 %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
@@ -36,16 +13,46 @@ As our tool is based on counterexample-guided refinement (CEGAR), we also compar
 We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
 Our results show that our tool is capable of solving unique benchmarks 
 that are beyond the reach of current state-of-the-art tools.
+Furthermore, we conducted a comparison of performance across different epsilon values for all the tools employed. 
+We extended this analysis to focus specifically on adversarially trained networks and observed a significant improvement 
+in performance. Moreover, we conducted a detailed comparison with \alphabeta{}, 
+utilizing the same preprocessing steps employed by the \alphabeta{} tool.
 
-In second category we did the detailed comparison with \alphabeta{}, which is the 1st ranker in both 
-International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22. 
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations.
+The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22
 The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
 respectively\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
 could not compare with MN-BaB since it required GPU to run.  
 Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
 in VNN-COMP'21.
+
+% We have implemented our approach in a prototype. We have presented out experiments in two subcategories. 
+% In first category we compared our tool with most related state of the art tools. We created three types of approaches in this category, 
+% (i) \deeppoly{}~\cite{singh2019abstract} and its refinements \kpoly{}~\cite{singh2019beyond}, \deepsrgr{}~\cite{yang2021improving}, 
+% (ii) other cegar based approaches, and 
+% %The approaches  \texttt{kPoly} and \texttt{deepSRGR} do the refinement on \deeppoly{}.
+% (iii) state-of-the-art tools \alphabeta~\cite{zhang2018efficient,wang2021beta,xu2020fast,zhang2022branch,tjeng2017evaluating}, 
+% \ovaltool~\cite{bunel2018unified,bunel2020branch,bunel2020lagrangian,de2021scaling,de2021scaling,de2021scaling2,de2021improved}, 
+% and \marabou~\cite{katz2019marabou}. 
+% Our tool is built upon \deeppoly{}, so we compare it with \deeppoly{} to establish a baseline. 
+% Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsrgr{}, 
+% which are other refinement tools based on \deeppoly{}. 
+% We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
+% As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
+% We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
+% Our results show that our tool is capable of solving unique benchmarks 
+% that are beyond the reach of current state-of-the-art tools.
+
+% In second category we did the detailed comparison with \alphabeta{}, which is the 1st ranker in both 
+% International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22. 
+% The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations.
+% The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
+% The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
+% respectively\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
+% could not compare with MN-BaB since it required GPU to run.  
+% Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
+% in VNN-COMP'21.
 
 
 \medskip
@@ -106,13 +113,24 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
 We conducted the experiments on a machine with \textsc{64GB RAM, 2.20 GHz Intel(R) Xeon(R) CPU E5-2660 v2}
 processor with CentOS Linux 7 operating system. 
 To make a fair comparison between the tools, we provide only a single \textsc{CPU}, and $2000$ seconds timeout for each instance for each tool. 
+We uses vanilla \deeppoly{}(\deeppoly{} without preprocessing in line 1 of algorithm~\ref{algo:main}) 
+to generate kthe abstract constraints of benchmarks instances.
+Figure~\ref{res:milp_with_milp} represents the cactus plot of (log of) time taken vs the number of benchmarks 
+solved for the most related techniques. Table~\ref{tb:matrix} and \ref{tb:matrix1} represent a 
+pairwise comparison of the number of 
+instances that a tool could solve which another couldn't  
+(more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified 
+by tool $i$ but not by tool $j$), and Figure~\ref{res:ep:milp_with_milp}, compares wrt epsilon, the robustness parameter.
 
-\subsubsection{Comparison with state of the arts:}
+% \subsubsection{Comparison with state of the arts:}
 
-In this category we uses vanilla \deeppoly{}(\deeppoly{} without preprocessing in line 1 of algorithm~\ref{algo:main})
-to generate kthe abstract constraints of benchmarks instances. 
-We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved for the most related techniques (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp}, which compares wrt epsilon, the robustness parameter.
+% In this category we uses vanilla \deeppoly{}(\deeppoly{} without preprocessing in line 1 of algorithm~\ref{algo:main})
+% to generate kthe abstract constraints of benchmarks instances. 
+% We make three types of comparisons as shown in (i) Figure~\ref{res:milp_with_milp}, which is a cactus plot of (log of) time taken vs the number of benchmarks solved for the most related techniques (ii) Table~\ref{tb:matrix}, which makes a pairwise comparison of the number of instances that a tool could solve which another couldn't  (more precisely, the $(i,j)$-entry of the table is the number of instances which could be verified by tool $i$ but not by tool $j$) and (iii) Figure~\ref{res:ep:milp_with_milp}, which compares wrt epsilon, the robustness parameter.
 %represents the verified cases while the column represents the not verified cases, i.e.\kpoly{}'th row and \deeppoly{}'th column represent the  156 number of benchmarks instances which are solved by \kpoly{} and not solved by \deeppoly{}. 
+
+
+
 
 \paragraph{Comparison with the most related techniques:}
 In this subsection, we consider the techniques \deeppoly{}, \kpoly{}, and \deepsrgr{} to compare with ours. 
@@ -241,22 +259,36 @@ Thus we believe that these tools are truly orthogonal in their strengths and cou
     \label{tb:matrix}
 \end{table}
 
+\paragraph{Epsilon vs. performance: }
+As a sanity check, we analyzed the effect of perturbation size and the performance of the tools.
+In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as epsilon grows from $0.005$ to $0.05$. 
+At $\epsilon=0.005$, the performance of all the tools is almost the same except \cegarnn{} and \marabou{}.
+As epsilon increases, the success rate of tools drops consistently except \cegarnn{} and \marabou{}. Here also, we perform better than \deeppoly{}, 
+\kpoly{}, \deepsrgr{}, and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
+We are performing better compared to \marabou{} only when $\epsilon$ is less than $0.015$. 
+
+
+\begin{figure}[]    \centering
+\scalebox{0.8}{
+  \input{fig/ep_plot.tex}
+  }
+    \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
+    \label{res:ep:milp_with_milp}
+\end{figure}
+
 
 \paragraph{Comparison with adversarially trained networks: }
-
-% Table~\ref{tb:matrix1} shows the pairwise comparison of the verifiers on adversarially trained networks, the total number of benchmarks for 
-% defended networks are $2223$. We are performing far better than \deeppoly{}, \kpoly{}, and \deepsrgr{} on these benchmarks. 
-% In comparison to \alphabeta{} and \ovaltool{}, although they are solving around 135 more benchmarks in comparison to our approach. 
-% But we are solving around $75$ unique benchmarks which are not solved by both the tools. Out of $2223$ the number 
-% $75$ is a reasonable number of benchmarks. 
-
-Table~\ref{tb:matrix1} presents a pairwise comparison of verifiers on adversarially trained networks,
-which are 3 networks as shown in Table~\ref{tb:nndetail} and total $2223$ benchmarks instances. 
-Our approach performs significantly better than DeepPoly, kPoly, and deepSRGR on these benchmarks. 
-While \alphabeta{} and \ovaltool{} are solving approximately $135$ more benchmarks than our approach, 
-we are still able to solve $75$ unique benchmarks that are not solved by either of these tools. 
-Given that the total number of benchmarks is $2223$, $75$ is a notable number of benchmarks that our 
-approach is capable of solving.
+The networks considered for evaluation in this study are the ones corresponding to the 1st, 9th, and 10th 
+rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
+where adversarial examples were generated using standard methods such as PGD, and the network was subsequently 
+trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix1} presents a 
+pairwise comparison of verifiers on these adversarially trained networks, 
+encompassing a total of 2223 benchmark instances. 
+Our approach demonstrates significant superiority over \deeppoly{}, \kpoly{}, and \deepsrgr{} in terms of 
+performance on these benchmarks. While \alphabeta{} and \ovaltool{} outperform our approach by approximately 
+135 benchmarks, we are still able to solve 75 unique benchmarks that remain unsolved by both of these tools. 
+Considering the total number of benchmarks is 2223, this indicates a notable number of benchmarks that our 
+approach successfully addresses.
 
 
 {\color{red}
@@ -281,34 +313,17 @@ approach is capable of solving.
         \tiny \textbf{\drefine} & 170 & 163 & 168 & 76 & 75 & \textbf{0} & 1796 \\
         \hline
     \end{tabular}
-    \caption{Pairwise comparison of tools on adversarially trained networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
+    % \caption{Pairwise comparison of tools on adversarially trained networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
+    \caption{Pairwise comparison of tools on adversarially trained networks}
     \label{tb:matrix1}
 \end{table}
 }
-
-\paragraph{Epsilon vs. performance: }
-As a sanity check, we analyzed the effect of perturbation size and the performance of the tools.
-In Figure~\ref{res:ep:milp_with_milp}, we present the comparison of fractional success rate of tools as epsilon grows from $0.005$ to $0.05$. 
-At $\epsilon=0.005$, the performance of all the tools is almost the same except \cegarnn{} and \marabou{}.
-As epsilon increases, the success rate of tools drops consistently except \cegarnn{} and \marabou{}. Here also, we perform better than \deeppoly{}, 
-\kpoly{}, \deepsrgr{}, and \cegarnn{}, while \alphabeta{} and \ovaltool{} perform better.
-We are performing better compared to \marabou{} only when $\epsilon$ is less than $0.015$. 
-
-
-\begin{figure}[]    \centering
-\scalebox{0.8}{
-  \input{fig/ep_plot.tex}
-  }
-    \caption{Size of input perturbation (epsilon) vs. percentage of solved instances}
-    \label{res:ep:milp_with_milp}
-\end{figure}
 
 % \paragraph{Number of marked neurons: }
 % On average, \drefine{} marks $9.8\%$ of neurons, whenever it needs to refine. 
 % Our experiments show that the number of marked neurons is quite small, so our refinement is indeed fast and strengthens the argument that {\em "finding causes of spuriousness"} does improve the overall efficiency. 
 
-\subsubsection{Detailed comparison with \alphabeta{}: } 
-\paragraph{Comparison with preprocessing in algorithm~\ref{algo:main}: } 
+\paragraph{Detailed comparison with \alphabeta{} with same preprocessing: } 
 To evaluate the effectiveness of our approach, we conducted a benchmark analysis on the instances where 
 refinement was applied. We applied the same preprocessing steps used by \alphabeta{} to filter the benchmarks.
 These preprocessing steps are PGD attack, CROWN, and MIP to tighten the crown bounds. 
@@ -325,41 +340,54 @@ as shown in Table~\ref{tb:matrix}, are likely solved by preprocessing steps rath
 
 
 \paragraph{Subroutine time: }
-Table~\ref{tb:subroutine} presents the average time required by the \textsc{getmarkneuron} and \textsc{refinement} 
-subroutines, as well as the average number of marked neurons and refinement iterations in our experiments. 
-Each row in the table displays the average number for all benchmarks instances for a specific neural network. 
-The total average time taken by the \textsc{getmarkneuron} subroutine is $15.66$ seconds, while the \textsc{refinement}
-subroutine takes $89.69$ seconds. In comparison to the average \textsc{refinement} time, the \textsc{getmarkneuron} 
-subroutine takes up only $14.86\%$ of the total time, which is a small fraction. 
-The average number of marked neurons and refinement iterations are also relatively small, 
-indicating that integrating our \textsc{getmarkneuron} method with an efficient refinement procedure could significantly 
-improve overall performance. 
+% Table~\ref{tb:subroutine} presents the average time required by the \textsc{getmarkneuron} and \textsc{refinement} 
+% subroutines, as well as the average number of marked neurons and refinement iterations in our experiments. 
+% Each row in the table displays the average number for all benchmarks instances for a specific neural network. 
+% The total average time taken by the \textsc{getmarkneuron} subroutine is $15.66$ seconds, while the \textsc{refinement}
+% subroutine takes $89.69$ seconds. In comparison to the average \textsc{refinement} time, the \textsc{getmarkneuron} 
+% subroutine takes up only $14.86\%$ of the total time, which is a small fraction. 
+% The average number of marked neurons and refinement iterations are also relatively small, 
+% indicating that integrating our \textsc{getmarkneuron} method with an efficient refinement procedure could significantly 
+% improve overall performance. 
 
-\begin{table}[t]
-  \centering
-  \scalebox{0.8}{
-  \begin{tabular}{c|c|c|c|c}
-          \hline
-          \textbf{Neural Network} & \textbf{Avg marking time} & \textbf{Avg refinement time} & \textbf{\#Mark Neurons} & \textbf{\#Refinement iterations} \\
-          \hline
-          $3\times 50$ & 0.39 & 112.50 & 22.17 & 4.63 \\
-          $3\times 100$ & 0.56 & 149.50 & 20.60 & 3.67  \\
-          $5\times 100$ & 1.97 & 6.10 & 5.23 & 1.5  \\
-          $6\times 100$ & 5.86 & 218.87 & 23.27 & 4.55 \\
-          $9\times 100$ & 66.90 & 109.32 & 38.1 & 8.80  \\
-          $6\times 200$ & 16.08 & 54.16 & 15.23 & 3  \\
-          $9\times 200$ & 42.32 & 58.72 & 11.17 & 2.17  \\
-          $6\times 500$ & 6.50 & 30.75 & 1.97 & 1.4  \\
-          $6\times 500$ & 7.5 & 133.20 & 5.45 & 1.2 \\
-          $4\times 1024$ & 8.56 & 23.80 & 5 & 1 \\
-          \hline
-          \textbf{Total average} & 15.66 & 89.69 & 14.81 & 3.19 \\
-          \hline
-      \end{tabular}
-      }
-      \caption{Avrage marking, refinement time and average number of marked neurons and refinement iterations}
-      \label{tb:subroutine}
-  \end{table}
+
+We conducted measurements to determine the average time required by the \textsc{getmarkneuron} subroutine 
+and the \textsc{refinement} subroutine. 
+The \textsc{getmarkneuron} subroutine exhibited an average execution time of $15.66$ seconds, 
+whereas the \textsc{refinement} subroutine took $89.69$ seconds on average. 
+Comparatively, the \textsc{getmarkneuron} subroutine accounted for only $14.86\%$ of the total time, 
+which represents a small proportion. Furthermore, we measured the average number of marked neurons, 
+which amounted to $14.81$, and the average refinement iteration count, which stood at $3.19$. 
+These values also indicate a relatively small magnitude. 
+These findings suggest that integrating our \textsc{getmarkneuron} method with an efficient refinement 
+procedure could yield significant enhancements in overall performance.
+
+
+% \begin{table}[t]
+%   \centering
+%   \scalebox{0.8}{
+%   \begin{tabular}{c|c|c|c|c}
+%           \hline
+%           \textbf{Neural Network} & \textbf{Avg marking time} & \textbf{Avg refinement time} & \textbf{\#Mark Neurons} & \textbf{\#Refinement iterations} \\
+%           \hline
+%           $3\times 50$ & 0.39 & 112.50 & 22.17 & 4.63 \\
+%           $3\times 100$ & 0.56 & 149.50 & 20.60 & 3.67  \\
+%           $5\times 100$ & 1.97 & 6.10 & 5.23 & 1.5  \\
+%           $6\times 100$ & 5.86 & 218.87 & 23.27 & 4.55 \\
+%           $9\times 100$ & 66.90 & 109.32 & 38.1 & 8.80  \\
+%           $6\times 200$ & 16.08 & 54.16 & 15.23 & 3  \\
+%           $9\times 200$ & 42.32 & 58.72 & 11.17 & 2.17  \\
+%           $6\times 500$ & 6.50 & 30.75 & 1.97 & 1.4  \\
+%           $6\times 500$ & 7.5 & 133.20 & 5.45 & 1.2 \\
+%           $4\times 1024$ & 8.56 & 23.80 & 5 & 1 \\
+%           \hline
+%           \textbf{Total average} & 15.66 & 89.69 & 14.81 & 3.19 \\
+%           \hline
+%       \end{tabular}
+%       }
+%       \caption{Avrage marking, refinement time and average number of marked neurons and refinement iterations}
+%       \label{tb:subroutine}
+%   \end{table}
 
 Our experiments further emphasize that the DREFINE technique we use is orthogonal to most other techniques.\todo{I tried to summarize the reviews related to experiments. } 
 Specifically, we utilize counterexamples to identify the intrinsic cause of spuriousness, 
