@@ -8,30 +8,13 @@ Otherwise it returns a counterexample to the query. The algorithm uses supportin
 $\textsc{isVerified}$ (described subsequently) to get more marked neurons to refine and check the validity of the verification query  after refinement.
 
 
-The first line of the algorithm performs preprocessing steps similar to \alphabeta{} tools, which include 
-PGD (Projected Gradient Descent) attack, followed by CROWN~\cite{zhang2018efficient} which is an incomplete technique 
-followed by MIP to tighten the bounds. These preprocessing steps are optional. 
-The PGD attack is a method that can generate counter examples. It works by iteratively updating the 
-perturbation in the direction of the gradient of the loss function with respect to the input data, 
-while constraining the magnitude of the perturbation to be within a predefined limit.
-The CROWN generates the over-approximated bounds. 
-\todo{Please re check}
-More explanations are in Experiment section~\ref{sec:experiments}. ~\todo{explanations missing}
-The fourth line of Algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{}, 
-as described in Section~\ref{sec:deeppoly}. 
-For a node $n_{ij} \in N.neurons$, the abstract constraints consist of the lower and upper constraints as well as the lower and upper bounds. 
+The first line of the algorithm performs preprocessing steps similar to state-of-the-art tools (e.g. \alphabeta{}). These preprocessing steps are optional and are explained in more detail in Section~\ref{sec:experiments}, where they are used to compare our results with those of state-of-the-art tools. The fourth line of Algorithm~\ref{algo:main} generates all the abstract constraints by using \deeppoly{},  as described in Section~\ref{sec:deeppoly}.  For a node $n_{ij} \in N.neurons$, the abstract constraints consist of the lower and upper constraints as well as the lower and upper bounds. 
 Let $A.lc_i = \Land_{j=1}^{|l_i|} A(n_{ij}).lexpr \leq x_{ij} \leq  A(n_{ij}).uexpr$, which is a conjunction of upper and lower 
 constraints of each neuron of layer $l_i$ with respect to abstract constraint $A$. 
-The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. 
-If the preprocessing steps is applies then \deeppoly{} generate the $lexpr$ and $uexpr$ for \relu{} neurons as per triangle
-approximation presented in \deeppoly{}'s paper. Since the bounds provided by CROWN are precise, so, we do not do 
-back substitution while generating the $lexpr$ and $uexpr$. 
+The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from the previous layer's neurons, hence $A.lc_i$ contains the variables from layers $l_{i-1}$ and $l_i$. If the preprocessing steps in line 1 are applied, then \deeppoly{} generates the $lexpr$ and $uexpr$ for \relu{} neurons as per the triangle approximation. In this case, we may return a counter-example and stop or use these bounds without performing any back-substitution. 
 
 % If the bounds provided in the \deeppoly{} call at line number $4$ are tighter than vanilla \deeppoly{} \todo{what is the vanilla deeppoly?} then it keeps the 
 % tighter bounds and generate the $lexpr$ and $uexpr$ accordingly. \todo{why is this not written in the algo itself?}
-
-\todo{do you use the cex returned by preproc in line 8? It will go into return at line 2}
-
 
 % We start by describing Algorithm~\ref{algo:main}, where we present the top-level flow of our approach. The algorithm takes a verification query $\langle N,P,Q \rangle$ as input and returns success if the verification is successful, otherwise returns a counterexample to the query. The algorithm uses supporting algorithms $\textsc{getMarkedNeurons}$ and $\textsc{isVerified}$ (described subsequently) to get more marked neurons to refine and check the validity of the verification query after refinement.
 
