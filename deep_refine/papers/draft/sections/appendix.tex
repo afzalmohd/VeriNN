@@ -9,9 +9,9 @@
 \label{ap:exp:1}
 
 The networks considered for evaluation in this study are the ones corresponding to the 9th, and 10th 
-rows of Table~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
+rows of Figure~\ref{tb:nndetail}. These networks have been trained using adversarial techniques, 
 where adversarial examples were generated using PGD attack, and the network was subsequently 
-trained on these adversarial examples to enhance its robustness. Table~\ref{tb:matrix2} presents a 
+trained on these adversarial examples to enhance its robustness. Figure~\ref{tb:matrix2} presents a 
 pairwise comparison of verifiers on these adversarially trained networks, 
 encompassing a total of 1456 benchmark instances. 
 Our approach demonstrates significant superiority over \deeppoly{}, \kpoly{}, and \deepsrgr{} in terms of 
@@ -20,7 +20,7 @@ performance on these benchmarks. While \alphabeta{} and \ovaltool{} outperform o
 Considering the total number of benchmarks is 1456, this indicates a notable number of benchmarks that our 
 approach successfully addresses.
 
-\begin{table}[t]
+\begin{figure}[t]
   \scriptsize
     \centering
     \begin{tabular}{|c|c|c|c|c|c|g||c|}
@@ -44,7 +44,7 @@ approach successfully addresses.
     % \caption{Pairwise comparison of tools on adversarially trained networks, e.g. entry on row \kpoly{} and column \deeppoly{} represents 9 benchmark instances on which \kpoly{} verified but \deeppoly{} fails. The green row highlights the number of solved benchmark instances by \drefine{} and not others while the red column is the opposite.}
     \caption{Pairwise comparison of tools on adversarially trained networks}
     \label{tb:matrix2}
-\end{table}
+\end{figure}
 
 
 
