@@ -10,7 +10,7 @@ Furthermore, we compare our tool's performance with that of \kpoly{} and \deepsr
 which are other refinement tools based on \deeppoly{}. 
 We find that our tool performs well in comparison to these DeepPoly-based refinement tools.
 As our tool is based on counterexample-guided refinement (CEGAR), we also compare it with other CEGAR-based tools. 
-We also compare our tool with \alphabeta{}, \ovaltool{}, and \marabou{}. 
+We also compare our tool with the latest version of \alphabeta{}, and 2021 version of \ovaltool{} and \marabou{}. 
 Our results show that our tool is capable of solving unique benchmarks 
 that are beyond the reach of current state-of-the-art tools.
 Furthermore, we conducted a comparison of performance across different epsilon values for all the tools employed. 
@@ -19,13 +19,14 @@ in performance. Moreover, we conducted a detailed comparison with \alphabeta{},
 utilizing the same preprocessing steps employed by the \alphabeta{} tool.
 
 The tools \alphabeta{} and \ovaltool{} use a set/portfolio of different algorithms and optimizations.
-The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22
+The tool \alphabeta{} achieved the first rank persistantly in both International Verification of Neural Networks Competition(VNN-COMP'21) and VNN-COMP'22.
 The tool \marabou{} achieved the 6th ranks in VNN-COMP'22.  
 The tool~\alphabeta{}, \ovaltool{}, and \marabou{} also achieved the 1st, 3rd, and 5th rank, 
 respectively\footnote{We could not compare with \textsc{VeriNet}, which is the 2nd and 3rd of VNNCOMP 2021 and VNNCOMP 2022 respectively, as we had difficulties with its external solver's (\textsc{Xpress}) license. We also
 could not compare with MN-BaB since it required GPU to run.  
 Also, since we are comparing with \deeppoly{} and \kpoly{}, and \textsc{ERAN} uses these techniques internally, we skipped a direct comparison with \textsc{ERAN}, which achieved 4th rank in VNN-COMP'21.}, 
-in VNN-COMP'21.
+in VNN-COMP'21. We use the same configuration to run \alphabeta{} and \ovaltool{}, which these tools
+used in VNN-COMP for mnist benchmarks.   
 
 % We have implemented our approach in a prototype. We have presented out experiments in two subcategories. 
 % In first category we compared our tool with most related state of the art tools. We created three types of approaches in this category, 
@@ -83,6 +84,7 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
 % float values and checks for counter-example by executing $N$ on the denormalized image.
 % If a counter-example is found then the tool reports it, otherwise, the tool reports unknown.
 
+
 \begin{table}[t]
 \centering
 \scalebox{0.8}{
@@ -107,6 +109,12 @@ We avoided such instances and consider a total of $8496$ benchmark instances.
     \caption{Neural networks details}
     \label{tb:nndetail}
 \end{table}
+\begin{figure}[t]
+    % \centering
+    \input{fig/data_plot.tex}
+    \caption{Cactus plot with most related techniques}
+    \label{res:milp_with_milp}
+\end{figure}
 
 
 \subsection{Results}
@@ -140,12 +148,6 @@ Our technique outperforms the others in terms of the verified number of instance
 % \todo{afzal, check. this number was written 3700 and 1000-- its only 700 acc to table}
 except $14$ instances where \kpoly{} succeeds and our tool times out.
 
-\begin{figure}[t]
-    % \centering
-    \input{fig/data_plot.tex}
-    \caption{Cactus plot with most related techniques}
-    \label{res:milp_with_milp}
-\end{figure}
 
 % The approaches \deeppoly{}, \texttt{refinepoly}, and \texttt{deepSRGR} are incomplete and do not report the counter-example. 
 % Our approach is a complete approach. We compare our approach's \texttt{verified} only instances with incomplete approaches. 
@@ -340,6 +342,10 @@ suggesting that our approach performs
 well for such networks as PGD attack is not very effective on these benchmarks. 
 These results indicate that the majority of the benchmarks ($1095$) solved by \alphabeta{} and not by our approach, 
 as shown in Table~\ref{tb:matrix}, are likely solved by preprocessing steps rather than the refinement procedure.
+The combination of benchmarks solved by both tools results in a total of 937 benchmarks, 
+demonstrating an improvement in the benchmarks solved by \alphabeta{}. 
+This highlights the significant contribution of our tool in the context of portfolio verifiers, 
+as it complements and enhances the overall performance when integrated with other verification tools.
 
 
 \paragraph{Subroutine time: }
