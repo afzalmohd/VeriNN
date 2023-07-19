@@ -1,0 +1,376 @@
+%\usepackage{mathtools}
+%\usepackage{makecell}
+%\usepackage[]{graphics}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+
+%\usepackage{cuted}
+%\usepackage[dvipdfmx]{graphicx}
+% \graphicspath{ {./images/} }
+
+\usepackage{amsmath}
+\usepackage{pdflscape}
+\usepackage{rotating}
+\usepackage{authblk}
+\usepackage{appendix}
+\usepackage{colortbl}
+% \usepackage[top=0.85in,left=2.75in,footskip=0.75in]{geometry}
+%\allowdisplaybreaks{}
+
+%\expandafter\def\csname ver@etex.sty\endcsname{3000/12/31}
+%\let\globcount\newcount
+
+% I ADDED FOR THE CHANGE IN ENUMERATE TO ALPHABBETICAL
+% \usepackage{enumitem}
+
+%\DeclareFontShape{OT1}{cmr}{bx}{sc}{<-> cmbcsc10}{}
+
+% amsmath and amssymb packages, useful for mathematical formulas and symbols
+\usepackage{amsmath,amssymb}
+
+% \renewcommand{\figurename}{Fig.{}}
+
+% Use adjustwidth environment to exceed column width (see example table in text)
+% \usepackage{changepage}
+
+% Use Unicode characters when possible
+% \usepackage[utf8x]{inputenc}
+
+% textcomp package and marvosym package for additional characters
+\usepackage{textcomp,marvosym}
+
+% cite package, to clean up citations in the main text. Do not remove.
+% \usepackage{cite}
+
+% Use nameref to cite supporting information files (see Supporting Information section for more info)
+\usepackage{nameref,hyperref}
+
+% line numbers
+\usepackage[right]{lineno}
+\linenumbers
+% ligatures disabled
+%\usepackage{microtype}
+%\DisableLigatures[f]{encoding = *, family = * }
+
+% color can be used to apply background shading to table cells only
+\usepackage{xargs}                      % Use more than one optional parameter in a new commands
+% \usepackage[pdftex,dvipsnames,table]{xcolor}  % Coloured text etc.
+%\usepackage{todonotes}
+
+% array package and thick rules for tables
+\usepackage{array}
+
+% Use package Listing to add code in our Manuscript
+\usepackage{listings} 
+
+%\usepackage[figurename=Fig]{caption}
+% Added for the sub-pictures
+\usepackage{subcaption}
+
+% Added for the multi-column 
+\usepackage[british]{babel}
+\usepackage{hhline}
+\usepackage{multirow}
+
+% Packages for algorithm
+\usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{algorithm}
+\usepackage{diagbox}
+\algdef{SE}[DOWHILE]{Do}{doWhile}{\algorithmicdo}[1]{\algorithmicwhile\ #1}%
+
+%ADEDED BY ANKIT
+% use (a) and i in the enumerate
+% \usepackage{enumitem}
+% %\usepackage[outdir=./images/]{epstopdf}
+% %% Save the class definition of \subparagraph
+% \let\llncssubparagraph\subparagraph
+% %% Provide a definition to \subparagraph to keep titlesec happy
+% \let\subparagraph\paragraph
+% %% Load titlesec
+% % \usepackage[compact]{titlesec}
+% %% Revert \subparagraph to the llncs definition
+% \let\subparagraph\llncssubparagraph
+
+%\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+%\titlespacing{\section}{0pt}{*5}{*1.5}
+%\titlespacing{\subsection}{0pt}{*4}{*1.5}
+%\titlespacing\subsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+%\titlespacing\subsubsection{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+
+%Adjust the table 
+\usepackage{adjustbox}
+
+
+%add label refernce from another doc
+\usepackage{xr}
+\usepackage{catchfilebetweentags}
+
+\usepackage{tkz-orm}
+\usetikzlibrary{arrows,shapes,automata,backgrounds,petri,decorations.markings}
+\usetikzlibrary{matrix,positioning,decorations.pathreplacing,calc,tikzmark}
+
+\tikzset{
+  ln/.style  = { draw, thick, fill=black, circle, inner sep=0.3mm},
+  sqloc/.style  = { draw, thick, inner sep=1.0mm },
+  loc/.style    = { draw, circle, thick, inner sep=1.0mm },
+  notice/.style= { draw, rectangle callout, thick, rounded corners=5pt,fill=blue!10,callout relative pointer={#1} },
+  treenode/.style = {align=center, inner sep=0pt, text centered,
+    font=\sffamily},
+  arn_n/.style = {treenode, rectangle, font=\sffamily\bfseries },% arbre rouge noir, noeud noir
+  mymat/.style = { % matrix of math nodes,
+    left delimiter={[}, right delimiter ={]},nodes={anchor=base east} },
+  align at top/.style={baseline=(current bounding box.north)},
+  stack/.style={rectangle split, rectangle split parts=#1,draw, anchor=center}
+}
+
+\def\fsmt{\mathsf{SMT}}
+\def\fbmc{\mathsf{BMC}}
+\def\fqbf{\mathsf{QBF}}
+
+%\usepackage{lineno}
+%\linenumbers
+
+\usepackage{verbatim}
+\usepackage{pgfplots}
+%\usepackage{colortbl}
+%\usepackage{pgfplotstable}
+% \pgfplotsset{compat=1.17}
+	
+\def\cca#1{\cellcolor{blue!#10}\ifnum #1>5\color{white}\fi{#1}}
+
+\usepackage{tikz}
+\usetikzlibrary{tikzmark,decorations.pathreplacing,arrows,shapes,positioning,shadows,trees,shapes.gates.logic.US,arrows.meta,shapes,automata,petri,calc}
+\usepackage{caption}
+\usepackage{adjustbox}
+%\usepackage{todonotes}
+\usepackage[colorinlistoftodos,prependcaption,textsize=tiny]{todonotes}
+\newcommandx{\unsure}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\change}[2][1=]{\todo[linecolor=blue,backgroundcolor=blue!25,bordercolor=blue,#1]{#2}}
+\newcommandx{\info}[2][1=]{\todo[linecolor=OliveGreen,backgroundcolor=OliveGreen!25,bordercolor=OliveGreen,#1]{#2}}
+\newcommandx{\improve}[2][1=]{\todo[linecolor=Plum,backgroundcolor=Plum!25,bordercolor=Plum,#1]{#2}}
+\usepackage{verbatim}
+\usepackage{scalefnt}
+\usepackage{wrapfig}
+\usepackage{tikz-qtree}
+% \usepackage[table, dvipsnames]{xcolor}
+
+\mathchardef\mhyphen="2D
+\newcommand{\shorteq}{%
+  \settowidth{\@tempdima}{-}% Width of hyphen
+  \resizebox{\@tempdima}{\height}{=}%
+}
+
+
+%\definecolor{ai}{RGB}{179, 255, 179}
+%\colorlet{fv}{red!55}
+%\colorlet{ai}{blue!10}
+%\colorlet{ar}{green!56}
+
+\colorlet{fv}{gray!55}
+\colorlet{ai}{gray!10}
+\colorlet{ar}{gray!38}
+
+\usepackage[edges]{forest}
+\usepackage[T1]{fontenc}
+% \usepackage{lmodern}
+
+\tikzset{%
+  parent/.style={align=center,text width=3cm,rounded corners=3pt},
+  child/.style={align=center,text width=3cm,rounded corners=3pt},
+}
+
+% argument #1: any options
+\newenvironment{customlegend}[1][]{%
+	\begingroup
+	% inits/clears the lists (which might be populated from previous
+	% axes):
+	\csname pgfplots@init@cleared@structures\endcsname
+	\pgfplotsset{#1}%
+}{%
+	% draws the legend:
+	\csname pgfplots@createlegend\endcsname
+	\endgroup
+}%
+\def\addlegendimage{\csname pgfplots@addlegendimage\endcsname}
+
+\newcommand*{\equal}{=}
+ \usepackage{tikz}
+% \usetikzlibrary{arrows}
+ \usepackage{xparse}
+%\usetikzlibrary{}
+\pgfdeclarelayer{myback}
+\pgfsetlayers{myback,background,main}
+\usetikzlibrary{tikzmark,decorations.pathreplacing,arrows,shapes,positioning,shadows,trees,shapes.gates.logic.US,arrows.meta,shapes,automata,petri,calc,matrix,backgrounds}
+\tikzset{mycolor/.style = {line width=1bp,color=#1}}%
+\tikzset{myfillcolor/.style = {draw,fill=#1}}%
+
+
+\NewDocumentCommand{\highlight}{O{blue!40} m m}{%
+\draw[mycolor=#1] (#2.north west)rectangle (#3.south east);
+}
+
+\NewDocumentCommand{\fhighlight}{O{blue!40} m m}{%
+\draw[myfillcolor=#1] (#2.north west)rectangle (#3.south east);
+}
+ \usetikzlibrary{matrix,decorations.pathreplacing, calc, positioning}
+
+
+
+% create "+" rule type for thick vertical lines
+\newcolumntype{+}{!{\vrule width 2pt}}
+\renewcommand{\thesubfigure}{\Alph{subfigure}}
+
+% create \thickcline for thick horizontal lines of variable length
+\newlength\savedwidth
+\newcommand\thickcline[1]{%
+  \noalign{\global\savedwidth\arrayrulewidth\global\arrayrulewidth 2pt}%
+  \cline{#1}%
+  \noalign{\vskip\arrayrulewidth}%
+  \noalign{\global\arrayrulewidth\savedwidth}%
+}
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
+% Remove comment for double spacing
+%\usepackage{setspace} 
+%\doublespacing
+
+% Text layout
+% \raggedright
+% \setlength{\parindent}{0.5cm}
+% \textwidth 5.25in 
+% \textheight 8.75in
+% create "+" rule type for thick vertical lines
+% \newcolumntype{+}{!{\vrule width 2pt}}
+\renewcommand{\thesubfigure}{\Alph{subfigure}}
+
+% \thickhline command for thick horizontal lines that span the table
+\newcommand\thickhline{\noalign{\global\savedwidth\arrayrulewidth\global\arrayrulewidth 2pt}%
+\hline
+\noalign{\global\arrayrulewidth\savedwidth}}
+
+% \raggedright
+% \setlength{\parindent}{0.5cm}
+% \textwidth 5.25in 
+% \textheight 8.75in
+
+
+% \usepackage[aboveskip=1pt,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=off]{caption}
+% \renewcommand{\figurename}{Fig}
+% \usepackage{epstopdf}
+% \AppendGraphicsExtensions{.tif}
+
+\newcommand{\booleans}{\mathbb{B}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\integers}{\mathbb{Z}}
+\newcommand{\ordinals}{\mathbb{O}}
+\newcommand{\numarals}{\mathbb{I}}
+\newcommand{\reals}{\mathbb{R}}
+
+\newcommand{\maps}{\rightarrow}
+\newcommand{\pmaps}{\hookrightarrow}
+
+\newcommand{\union}{{\cup} }
+\newcommand{\Union}{{\bigcup} }
+\newcommand{\powerset}[1]{2^{#1}}
+\newcommand{\intersection}{{\cap} }
+\newcommand{\intersect}{\intersection}
+\newcommand{\Intersection}{{\bigcap} }
+\newcommand{\compose}{{\circ} }
+
+
+\newcommand{\ltrue}{\mathbf{tt}}
+\newcommand{\lfalse}{\mathbf{ff}}
+\newcommand{\limplies}{\Rightarrow}
+\newcommand{\lxor}{\oplus}
+\newcommand{\Land}{\bigwedge}
+\newcommand{\Lor}{\bigvee}
+\newcommand{\Lxor}{\bigoplus}
+\newcommand{\lequiv}{\Leftrightarrow}
+\newcommand{\landplus}{\mathrel{:\hspace{-3pt}\land\hspace{-3pt}=}}
+\newcommand{\lorplus}{\mathrel{:\hspace{-3pt}\lor\hspace{-3pt}=}}
+
+\newcommand{\nodes}{\mathcal{N}}
+\newcommand{\mols}{M}
+\newcommand{\nlabel}{L}
+\newcommand{\edges}{E}
+\newcommand{\pairs}{\mathcal{P}}
+\newcommand{\nodef}{f}
+\newcommand{\edgef}{g}
+
+\newcommand*{\var}{Var}
+\newcommand{\wff}{$\mathcal{W}$} % choose suitable symmbol
+\newcommand*{\ltf}{\mathcal{F}} % choose suitable symmbol
+\newcommand*{\prop}{\mathcal{P}}
+\newcommand*{\op}{\mathcal{O}}
+\newcommand*{\Next}{\textsf{X}}
+\newcommand*{\until}{\textsf{\,U\,}}
+\newcommand*{\finally}{\textsf{F}}
+\newcommand*{\globally}{\textsf{G}}
+\newcommand*{\val}{V(\varphi, w)}
+\newcommand*{\sample}{\mathcal{S}}
+
+\newcommand{\varpsi}{\psi}
+
+\newcommand{\depth}{\ensuremath{d}}
+\newcommand{\discount}{\ensuremath{\delta}}
+
+
+\newcommand{\lorem}{{\bf LOREM}}
+\newcommand{\ipsum}{{\bf IPSUM}}
+
+\newcommand{\npath}{\texttt{NPath}}
+
+\newcommand{\vtstool}{\textsc{VTSArch}}
+\newcommand{\zthree}{\textsc{Z3}}
+\newcommand{\ourtool}{\textsc{QuantLearn}}
+\newcommand{\sattool}{\textsc{VTSBMC}}
+\newcommand{\smttool}{\textsc{VTSSMT}}
+\newcommand{\qbftool}{\textsc{VTSQBF}}
+\newcommand{\depqbf}{\textsc{DepQBF}}
+\newcommand{\rarqbf}{\textsc{RaRQBF}}
+\newcommand{\ashu}[1]{ {\textcolor{magenta} {Ashutosh: #1}} }
+\newcommand{\akshay}[1]{ {\textcolor{blue} {Akshay: #1}} }
+\newcommand{\afzal}[1]{ {\textcolor{green!50!black}{Afzal: #1}} }
+
+\newcommand{\affine}{\textsc{Affine}}
+\newcommand{\relu}{\textsc{ReLU}}
+\newcommand{\deeppoly}{\textsc{DeepPoly}}
+\newcommand{\kpoly}{\textsc{kPoly}}
+\newcommand{\deepsrgr}{\textsc{deepSRGR}}
+% \newcommand{\alphabeta}{$\alpha - \beta$-CROWN}
+\newcommand{\alphabeta}{$\alpha\beta$-CROWN}
+\newcommand{\ovaltool}{\textsc{Oval}}
+\newcommand{\drefine}{\textsc{drefine}}
+\newcommand{\narv}{\textsc{NARV}}
+\newcommand{\cegarnn}{\textsc{cegar\_nn}}
+\newcommand{\marabou}{\textsc{marabou}}
+\newcommand{\markednewrons}{\emph{markedNeurons}}
+\newcommand{\milp}{\textsc{MILP}}
+\newcommand{\sat}{\textsc{SAT}}
+\newcommand{\unsat}{\textsc{UNSAT}}
+\newcommand{\unsatcore}{\textsc{UnsatCore}}
+\newcommand{\maxsat}{\textsc{maxSat}}
+\newcommand{\checksat}{\textsc{checkSAT}}
+\newcommand{\hardconstr}{\textsc{hardConstr}}
+\newcommand{\softconstr}{\textsc{softConstr}}
+\newcommand{\verified}{\textsc{verified}}
+\newcommand{\falsified}{\textsc{falsified}}
+
+
+\newtheorem{df}{Definition}
+
+
+\newcommand{\blue}[1]{{\color{blue}#1}}
+%--------------------- DO NOT ERASE BELOW THIS LINE --------------------------
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:

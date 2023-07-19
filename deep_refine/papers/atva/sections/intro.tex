@@ -1,0 +1,107 @@
+% Why this problem?
+Neural networks are being increasingly used in safety-critical systems such as autonomous vehicles, medical diagnosis, and speech recognition~\cite{bojarski2016end,amato2013artificial,hinton2012deep}. It is important not only that such systems behave correctly in theory but also that they are robust in practice. Unfortunately, it is often the case (see e.g., Goodfellow \cite{goodfellow2014explaining}) that a slight change/perturbation in the input can often fool the neural networks into an error. Such errors can be hard to find/analyze/debug as these neural networks contain hundreds of thousands of non-linear nodes.
+
+% What is the problem?
+To address this problem, an entire line of research has emerged focussing on automatically proving (or disproving) the robustness of such networks. Since automatic verification of neural networks is NP-hard~\cite{katz2021reluplex}, researchers use approximations in their methods. Classically, we may divide the methods into two classes, namely complete and incomplete. The methods~\cite{lomuscio2017approach,fischetti2018deep,dutta2018output,cheng2017maximum,katz2017reluplex,katz2019marabou,ehlers2017formal,huang2017safety,wang2021beta,xu2020fast,zhang2022general} are complete. Since complete methods explore exact state space, they suffer from scalability issues on large-scale networks. On the other hand, abstraction based methods e.g., \cite{dvijotham2018dual}, \cite{gehr2018ai2}, \cite{singh2018fast},  \cite{singh2018boosting}, \cite{weng2018towards}, \cite{wong2018provable}, \cite{zhang2018efficient}, \cite{zhang2018efficient} are sound and incomplete, because they over-approximate the state space, but they scale extremely well to large benchmarks. A representative method \deeppoly{}~\cite{singh2019abstract} maintains and propagates upper and lower bound constraints using the so-called triangle approximation (also see Section~\ref{sec:deeppoly}). This is also sometimes called bound-propagation. %a single upper and a single lower linear constraint as well as lower and upper bounds for each neuron in the network. For an affine neuron, the upper and lower constraints are the same as an affine expression, which is a weighted sum of the input neurons. For a $\relu${} neuron, upper and lower constraints are constructed by the so-called triangle approximation.
+Unsurprisingly, \deeppoly{} and other abstraction based methods suffer from imprecision. Hence, the methods \cite{wang2018formal,wang2018efficient,elboher2020abstraction,yang2021improving,lin2020art} refine the over-approximated state space to achieve completeness. In \cite{wang2018formal,wang2018efficient,lin2020art} the authors eliminate the spurious information (i.e., imprecision introduced by abstraction) by bisecting the input space on the guided dimension. In~\cite{yang2021improving}, which also works on top of \deeppoly{}~\cite{singh2019abstract}, the authors remove the spurious region by  conjuncting each neuron's constraints with the negation of the robustness property and using an \milp{} (mixed integer linear programming) optimizer Gurobi~\cite{gurobioptimizer} to refine the bounds of neurons. Another work that refines
+%The papers also do the refinement on
+\deeppoly{} %are \texttt{deepSRGR}~\cite{yang2021improving} and
+is \kpoly{}~\cite{singh2019beyond} which considers 
+a group of neurons at once to generate the constraints and compute the bounds of neurons. One issue with all these approaches is that refinement is not guided by previous information/runs and hence they suffer from scalability issues.
+% although these papers do not do the cegar-based refinement.
+%The approach \texttt{refinepoly}
+
+
+
+% In the refinement, process authors split the merged neurons.  
+% In the worst case, this method may get back to the original network.  
+% Although this work is a cegar-based approach\todo{afzal, this part is unclear still}, 
+% it also suffers from scalability issues on large-scale networks. %  The work \cite{elboher2020abstraction} refinement process focuses on the structure of the networks.
+
+In this paper, we consider the basic abstraction framework provided by \deeppoly{} and develop a novel refinement technique that is {\em counterexample guided}, i.e., we use counterexamples generated from imprecisions during abstraction to guide the refinement process. Our main contributions are the following:
+\begin{itemize}
+\item We introduce a new {\em maxsat-based} technique to find the cause of imprecision and spuriousness. Starting with an input where the abstraction does not get verified (we use a \milp{} solver to obtain this), we check whether the input generates a real counterexample of falsification of the property or if it is spurious, by executing the neural net. If it is a spurious counterexample, we identify the neuron or the set of neurons that caused it.  
+\item We use these specially identified or {\em marked} neurons to split and refine. This ensures that, unlike earlier refinement methods, our method progresses at each iteration and eliminates spurious counterexamples.
+\item We adapt the existing refinement framework built on ideas from \milp{}-methods and implement this as a counterexample guided abstraction refinement algorithm on top of \deeppoly{}.
+\item We show that our technique outperforms to-the-best-of-our-knowledge all existing refinement strategies based on \deeppoly{}.
+\item   We also identify a class of benchmarks coming from adversarially trained networks, where these state-of-the-art tools do not work well, because of the ineffectiveness of certain preprocessing steps (e.g., PGD attack~\cite{dong2018boosting})
+\item Incorporating such preprocessing techniques in our tool allows us to obtain a significant improvement in the overall performance of our tool.
+%\item We further demonstrate that
+ Our implementation is able to verify several benchmarks that are beyond the reach of state-of-the-art tools such as \alphabeta{}~\cite{alphabetacrown} and \ovaltool{}~\cite{bunel2020branch}.
+
+  % matching the performance of these state-of-the-art tools.
+%  ork do not well because some of the optimizations are ineffective against the benchmarks.
+  % , as discussed next.
+\end{itemize}
+%Thus, whenever \deeppoly{} fails to verify a property, we conjunct the linear constraints generated by it with the negation of the property, and check for satisfiability, by using an \milp{}-based tool.  If the tool return \unsat{} then we report property \texttt{verified}. Otherwise, we go to the refinement process. We have two parts of our refinement approach, one finds the causes of spurious information  and the second part refines the information gets in the first part.
+
+%Given our focus on the cause of spuriousness, let us now explain at a high level what our counterexamples are and how we use them. TOREWRITE: PICTURE AND EXPLANATION HERE.
+
+
+\medskip
+
+\noindent{\em Related work.}
+{A different but very successful line of research has been to revisit the branching heuristics for refinement and 
+use ideas from convex optimization instead of linear or mixed integer linear programming. Starting from a slightly 
+different abstraction/bound propagation method CROWN~\cite{zhang2018efficient}, the work in \cite{wang2021beta} 
+adopts this approach. This is amenable to parallelizing and hence good for GPU implementations~\cite{xu2020fast}. 
+Recently, techniques based on cutting planes have been used to further improve the refinement analysis, solving more benchmarks 
+at the cost of speed~\cite{zhang2022general}. The success of this line of research can be seen by the fact that the 
+state-of-the-art tool \alphabeta{}~\cite{alphabetacrown} (a highly optimized solver that uses a collection of different 
+parametrized algorithms) has won the 2nd and 3rd international Verification of Neural Networks Competition (VNNCOMP'21,'22) 
+in a field of leading tools for robustness verification. \ovaltool{}~\cite{bunel2020branch}, 
+another leading tool, uses multiple optimized techniques, which at its core perform an effective branch and bound on 
+the \relu{} activation function. They attempt to compute the rough estimate on the improvement on objective function by 
+splitting a particular neuron, and split neurons with the highest estimated improvement. 
+Finally, in \marabou{}~\cite{katz2019marabou}, another leading complete tool, the authors search for an assignment that 
+satisfies the constraints. They treat the non-linear constraints lazily with the hope that some non-linear constraints 
+will not be needed to satisfy. Despite the enormous progress made by these tools in just the last 2-3 years, 
+there still many benchmarks that are out of their reach. %One reason is that they often focus on techniques to fix the imprecisions caused by abstractions.
+Our focus is in this paper is orthogonal to these approaches, as we use counterexamples to guide the identification 
+the source of imprecision. In our experiments in Section~\ref{sec:experiments}, 
+we show that this allows us to solve many benchmarks which these cannot. 
+Integrating our counterexample guided approach for imprecision-identification with these optimized 
+tools (e.g., \alphabeta{}'s branch and bound strategy) would be the next step 
+towards wider coverage and performance. For instance, the constraints solved by 
+\alphabeta{}, which also uses branch-and-bound, are from a dual space, and hence it is a priori unclear how to derive 
+our maxSAT query from the failure of a run.
+%Surprisingly, we show that 180 benchmarks that cannot be solved by \alphabeta{} can be solved by our tool.
+
+As mentioned earlier, \deepsrgr{}~\cite{yang2021improving} and \kpoly{}~\cite{singh2019beyond} use refinement of \deeppoly{}, 
+but they are not counterexample guided. Elboher et al~\cite{elboher2020abstraction} does perform 
+counterexample guided abstraction refinement, but their abstraction technique is orthogonal to \deeppoly{}.  
+They reduce the network size by merging similar  neurons with over-approximation, while \deeppoly{} maintains 
+the linear constraints for each neuron without changing the structure of the network. 
+These approaches also suffer from scalability issues on large-scale networks.
+
+}
+
+
+%Paper~\cite{lin2020art} do the refinement by bisecting the input space on the guided dimension.  Our approach exploits the incomplete technique \deeppoly{}, which scales well, but if it fails to verify then we do the cegar-based refinement.
+
+%% Finally, Elbohar et.al. \cite{elboher2020abstraction} define four classes of neurons based on their 
+%% characteristics.
+%% At the time of abstraction, they merge each neuron into one of the four classes.  
+%% After completing the abstraction process, they use the state of the complete verifier to verify  
+%% the abstract network, and go to the refinement process in case of failure. 
+%% In case of failure,  authors get an input point that is not a counterexample on the original network 
+%% but a counterexample on the abstract network. They execute the input point on both abstract and original networks and 
+%% note the value of each neuron. For each neuron, authors compute the difference between its value on the original
+%% network with the corresponding merged neuron's value on the abstract network. The authors also consider the difference between the input edge weight with the corresponding
+%% merge neuron's input edge weight. They multiply the neuron's value difference and incoming edge difference
+%% for each neuron and split the one with a higher value. In the worst case, this method may get back to the original network.
+%% Although this work is a cegar-based approach,\todo{please check the para now; Ashutosh: this is too long discussing a single method.} 
+%% it also suffers from scalability issues on large-scale networks.   
+
+\medskip
+
+\noindent{\em Structure of the paper.} We start with a motivating example in the next Section~\ref{sec:motivation}.  We define the notions and definitions in Section~\ref{sec:model}. Section~\ref{sec:algo} contains the  algorithm procedure of our approach as well as proofs of progress and termination. Section~\ref{sec:experiments} contains our experiments results and we conclude in Section \ref{sec:conclusion}.
+
+
+
+% --- do not erase below this line ----
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

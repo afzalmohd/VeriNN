@@ -1,0 +1,181 @@
+In this section we discuss valuation functions that assign a value to a pair
+$(\varphi,w)$ consisting of an LTL formula $\varphi$ and a finite word $w$. The
+function indicates ``how well'' $w$ is represented by $\varphi$. The intuition
+is that a pair scores high if all subformulae of $\varphi$ participate in
+accepting $w$ in $L(\varphi)$. For example, $\globally(p\lor q)$ should score
+well along with word $\{p\}\{q\}\{p\}\{q\}\{p\}\{q\}$ but should not do well
+with word $\{p\}\{p\}\{p\}\{p\}\{p\}\{p\}$, since subformula $q$ did not appear
+in the word.
+
+\subsection{A valuation function}
+
+Let us present a valuation function first.
+Let $\ltf$ represent the set of NNF $\globally\finally$-fragment formulae over $\prop$.  
+We interpret LTL formulae over finite words and define the quantitative
+semantics in terms of a \emph{valuation mapping} $V : \ltf \times \Sigma^* \to
+\reals ^+ \: \union \: \{0\}$, where $\Sigma=2^{\prop}$. The valuation mapping
+is defined over a word $w \in \Sigma^*$ inductively as follows:
+
+\begin{minipage}{0.43\linewidth}
+\begin{itemize}
+\item $V(p, w) =  \left \{ \begin{array}{cc} 1 & \textnormal{if } p \in w(1)
+                             \\
+                             0 & \textnormal{otherwise}
+                           \end{array}
+                         \right.  $
+\item $V(\lnot p, w) =  \left \{ \begin{array}{cc} 1 & \textnormal{if } p \not\in w(1)
+                             \\
+                             0 & \textnormal{otherwise}
+                           \end{array}
+                         \right.  $                            
+% \item $V(\neg\varphi, w) = 1 - V(\varphi)$
+\end{itemize}
+\end{minipage}
+\begin{minipage}{0.55\linewidth}
+\begin{itemize}
+\item $V(\varphi \land \psi, w) = \discount \cdot V(\varphi, w) \cdot V(\psi, w)$
+\item $V(\varphi \lor \psi, w) = \discount \cdot \dfrac{V(\varphi, w) + V(\psi, w)}{2}$
+% \item $V(\Next \varphi, w) = V(\varphi, w[2:])$
+\end{itemize}  
+\end{minipage}
+
+\begin{itemize}
+    \item $V(\globally \varphi, w) = \begin{cases}
+        \discount \cdot \sum_{i = 0}^{|w|} r^{i} \cdot V(\varphi, w[i:]) & \textnormal{iff } \not \exists\; t, V(\neg\varphi, w[t:]) > 0 \\ 
+        0 & \textnormal{otherwise}
+    \end{cases}$
+    \item $V(\finally \varphi, w) = \begin{cases}
+        \discount \cdot r^{t} \cdot V(\varphi, w[t:]) & t = \min \{j \mid V(\varphi, w[j:]) > 0\} \\ 
+        0 & \textnormal{if } \not \exists\; t, V(\varphi, w[t:]) > 0
+    \end{cases}$
+             
+%
+%   \[ \begin{cases} \scriptsize{[\sum \limits_{1 \leq t' < t} V(\varphi, w[t':]) +
+%    V(\psi, w[t:])]},~\mbox{if}&\\
+%         \exists  t V(\psi, w[t:]) {>} 0, \textnormal{ and }\forall 1 \leq t' <
+%        t, &\\ V(\psi, w[t':]) {=} 0, V(\varphi, w[t':]) > 0&\\  
+%    0 & \textnormal{otherwise}
+%
+%\end{cases}
+%\]
+\end{itemize}
+If $w \models \varphi$ then $V(\varphi,w)$ is non-zero.
+%
+The valuation scheme is parameterized by two discount factors $r$ and $\discount$.
+%
+% The valuation can only range from $0$ to $1$.
+%
+For the literals, we assign valuation zero or one if the word satisfies
+the literals or not.
+%
+We interpret conjunction as multiplication, which implies we need both subformulae
+to do well on the word.
+%
+We interpret disjunction as an addition, which implies we give a high score to the formula
+if any of the two subformulae does well on the word.
+%
+Our interpretation of $\globally \varphi$ computes the discounted sum of the value of $\varphi$
+at each position of the word.
+After each letter, we apply a discount of $r$, where $0< r < 1$.
+%
+Our interpretation of $\finally \varphi$ computes the discounted score of $\varphi$
+at the earliest position where $\varphi$ has a non-zero score.
+%
+We also apply a discount factor $\discount$ each time we build a more complex formula,
+where $0 < \discount < 1$.
+%
+For example, consider the
+formula $\varphi=\finally q$ for $p, q \in \prop$ and the word
+$w=\{p\}\{p,r\}\{p\}\{p,s\}\{p\}\{p\}\{p,q\}(\{r\}\{q\})^*$. Then $q$ holds for
+the first time at the position $t=7$, and for all $t' < t$, $q$ is not present
+in $w$. Thus, $V(q,w[7:])=1$, making $V(\varphi, w)=\discount\cdot r^{7}\cdot 1$.
+ In other words, we
+assign non-zero scores only for satisfiable formulas.
+
+For a sample $\sample$, the valuation of a formula $\varphi$ is taken as the sum of valuations over all positive traces in the sample, that is,
+%\begin{equation*}
+ $ V(\varphi, \sample = (P, N)) = \sum_{w \in P}^{} V(\varphi, w)$.
+
+% By no measure, we can claim that the evaluation scheme is the most suitable
+% scheme of valuation in the context of learning LTL formulas.
+% %
+% However, 
+The scheme attempts to match intuition about the operators.
+%
+Our experiments illustrate that our choice is promising.
+%
+In the next section, we will consider the other possible natural choices
+for the valuation function.
+%
+
+
+% Intuitively, the valuation mapping for  ($\varphi \until \psi$) is the sum of
+% valuations wrt $\varphi$ at each position till $\psi$ is seen for the first time.
+% The valuation is $0$ if neither  $\varphi$ nor $\psi$ holds at a given position
+% before $\psi$ is seen. We call $\val$ the \emph{valuation} of $\varphi$ over $w$
+% and say $w$ \emph{satisfies} $\varphi$ if $\val > 0$.
+
+\subsection{Variations in valuation functions}
+\label{sec:vari}
+There are multiple (subjective) choices for the
+valuation function, none of which have obvious theoretical advantages.
+However, they behave very differently in practice.
+We consider various choices for the valuation function.
+Here, we present
+examples that differentiate the capabilities and uses of each valuation function.
+\begin{itemize}
+\item 
+  We may assign $V(\varphi \land \varpsi, w)$ as the minimum of $V(\varphi, w)$
+  and $V(\varpsi, w)$~\cite{tabuada2015robust}. This valuation ensures that both
+  $\varphi$ and $\varpsi$ must score high for $\varphi \land \varpsi$ to score
+  high. However, the function is not sensitive to the formula that has a higher
+  value. Therefore, the learning algorithm becomes unguided for one part of the
+  formula. This suggests a modification to the valuation function that takes
+  both the subformulae into account symmetrically, without flattening one of the
+  subformulae. Our valuation function for the conjunction of two formulae,
+  defined as their product $V(\varphi, w) \times V(\varpsi, w)$ is based on this
+  idea.
+  
+  % A reasonable starting point often
+  % used in many value interpretations of LTL \sankalp{add sources for rLTL}
+  % is $min(V(\varphi, \cdot), V(\varpsi, \cdot))$.
+  % However, in relatively simple examples, this unnecessary levels
+  % the larger of the two involved sunformulae. If $V(\varphi, \cdot)$ is say, 0.1,
+  % the value of $V(\varpsi, \cdot)$ can vary between 0.1 and $\inf$ without
+  % affecting the valuation of the combination. 
+
+  % \sankalp{Explain the usefulness of the product a bit more?}
+
+\item Symmetrically, we may assign $V(\varphi \lor \varpsi, w)$ as the 
+  maximum of $V(\varphi, w)$ and $V(\varpsi, w)$.
+  Just as  in the previous case, this unnecessarily discards potential information carried by the valuation   of a smaller subformula.
+  In our earlier evaluation, we used the arithmetic mean of the two subformulae,
+  which helps model disjunction such that if either of the parts evaluates high,  
+  then the score goes high and both parts have an incentive to score well.
+  For example, consider $\globally (p \lor q)$. If no $q$ occurs in $w$ then
+  $V(p\lor q, w[i:])$ will be scored lower than if both $p$ and $q$ occur in $w$.
+   
+  % a 'middle' path between
+  % size explosion and information transfer.   
+% \item $V(\lnot \varpsi, \cdot)$ --- \sankalp{Not sure what to write to
+%     distinguish different ideas? No particular issues with not other than
+%     compatibility and negative numbers sometimes}
+  
+\item In our valuation of $V(\globally \varpsi, w)$, we compute the discounted
+  sum of $V(\varpsi, w[i:])$. We may choose a variety of discounted sums that
+  have a different decay rate than the exponential decay, which allows us to
+  give varied weight to longer words.
+
+\item $V(\finally \varpsi, w)$ needs to represent the strength of evidence of
+  $\varpsi$ being true at $w[i:]$ for some $i$. We can give some discounted
+  weights to the true occurrences and compute the average. In addition to being
+  computationally expensive, this scheme may have an adverse effect that, in
+  case of $\varpsi$ being true   at each $w[i:]$,  then $V(\finally \varpsi, w)$
+  may rank higher than $V(\globally \varpsi, w)$. Therefore, in our earlier
+  scheme, we gave weight only to the earliest occurrence.
+\end{itemize}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
