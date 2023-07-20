@@ -56,7 +56,7 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
   \textbf{Output: } verified or an abstract counterexample. 
   \begin{algorithmic}[1]
     \State $constr := P \land (\Land_{i=1}^k A.lc_i)\land \neg Q$
-    \State $constr := constr \land (\Land_{x \in marked} exactConstr(x))$ \Comment{as in eq \ref*{eq:reluexact}}
+    \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref*{eq:reluexact}}
     \State isSat = checkSat(constr)
     \If{isSat}
       \State m := getModel(constr)
@@ -82,7 +82,7 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
         \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref{eq:reluexact}}
         \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val^{v_0}_{(i-1)j})$
         \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = v_{kj})$
-        \State $softConstrs := \cup_{j=1}^{|l_j|} (x_{ij} = val^{v_0}_{ij})$
+        \State $softConstrs := \cup_{j=1}^{|l_i|} (x_{ij} = val^{v_0}_{ij})$
         \State $res, softsatSet = \maxsat{}(constr, softConstrs)$ \Comment{res always \sat{}}
         \State $newMarked := \{n_{ij} | 1 \leq j \leq |l_i| \land (x_{ij} = val_i(j)) \notin  softsatSet\}$ 
         \If{$newMarked$ is empty}
