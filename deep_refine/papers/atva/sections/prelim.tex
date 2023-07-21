@@ -115,7 +115,7 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
 
 \item If $Type_i= \relu$ and $y=\relu(x)$,{\color{red}\todo{As per comment 1.5.5 of reviewer 2} where $x$ is a neuron in $l_{i-1}$ and $y$ is a neuron in $l_i$}, we consider the following three cases: %\todo{I tried to simplify the notation, please have a look}:
   \begin{enumerate}
-  \item If $A(x).lb \geq 0$ then $\relu$ is in active phase and
+  \item \sloppy If $A(x).lb \geq 0$ then $\relu$ is in active phase and
     $A(y).lexpr := A(y).uexpr := x$,
     and $A(y).lb := A(x).lb$ and $A(y).ub := A(x).ub$
   \item If $A(x).ub \leq 0$ then $\relu$ is in passive phase and
@@ -198,12 +198,12 @@ Otherwise, \deeppoly{} fails to prove the query.
 % We use an optimization query in gurobi to implement \texttt{maxsoftConstr} function.
 
 In our algorithms, we are using two major calls \checksat{} and \maxsat{}.
-The function \checksat{} in algorithm \ref{algo:verif1}, 
+The function \checksat{} in Algorithm \ref{algo:verif1}, 
 takes a quantifier-free formula as input and returns \sat{} or \unsat{}. 
 % In the case of \texttt{UNSAT}, it returns the irreducible inconsistent subsystem (\texttt{iis}). 
 % The \texttt{iis} is a subset of constraints, which are \texttt{UNSAT}, 
 % but if a single constraint is removed from \texttt{iis} then it becomes \texttt{SAT}.
-The function \maxsat{} in the algorithm \ref{algo:refine2} takes
+The function \maxsat{} in the Algorithm \ref{algo:refine2} takes
 two arguments as input \hardconstr{} and \softconstr{}. 
 The \hardconstr{} is a Boolean formula of constraints,
 and \softconstr{} is a set of constraints. 
@@ -214,6 +214,12 @@ constraints satisfied in \softconstr{}, or returns
 \unsat{} if \hardconstr{} fails to satisfy.
 We are using Gurobi(v9.1)~\cite{gurobioptimizer} to implement 
 both \checksat{} and \maxsat{} functions. 
+{\color{red}\todo{With respect to comment 3 of reviewer 2} Furthermore, Algorithm~\ref{algo:verif1} includes a function called \getmodel{}, 
+which serves as a mapping from variables to satisfying values. 
+The \getmodel{} function is utilized in cases where \checksat{} returns \sat{} to retrieve 
+the satisfying assignment for the variables.}
+ 
+
 
 
 

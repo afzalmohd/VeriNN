@@ -25,11 +25,11 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
 
 \begin{algorithm}[t]
   \textbf{Input: } A verification problem $\langle N,P,Q \rangle$ \\
-  \textbf{Output: } UNSAT or SAT
+  \textbf{Output: } Verified or Counterexample
   \begin{algorithmic}[1]
     \State $\mathsf{cex}, bounds = preprocessing(N,P,Q)$
     \If{cex is not None}
-      \State \textbf{return} Failed(cex)
+      \State \textbf{return} Failed(cex) \Comment{cex is a counter example}
     \EndIf
     \State $A := \deeppoly{(N,P, bounds)}$\Comment{use \deeppoly{} to generate abstract constraints.}
     \State $marked$ := \{\}
@@ -37,7 +37,7 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
       \State result = $\textsc{isVerified}$($\langle N,P,Q \rangle$, $A$, $marked$)
       \If{result = CEX(${v_0}, {v_1} ... {v_k}$)}
         \If{$N({v_0}) \models \lnot Q$}
-          \State \textbf{return} Failed(${v_0}$)
+          \State \textbf{return} Failed(${v_0}$) \Comment{$v_0$ is a counter example}
         \Else
         \State $markedNt$ := $\textsc{getMarkedNeurons}$($N$, $A$, $marked$, ${v_0}, {v_1} ... {v_k}$)
           \State $marked$ := $marked$ $\union$ $markedNt$
@@ -56,11 +56,11 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
   \textbf{Output: } verified or an abstract counterexample. 
   \begin{algorithmic}[1]
     \State $constr := P \land (\Land_{i=1}^k A.lc_i)\land \neg Q$
-    \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref*{eq:reluexact}}
+    \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in Equation \ref*{eq:reluexact}}
     \State isSat = checkSat(constr)
     \If{isSat}
       \State m := getModel(constr)
-      \State \textbf{return} CEX($m(x_0),....,m(x_k)$)
+      \State \textbf{return} CEX($m(x_0),....,m(x_k)$)\Comment{Abstract counter example where $x_i$ is a vector of variables in layer $l_i$}
     \Else
       \State \textbf{return} verified
     \EndIf
@@ -79,7 +79,7 @@ The $lexpr$ and $uexpr$ for any neuron of a layer contain variables only from th
     \For{$i=1$ to $k$} \Comment{inputLayer excluded}
       \If{$l_i$ is $\relu${} layer}
         \State $constr := \Land_{t=i}^k A.lc_t$
-        \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in eq \ref{eq:reluexact}}
+        \State $constr := constr \land (\Land_{n \in marked} exactConstr(n))$ \Comment{as in Equation \ref{eq:reluexact}}
         \State $constr := constr \land \Land_{j=1}^{|l_{i-1}|} (x_{(i-1)j} = val^{v_0}_{(i-1)j})$
         \State $constr := constr \land \Land_{j=1}^{|l_k|} (x_{kj} = v_{kj})$
         \State $softConstrs := \cup_{j=1}^{|l_i|} (x_{ij} = val^{v_0}_{ij})$
