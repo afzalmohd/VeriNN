@@ -4,8 +4,11 @@
 	\caption{Hypothetical example of neural network}
 	\label{fig:motivating}
 \end{figure}
-Consider a neural network in Figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
-\affine{} and \relu{}, so a total of four layers is shown in Figure~\ref{fig:motivating}. 
+% Consider a neural network in Figure~\ref{fig:motivating},  which has one input, one hidden, and one output layer. The hidden layer is separated into two layers 
+% \affine{} and \relu{}, so a total of four layers is shown in Figure~\ref{fig:motivating}. 
+Consider the neural network depicted in Figure~\ref{fig:motivating}, which comprises one input layer, one hidden layer, 
+and one output layer. The hidden layer is divided into two sub-layers: \affine{} and \relu{}, 
+resulting in a total of four layers shown in Figure~\ref{fig:motivating}.
 Every layer contains two neurons. The neuron $x_8$ has a bias of $1$, and all the other neurons have a bias of $0$. 
 Our goal is to verify for all input $x_1,x_2 \in [-1,1]$ the outputs satisfy $x_7 \leq x_8$. 
 Our approach extends \deeppoly{}~\cite{singh2019abstract}.

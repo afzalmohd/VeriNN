@@ -111,7 +111,13 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
   We compute $A(x_{ij}).lb$ and $A(x_{ij}).ub$ by back substituting
   the variables in $A(x_{ij}).lexpr$ and $A(x_{ij}).uexpr$ respectively up to input layer.
   Since $P$ of the verification query has lower and upper bounds of the input layer,
-  we can compute the bounds for $x_{ij}$.
+  we can compute the bounds for $x_{ij}$. 
+  {\color{red} \todo{Added explaination by running example} Consider the neuron $x_3$ in Figure~\ref{fig:motivating}. 
+  Both its upper and lower constraints are same, represented by the expression $x_1 + x_2$. 
+  To compute the upper bound of $x_3$, we substitute the upper bounds of $x_1$ and $x_2$, which are both $1$. 
+  Consequently, the upper bound is calculated as $2 (1 + 1)$. 
+  Similarly, for the lower bound of $x_3$, we substitute the lower bounds of $x_1$ and $x_2$, which are both $-1$. 
+  Thus, the lower bound is computed as $-2 (-1 + -1)$.} 
 
 \item If $Type_i= \relu$ and $y=\relu(x)$,{\color{red}\todo{As per comment 1.5.5 of reviewer 2} where $x$ is a neuron in $l_{i-1}$ and $y$ is a neuron in $l_i$}, we consider the following three cases: %\todo{I tried to simplify the notation, please have a look}:
   \begin{enumerate}
@@ -128,6 +134,12 @@ In \deeppoly{}, we compute the abstraction $A$ as follows.
     And $A(y).lexpr := \lambda . x$, where $\lambda \in \{0,1\}$. 
     We can choose any value of $\lambda$ dynamically.
     We compute $A(y).lb$ and $A(y).ub$ by doing the back-subtitution similar to the \affine{} layer's neuron.
+    {\color{red} Consider the neuron $x_5$ in Figure~\ref{fig:motivating}, whose input is $x_3$. 
+    Since $x_3$'s upper bound is positive and lower bound is negative, the behavior of $x_5$ becomes uncertain. 
+    The upper expression of $x_5$ is computed using the above method as $0.5 * x_3 + 1$. 
+    By backsubstituting the upper expression of $x_3$, it becomes $0.5 (x_1 + x_2) + 1$. 
+    Using the upper bounds of $x_1$ and $x_2$, $x_5$'s upper bound is computed as $2$. 
+    On the other hand, the lower expression of $x_5$ remains $0$, by taking the value of $\lambda$ as $0$.}   
   \end{enumerate}
 %} 
 
