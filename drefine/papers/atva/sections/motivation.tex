@@ -155,17 +155,17 @@ The question is to identify the neuron whose abstraction lead to this imprecisio
 % {\color{red}\todo{As per comment 1.5.4 of reviewer 2} Here, the closeness measures are determined by comparing the equality of the corresponding neurons in abstract execution and exact execution.}
 % Here the closeness measures in terms of the equality of the neurons. 
 {\color{red}\todo{With respect to comment 6 of reviewer 1} To identify the neurons whose abstraction leads to imprecision, let us refer to Figure~\ref{fig:pictorial1}. 
-In the figure, $p_i$ represents the abstract constraint space in layer $l_i$, while the black line denotes 
+In the figure, $p_i$ represents the abstract constraint space in layer $l_i$, while the solid black line denotes 
 the spurious counterexample depicted in Equation~\ref{eq:sat1}. 
-On the other hand, the green line represents the exact execution of the input point of the spurious counterexample, 
+On the other hand, the dashed green line represents the exact execution of the input point of the spurious counterexample, 
 as denoted by Equation~\ref{eq:sat2}.
 
-The objective is to make the black line as close as possible to the green line from the first layer to the last layer 
+The objective is to make the solid black line as close as possible to the dashed green line from the first layer to the last layer 
 while keeping the first and last points the same, i.e., $x_1 = 1$, $x_2 = 1$, and $x_7 = 2$, $x_8 = 1$. 
-The closest line to achieving this goal is represented by the blue line, 
+The closest line to achieving this goal is represented by the dotted blue line, 
 which is also the abstract execution but exhibits the highest closeness to the exact execution of the spurious counterexample.
-In this context, $v_i$ refers to the vector of values of neurons in layer $l_i$ of the black line, 
-while $v'_i$ and $v''_i$ represent the vectors of the green and blue lines, respectively.
+In this context, $v_i$ refers to the vector of values of neurons in layer $l_i$ of the solid black line, 
+while $v'_i$ and $v''_i$ represent the vectors of the dashed green and dotted blue lines, respectively.
 }
 
 The green and black points are the same for the input layer, i.e., $[1,1]$. On the first affine layer, $l_1$ 
@@ -174,13 +174,13 @@ For $l_2$, we try to make $v''_2$ close to $v'_2$, such that $v''_2$ reaches to 
 them as soft constraints (i.e.,  $\{x_5=2, x_6=2\}$) 
 while maintaining that the rest of the hard constraints are satisfied (see Equation~\ref{eq:opt1})
 e.g., input points $v_0=v''_0$ and output points $v_3=v''_3$ remain same. 
-We mark the neurons of the layer where the blue line starts diverging from the green line, i.e., $l_2$. 
+We mark the neurons of the layer where the dotted blue line starts diverging from the dashed green line, i.e., $l_2$. 
 The divergence we find by the \maxsat{} query. If \maxsat{} returns all the soft constraints as satisfied, it means
 the blue point becomes equal to the green point. If \maxsat{} returns partial soft constraints as satisfied, 
 we mark the neurons whose soft constraints are not satisfied. In our example, \maxsat{} returns 
 soft constraints $\{x_5=2\}$ as satisfied, it means soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
-The blue and black lines are the same for our motivating example since it contains only one \relu{} layer. 
-However, in general, it may or may not be the same. We optimize the blue line to be close to the green line while also resulting in as few marked neurons as  possible.
+The dotted blue and solid black lines are the same for our motivating example since it contains only one \relu{} layer. 
+However, in general, it may or may not be the same. We optimize the dotted blue line to be close to the dashed green line while also resulting in as few marked neurons as  possible.
 
 
 

@@ -57,7 +57,8 @@ We use the same configuration to run \alphabeta{} and \ovaltool{}, which these t
 %We use the MNIST \cite{deng2012mnist} for our evaluation.    
 %\subsection{Implementation}
 \noindent{\bf Implementation.}
-We have implemented our techniques in a tool, which we call \drefine{}~\cite{drefine}, in \textsc{C++} programming language. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.
+We have implemented our techniques in a tool, which we call \drefine{}, in \textsc{C++} programming language. 
+{\color{red} The tool \drefine{} is available at \url{https://github.com/afzalmohd/VeriNN/tree/atva2023}}. Our approach relies on \deeppoly{}, so we also have implemented \deeppoly{} in \textsc{C++}. We are using a \textsc{C++} interface of the tool Gurobi~\cite{gurobioptimizer} to check the satisfiability as well as solve  \maxsat{} queries. %We have implemented our technique as a tool and call it \drefine{}.
 
 %\subsection{Benchmarks}
 \noindent{\bf Benchmarks.}
@@ -331,7 +332,8 @@ Our approach demonstrates significant superiority over \deeppoly{}, \kpoly{}, an
 performance on these benchmarks. While \alphabeta{} and \ovaltool{} outperform our approach by approximately 
 135 benchmarks, we are still able to solve 75 unique benchmarks that remain unsolved by both of these tools. 
 Considering the total number of benchmarks is 2223, this indicates a notable number of benchmarks that our 
-approach successfully addresses. For more details, please refer to Appendix~\ref{ap:exp:1}
+approach successfully addresses. 
+% For more details, please refer to Appendix~\ref{ap:exp:1}
 
 
 \begin{table}[t]
