@@ -17,7 +17,7 @@ Ashutosh Gupta\inst{1}\orcidID{0009-0003-7755-2006} \and
 S. Akshay\inst{1}\orcidID{0000-0002-2471-5997}}
 
 \authorrunning{M. Afzal et al.}
-\titlerunning{Using Counterexamples to Improve Robustness...}
+\titlerunning{Using Counterexamples to Improve Robustness Verification in NNs}
 
 \institute{Indian Institute of Technology Bombay, Mumbai, India\and TCS Research, Pune, India}
 % \date{April 2021}
@@ -30,8 +30,7 @@ S. Akshay\inst{1}\orcidID{0000-0002-2471-5997}}
 \begin{abstract}
   Given the pervasive use of neural networks in safety-critical systems it is important to ensure that they are robust. Recent research has focused on the question of verifying whether networks do not alter their behavior under small perturbations in inputs. Most successful methods are based on the paradigm of branch-and-bound, an abstraction-refinement technique. However, despite tremendous improvements in the last five years, there are still several benchmarks where these methods fail. One reason for this is that many methods use off-the-shelf methods to find the cause of imprecisions.  
 
-  In this paper, our goal is to develop an approach to identify the precise source of imprecision during abstraction. We present a {\em novel} counterexample guided approach that can be applied alongside many abstraction techniques. As a specific case, we implement our technique on top of a basic abstraction framework provided by the tool~\deeppoly{} and demonstrate how we can remove imprecisions in a targetted manner. This allows us to go past~\deeppoly{}'s performance as well as outperform other refinement approaches in literature. Surprisingly, we are also able to verify several benchmark instances on which all leading tools %(as per their performance of their recent version)
-  fail. 
+  In this paper, our goal is to develop an approach to identify the precise source of imprecision during abstraction. We present a {\em novel} counterexample guided approach that can be applied alongside many abstraction techniques. As a specific case, we implement our technique on top of a basic abstraction framework provided by the tool~\deeppoly{} and demonstrate how we can remove imprecisions in a targetted manner. This allows us to go past~\deeppoly{}'s performance as well as outperform other refinement approaches in literature. Surprisingly, we are also able to verify several benchmark instances on which all leading tools  fail. 
   \keywords{Neural Networks \and Abstraction Refinement \and Robustness verification \and Counterexample guided approaches}
 \end{abstract}
 
