@@ -180,8 +180,7 @@ the blue point becomes equal to the green point. If \maxsat{} returns partial so
 we mark the neurons whose soft constraints are not satisfied. In our example, \maxsat{} returns 
 soft constraints $\{x_5=2\}$ as satisfied, it means soft constraint of $x_6$ could not satisfied, so, we mark $x_6$.
 The blue and black lines are the same for our motivating example since it contains only one \relu{} layer. 
-However, in general, it may or may not be the same. We are finding the blue line (the closest to the green line) to mark the 
-less number of marked neurons. 
+However, in general, it may or may not be the same. We optimize the blue line to be close to the green line while also resulting in as few marked neurons as  possible.
 
 
 
