@@ -324,6 +324,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             return FAILED;
         }
         else{
+            ITER_COUNTS += 1;
             get_images_from_satval(prev_input_point, net->input_layer);
             if(loop_counter > 0 && generate_data){
                  print_image_with_label(net, prev_input_point);
@@ -338,7 +339,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             }
         }
         loop_counter++;
-        ITER_COUNTS += 1;
+        // ITER_COUNTS += 1;
     }
     return UNKNOWN;
 }
