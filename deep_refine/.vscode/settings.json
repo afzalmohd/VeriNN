@@ -87,7 +87,12 @@
         "span": "cpp",
         "stop_token": "cpp",
         "syncstream": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "*.ipp": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "rope": "cpp",
+        "slist": "cpp"
     },
     "cmake.configureOnOpen": false
 }

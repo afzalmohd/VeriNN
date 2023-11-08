@@ -50,7 +50,7 @@ size_t execute_network(Network_t* net){
 
 bool run_deeppoly(Network_t* net){    
     //reset_backprop_vals(net);
-    deeppoly_reset_network(net);
+    // deeppoly_reset_network(net);
     bool is_varified = forward_analysis(net);
     //bool is_varified = is_image_verified(net);
     return is_varified;

@@ -6,6 +6,7 @@
 #include "decision_making.hh"
 #include "milp_refine.hh"
 #include "milp_mark.hh"
+#include "vericomp.hh"
 #include<cmath>
 #include<fstream>
 #include<iostream>
@@ -52,6 +53,8 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
+        // std::cout<<"Check..."<<std::endl;
+        // compute_pre_imp(net);
         // return 0;
         create_input_prop(net);
         std::queue<Network_t*> work_q;
@@ -257,7 +260,18 @@ bool is_dim_to_split(size_t i, std::vector<size_t> dims){
 }
 
 drefine_status run_refine_poly_for_one_task(Network_t* net){
+    std::string bounds_file_path = "";
+    // parse_file_and_update_bounds(net, bounds_file_path);
+    // return VERIFIED;
     bool is_verified = run_deeppoly(net);
+    // for(Layer_t* layer : net->layer_vec){
+    //     if(!layer->is_activation){
+    //         for(Neuron_t* nt : layer->neurons){
+    //             std::cout<<layer->layer_index+1<<" "<<nt->neuron_index<<" "<<nt->ub<<" "<<-nt->lb<<std::endl;
+    //         }
+    //     }
+    // }
+    // return VERIFIED;
     if(is_verified){
         return DEEPPOLY_VERIFIED;
     }
@@ -275,6 +289,7 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
     return status;
 }
 
+
 drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     // net->counter_class_dim = net->actual_label;
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
@@ -282,6 +297,13 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
         loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
     }
     bool generate_data = false;
+    drefine_status status = UNKNOWN;
+    // status = is_verified_by_vericomp(net);
+    if(status != UNKNOWN){
+        return status;
+    }
+
+    // return status;
     xt::xarray<double> prev_input_point = net->input_layer->res;
     size_t loop_counter = 0;
     while(loop_counter < loop_upper_bound){

@@ -112,11 +112,52 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
     GRBLinExpr grb_obj = var_vector[actual_class_var_index] - var_vector[counter_class_var_index];
     model.setObjective(grb_obj, GRB_MINIMIZE);
-    model.optimize();
-    double obj_val = model.get(GRB_DoubleAttr_ObjVal);
-    if(obj_val > 0){
-        return true;
+    bool is_sat = false;
+    double obj_val;
+    for(size_t counter = 1; counter<5; counter++){
+        model.set(GRB_DoubleParam_TimeLimit, 2*counter);
+        model.optimize();
+        obj_val = model.get(GRB_DoubleAttr_ObjVal);
+        if(obj_val <= 0){
+            std::cout<<"Counter: "<<counter<<std::endl;
+            is_sat = true;
+            break;
+        }
+        std::cout<<"Failed Counter: "<<counter<<std::endl;
     }
+    if(!is_sat){
+        model.set(GRB_DoubleParam_TimeLimit, 2000);
+        model.optimize();
+        double obj_val = model.get(GRB_DoubleAttr_ObjVal);
+        if(obj_val > 0){
+            return true;
+        }
+        // std::cout<<"Checking satisfiability..."<<std::endl;
+        // std::string out_constr = "removable_constraint";
+        // model.addConstr(grb_obj, GRB_LESS_EQUAL, 0.0, out_constr);
+        // GRBLinExpr grb1 = 0;
+        // model.setObjective(grb1, GRB_MINIMIZE);
+        // model.optimize();
+        // auto rm_constr = model.getConstrByName(out_constr);
+        // model.remove(rm_constr);
+        // int status = model.get(GRB_IntAttr_Status);
+        // if(status == GRB_INFEASIBLE){
+        //     model.update();
+        //     return true;
+        // }
+        // else if(status == GRB_OPTIMAL){
+        //     std::cout<<"Optimal result.."<<std::endl;
+        // }
+        // else{
+        //     std::cout<<"status: "<<status<<std::endl;
+        //     assert(0 && "Wring grb output\n");
+        // }
+    }
+    // model.optimize();
+    // double obj_val = model.get(GRB_DoubleAttr_ObjVal);
+    // if(obj_val > 0){
+    //     return true;
+    // }
     // std::cout<<var_vector[actual_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[actual_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
     // std::cout<<var_vector[counter_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[counter_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
     if(is_first){
@@ -132,6 +173,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
         update_sat_vals(net, var_vector);
     }
     net->index_vs_err[counter_class_index] = -obj_val;
+    // model.update();
     return false;
 } 
 
