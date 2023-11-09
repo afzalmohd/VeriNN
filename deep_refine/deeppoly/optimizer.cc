@@ -114,14 +114,22 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     model.setObjective(grb_obj, GRB_MINIMIZE);
     bool is_sat = false;
     double obj_val;
-    for(size_t counter = 1; counter<5; counter++){
-        model.set(GRB_DoubleParam_TimeLimit, 2*counter);
+    for(size_t counter = 1; counter<11; counter++){
+        model.set(GRB_DoubleParam_TimeLimit, 5*counter);
         model.optimize();
         obj_val = model.get(GRB_DoubleAttr_ObjVal);
         if(obj_val <= 0){
             std::cout<<"Counter: "<<counter<<std::endl;
+            std::cout<<"Val: "<<obj_val<<" Bounds: "<<model.get(GRB_DoubleAttr_ObjBound)<<std::endl;
             is_sat = true;
             break;
+        }
+        else{
+            double bound = model.get(GRB_DoubleAttr_ObjBound);
+            if(bound > 0){
+                return true;
+            }
+            std::cout<<"Val: "<<obj_val<<" Bounds: "<<bound<<std::endl;
         }
         std::cout<<"Failed Counter: "<<counter<<std::endl;
     }
