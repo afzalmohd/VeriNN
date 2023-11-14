@@ -17,6 +17,7 @@ void unmark_net(Network_t* net){
             for(Neuron_t* nt : layer->neurons){
                 if(nt->is_marked){
                     nt->is_marked = false;
+                    net->number_of_marked_neurons += 1;
                 }
             }
         }

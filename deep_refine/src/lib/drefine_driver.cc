@@ -325,7 +325,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
         }
         else{
             ITER_COUNTS += 1;
-
+            net->number_of_refine_iter += 1;
             for(Layer_t* layer : net->layer_vec){
                 if(layer->is_marked){
                     std::cout<<"Layer index::: "<<layer->layer_index<<", ";
@@ -664,9 +664,9 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(ITER_COUNTS)+","+std::to_string(NUM_MARKED_NEURONS)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(net->number_of_refine_iter)+","+std::to_string(net->number_of_marked_neurons)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
     write_to_file(Configuration_deeppoly::result_file, str);
-    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(ITER_COUNTS)+",num_marked_neurons="+std::to_string(NUM_MARKED_NEURONS)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(net->number_of_refine_iter)+",num_marked_neurons="+std::to_string(net->number_of_marked_neurons)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
     std::cout<<str<<std::endl;
 }
 
