@@ -12,4 +12,6 @@ bool is_prp_verified_by_milp(Network_t* net);
 void create_milp_mark_milp_refine_constr_ab(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector);
 void create_milp_constr_FC_without_marked_ab(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 bool is_prp_verified_ab(Network_t* net);
+std::string get_constr_name(size_t layer_idx, size_t nt_idx);
+
 #endif

@@ -8,11 +8,279 @@
 #include<map>
 
 
+bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar>& var_vector, size_t var_counter){
+    bool is_marked = false;
+    std::map<Neuron_t*, double> nt_err_map;
+    auto res_iter = start_layer->res.begin();
+    for(size_t i=0; i<start_layer->neurons.size(); i++, res_iter++){
+        Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
+        GRBVar var = var_vector[var_counter+i];
+        double sat_val = var.get(GRB_DoubleAttr_X);
+        double res = *res_iter;
+        double diff = abs(sat_val - res);
+        // std::cout<<diff<<" , "<<sat_val<<" , "<<res<<std::endl;
+        if(diff > DIFF_TOLERANCE){
+            if(pred_nt->lb > 0 && pred_nt->ub > 0){
+                is_marked = true;
+                nt_err_map[pred_nt] = diff;
+            }
+        }
+    }
+    // std::cout<<std::endl;
+    std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
+    if(nt_err_map.size() > MAX_NUM_MARKED_NEURONS){
+        for(size_t i = 0; i<MAX_NUM_MARKED_NEURONS; i++){
+            if(nt_err_map.size() > 0){
+                Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
+                max_val_nt->is_marked = true;
+                std::cout<<max_val_nt->neuron_index<<", ";
+                nt_err_map.erase(max_val_nt);
+            }
+        }
+    }
+    else{
+        std::map<Neuron_t*, double>::iterator itr;
+        for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
+            itr->first->is_marked = true;
+            std::cout<<itr->first->neuron_index<<", ";
+        }
+    }
+    std::cout<<std::endl;
+
+    if(is_marked){
+        start_layer->pred_layer->is_marked = true;
+        return true;
+    }
+    return false;
+}
+
+
+void creating_constraints(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
+    size_t var_counter = net->input_dim;
+    int numlayers = net->layer_vec.size();
+    for(int layer_index = 0; layer_index < numlayers; layer_index++){
+        Layer_t* layer = net->layer_vec[layer_index];
+        if(layer->is_activation){
+            create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
+        }
+        else{
+            if(Configuration_deeppoly::bounds_path != ""){
+                create_milp_constr_FC_without_marked_ab(layer, model, var_vector, var_counter);
+            }
+            else{
+                create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+            }
+        }
+        var_counter += layer->dims;
+    }
+}
+
+void update_vars_bounds(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter){
+    for(size_t i=0; i<layer->dims; i++){
+        GRBVar var = var_vector[var_counter+i];
+        double sat_val = var.get(GRB_DoubleAttr_X);
+        var.set(GRB_DoubleAttr_LB, sat_val);
+        var.set(GRB_DoubleAttr_UB, sat_val);
+    }
+}
+
+void updated_vars_bounds_by_exact_val(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter){
+    auto iter = layer->res.begin();
+    for(size_t i=0; i<layer->dims; i++, iter++){
+        GRBVar var = var_vector[var_counter+i];
+        var.set(GRB_DoubleAttr_LB, *iter);
+        var.set(GRB_DoubleAttr_UB, *iter);
+    }
+}
+
+void updated_vars_bounds_by_original_bounds(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter){
+    for(size_t i=0; i<layer->dims; i++){
+        Neuron_t* nt = layer->neurons[i];
+        GRBVar var = var_vector[var_counter+i];
+        var.set(GRB_DoubleAttr_LB, -nt->lb);
+        var.set(GRB_DoubleAttr_UB, nt->ub);
+    }
+}
+
+
+void remove_maxsat_constr(GRBModel& model, Layer_t* layer){
+    for(size_t i=0; i<layer->dims; i++){
+        std::string constr_name = get_consr_name_binary(layer->layer_index, i);
+        GRBConstr constr = model.getConstrByName(constr_name);
+        model.remove(constr);
+    }
+    model.update();
+}
+
+void remove_constrs(GRBModel& model, Layer_t* layer){
+    if(layer->is_activation){
+        for(size_t i=0; i<layer->dims; i++){
+            Neuron_t* pred_nt = layer->pred_layer->neurons[i];
+            Neuron_t* nt = layer->neurons[i];
+            std::string constr_name = get_constr_name(layer->layer_index, i);
+            std::string constr_name1 = constr_name+",1";
+            std::string constr_name2 = constr_name+",2";
+            std::string constr_name3 = constr_name+",3";
+            std::string constr_name4 = constr_name+",4";
+            if(nt->lb <= 0 || nt->ub <= 0){
+                GRBConstr constr = model.getConstrByName(constr_name);
+                model.remove(constr);
+            }
+            else if(pred_nt->is_marked){
+                GRBConstr constr = model.getConstrByName(constr_name1);
+                model.remove(constr);
+                constr = model.getConstrByName(constr_name2);
+                model.remove(constr);
+                constr = model.getConstrByName(constr_name3);
+                model.remove(constr);
+                constr = model.getConstrByName(constr_name4);
+                model.remove(constr);
+            }
+            else{
+                GRBConstr constr = model.getConstrByName(constr_name1);
+                model.remove(constr);
+                constr = model.getConstrByName(constr_name2);
+                model.remove(constr);
+            }
+        }
+    }
+    else{
+        for(size_t i=0; i<layer->dims; i++){
+            std::string constr_name = get_constr_name(layer->layer_index, i);
+            GRBConstr constr = model.getConstrByName(constr_name);
+            model.remove(constr);
+        }
+    }
+
+    model.update();
+}
+
+void get_marked_neurons(Network_t* net){
+    bool is_optimized = false;
+    GRBModel model = create_grb_env_and_model();
+    std::vector<GRBVar> var_vector;
+    creating_vars_with_constant_vars(net, model, var_vector, 0);
+    creating_constraints(net, model, var_vector);
+    size_t var_counter = net->input_dim;
+    for(Layer_t* layer : net->layer_vec){
+        if(layer->is_activation){
+            create_optimization_constraints_layer(layer, model, var_vector, var_counter);
+            model.optimize();
+            bool is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            is_optimized = true;
+            if(is_layer_marked){
+                break;
+            }
+            else{
+                // printf("Check..\n");
+                update_vars_bounds(layer, var_vector, var_counter);
+            }
+
+            // remove_maxsat_constr(model, layer);
+        }
+        else if(is_optimized){
+            update_vars_bounds(layer, var_vector, var_counter);
+        }
+        var_counter += layer->dims;
+    }
+}
+
+bool is_found_cex_in_abs_exec(GRBModel& model){
+
+    model.optimize();
+    int status = model.get(GRB_IntAttr_Status);
+    if(status == GRB_OPTIMAL){
+        return true;
+    }
+    else if(status == GRB_INFEASIBLE){
+        std::cout<<"Infeasible..........."<<std::endl;
+        return false;
+    }
+    else{
+        std::cout<<"Something wrong: grb status: "<<status<<std::endl;
+        assert(0);
+        return false;
+    }
+}
+
+void get_marked_nts_after_spurious_cex_reverse(Network_t* net, GRBModel& model, size_t layer_idx, std::vector<GRBVar>& var_vector, size_t var_counter){
+    bool is_marked = false;
+    for(size_t i=layer_idx; i<net->layer_vec.size(); i++){
+        Layer_t* layer = net->layer_vec[i];
+        if(layer->is_activation){
+            create_optimization_constraints_layer(layer, model, var_vector, var_counter);
+            model.optimize();
+            int status = model.get(GRB_IntAttr_Status);
+            std::cout<<"Optimization status: "<<status<<std::endl;
+            bool is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            if(is_layer_marked){
+                is_marked  =true;
+                break;
+            }
+        }
+        var_counter += layer->dims;
+    }
+    if(!is_marked){
+        std::cout<<"Something wroong in get_marked_after_spurious_cex_api...."<<std::endl;
+        assert(0);
+    }
+}
+
+void get_marked_neurons_reverse(Network_t* net){
+    GRBModel model = create_grb_env_and_model();
+    std::vector<GRBVar> var_vector;
+    size_t var_counter = net->input_dim;
+    for(Layer_t* layer : net->layer_vec){
+        var_counter += layer->dims;
+    }
+    var_counter -= net->output_dim;
+    size_t affine_layers_counter = 0;
+    creating_vars_with_constant_vars(net, model, var_vector, 0);
+    for(size_t i=0; i<net->output_dim; i++){
+        Neuron_t* nt = net->layer_vec.back()->neurons[i];
+        GRBVar var = var_vector[var_counter+i];
+        var.set(GRB_DoubleAttr_LB, -nt->lb);
+        var.set(GRB_DoubleAttr_UB, nt->ub);
+    }
+    for(int i=net->layer_vec.size() -1; i>=0; i--){
+        Layer_t* layer = net->layer_vec[i];
+        if(layer->is_activation){
+            create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
+        }
+        else{
+            if(affine_layers_counter >= 1){
+                updated_vars_bounds_by_exact_val(layer, var_vector, var_counter);
+                bool is_spurious_cex = is_found_cex_in_abs_exec(model);
+                // model.reset();
+                if(is_spurious_cex){
+                    std::cout<<"Found counter at layer........................ : "<<i<<std::endl;
+                    get_marked_nts_after_spurious_cex_reverse(net, model, layer->layer_index, var_vector, var_counter);
+                    break;
+                }
+                else{
+                    updated_vars_bounds_by_original_bounds(layer, var_vector, var_counter);
+                }
+            }
+            create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+            affine_layers_counter++;
+        }
+
+        var_counter -= layer->pred_layer->dims;
+    }
+}
+
+
 bool run_milp_mark_with_milp_refine(Network_t* net){
     bool is_ce = is_sat_val_ce(net);
     if(is_ce){
         return true;
     }
+
+    // get_marked_neurons_reverse(net);
+    // return false;
+
+    // get_marked_neurons(net);
+    // return false;
     
     for(size_t i=0; i<net->layer_vec.size();i++){
         Layer_t* layer = net->layer_vec[i];
@@ -124,16 +392,17 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
     std::map<Neuron_t*, double> nt_err_map;
     if(status == GRB_OPTIMAL){
         // std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
-        for(size_t i=0; i<start_layer->neurons.size(); i++){
+        auto res_iter = start_layer->res.begin();
+        for(size_t i=0; i<start_layer->neurons.size(); i++, res_iter++){
             Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
             GRBVar var = var_vector[var_counter+i];
             double sat_val = var.get(GRB_DoubleAttr_X);
-            double res = start_layer->res[i];
+            double res = *res_iter;
             double diff = abs(sat_val - res);
+            // std::cout<<diff<<" , "<<sat_val<<" , "<<res<<std::endl;
             if(diff > DIFF_TOLERANCE){
                 if(pred_nt->lb > 0 && pred_nt->ub > 0){
                     is_marked = true;
-                    // std::cout<<pred_nt->neuron_index<<", ";
                     nt_err_map[pred_nt] = diff;
                 }
             }
@@ -160,22 +429,53 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
         std::cout<<std::endl;
     }
     else{
+        std::cout<<"Something wrong in maxsat... Gurobi status: "<<status<<std::endl;
         assert(0 && "Something is wrong\n");
     }
     if(is_marked){
         start_layer->pred_layer->is_marked = true;
         return true;
     }
+    else{
+        for(size_t i=0; i<start_layer->dims; i++){
+            Neuron_t* nt = start_layer->neurons[i];
+            GRBVar var = var_vector[var_counter+i];
+            double sat_val = var.get(GRB_DoubleAttr_X);
+            nt->sat_val = sat_val;
+        }
+    }
     return false;
 }
 
+std::string get_consr_name_binary(size_t layer_idx, size_t nt_idx){
+    std::string constr_name = "cb_"+std::to_string(layer_idx)+","+std::to_string(nt_idx);
+    return constr_name;
+}
+
 void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    auto iter = layer->res.begin();
     GRBLinExpr obj=0;
-    for(size_t i=0; i<layer->dims; i++){
+    for(size_t i=0; i<layer->dims; i++, iter++){
+        std::string constr_name = get_consr_name_binary(layer->layer_index, i);
+        std::string constr_name1 = constr_name+",1";
+        std::string constr_name2 = constr_name+",2";
         Neuron_t* nt = layer->neurons[i];
+        double lb = -nt->lb;
+        double range = nt->ub - lb;
+        double exact_val = *iter;
+        GRBVar var = var_vector[var_counter+i];
+        
         std::string var_str = "b,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
         GRBVar bin_var = model.addVar(0, 1, 0.0, GRB_BINARY, var_str);
-        model.addGenConstrIndicator(bin_var, 1, var_vector[var_counter+i], GRB_EQUAL, layer->res[i]);
+        
+        GRBLinExpr expr1 = var - exact_val;
+        expr1 -= (1-bin_var)*range;
+        model.addConstr(expr1, GRB_LESS_EQUAL, 0, constr_name1);
+        
+        GRBLinExpr expr2 = var - exact_val;
+        expr2 += (1-bin_var)*range;
+        model.addConstr(expr2, GRB_GREATER_EQUAL, 0, constr_name2);
+        
         obj += bin_var;
     }
     model.setObjective(obj, GRB_MAXIMIZE);
@@ -223,7 +523,8 @@ void create_constant_vars_satval_layer(Network_t* net, Layer_t* layer, GRBModel&
         }
     }
     else{
-        for(size_t i=0; i<layer->dims; i++){
+        auto iter = layer->res.begin();
+        for(size_t i=0; i<layer->dims; i++, iter++){
             Neuron_t* nt = layer->neurons[i];
             std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
             GRBVar x = model.addVar(layer->res[i], layer->res[i], 0.0, GRB_CONTINUOUS, var_str);

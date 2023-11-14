@@ -14,5 +14,7 @@ bool is_sat_val_ce(Network_t* net);
 void create_satvals_to_image(Layer_t* layer);
 void get_images_from_satval(xt::xarray<double>& res, Layer_t* layer);
 // void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer);
+std::string get_consr_name_binary(size_t layer_idx, size_t nt_idx);
+Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m);
 
 #endif

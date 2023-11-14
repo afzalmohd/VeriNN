@@ -325,6 +325,35 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
         }
         else{
             ITER_COUNTS += 1;
+
+            for(Layer_t* layer : net->layer_vec){
+                if(layer->is_marked){
+                    std::cout<<"Layer index::: "<<layer->layer_index<<", ";
+                    for(Neuron_t* nt : layer->neurons){
+                        if(nt->is_marked){
+                            std::cout<<nt->neuron_index<<" ";
+                        }
+                    }
+                    std::cout<<std::endl;
+                }
+            }
+            std::cout<<std::endl;
+
+            std::cout<<"Iteration number: "<<ITER_COUNTS<<std::endl;
+            for(Layer_t* layer : net->layer_vec){
+                if(layer->is_marked){
+                    std::cout<<"Layer index::: "<<layer->layer_index<<",";
+                    size_t count = 0;
+                    for(Neuron_t* nt : layer->neurons){
+                        if(nt->is_marked){
+                            count++;
+                        }
+                    }
+                    std::cout<<count<<std::endl;
+                }
+            }
+            std::cout<<std::endl;
+
             get_images_from_satval(prev_input_point, net->input_layer);
             if(loop_counter > 0 && generate_data){
                  print_image_with_label(net, prev_input_point);

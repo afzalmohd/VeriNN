@@ -160,7 +160,9 @@ std::map<size_t, std::map<size_t, std::vector<size_t>>> parse_file(std::string &
 }
 
 void parse_file_and_update_bounds(Network_t* net, std::string &file_path){
-    file_path = "/home/u1411251/Documents/tools/VeriNN/deep_refine/bounds_3_7.txt";
+    file_path = "/home/u1411251/Downloads/bounds_66.txt";
+    size_t NUM_LAYERS = 16;
+    size_t upto_layer_index = 2*(NUM_LAYERS -1);
     size_t image_index;
     size_t layer_idx;
     size_t nt_idx;
@@ -190,9 +192,9 @@ void parse_file_and_update_bounds(Network_t* net, std::string &file_path){
                             ub = std::stod(acc);
                         }
                         else if(counter == 4){
-                            if(image_index == Configuration_deeppoly::image_index){
+                            if(image_index == Configuration_deeppoly::image_index && layer_idx <= upto_layer_index){
                                 lb = std::stod(acc);
-                                // std::cout<<"Check.. : "<<image_index<<" "<<layer_idx+1<<" "<<nt_idx<<" "<<ub<<" "<<lb<<std::endl;
+                                std::cout<<"Check.. : "<<image_index<<" "<<layer_idx+1<<" "<<nt_idx<<" "<<ub<<" "<<lb<<std::endl;
                                 Layer_t* layer = net->layer_vec[layer_idx];
                                 Neuron_t* nt = layer->neurons[nt_idx];
                                 nt->lb = -lb;
