@@ -261,7 +261,7 @@ bool is_dim_to_split(size_t i, std::vector<size_t> dims){
 
 drefine_status run_refine_poly_for_one_task(Network_t* net){
     std::string bounds_file_path = "";
-    // parse_file_and_update_bounds(net, bounds_file_path);
+    parse_file_and_update_bounds(net, bounds_file_path);
     // return VERIFIED;
     bool is_verified = run_deeppoly(net);
     // for(Layer_t* layer : net->layer_vec){

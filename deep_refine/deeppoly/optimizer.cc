@@ -89,6 +89,10 @@
 
 // }
 
+std::string get_constr_name(size_t layer_idx, size_t nt_idx){
+    std::string name = "c_"+std::to_string(layer_idx)+","+std::to_string(nt_idx);
+    return name;
+}
 
 GRBModel create_env_model_constr(Network_t* net, std::vector<GRBVar>& var_vector){
     GRBModel model = create_env_and_model();
@@ -181,7 +185,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     //     return true;
     // }
     
-    model.set(GRB_DoubleParam_TimeLimit, 2000);
+    // model.set(GRB_DoubleParam_TimeLimit, 2000);
     model.optimize();
     double obj_val = model.get(GRB_DoubleAttr_ObjVal);
     if(obj_val > 0){
@@ -276,6 +280,51 @@ void create_milp_constr_FC(Layer_t* layer, GRBModel& model, std::vector<GRBVar>&
     }
 }
 
+void create_milp_or_lp_encoding_relu(GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter, Layer_t* layer, size_t nt_index, bool is_with_binary_var){
+    std::string contr_name = get_constr_name(layer->layer_index, nt_index);
+    std::string constr_name1 = contr_name+",1";
+    std::string constr_name2 = contr_name+",2";
+    std::string constr_name3 = contr_name+",3";
+    std::string constr_name4 = contr_name+",4";
+    Neuron_t* pred_nt = layer->pred_layer->neurons[nt_index];
+    double lb = -pred_nt->lb;
+    std::string var_str = "bin,"+std::to_string(layer->layer_index)+","+std::to_string(nt_index);
+    GRBVar var;
+    if(is_with_binary_var){
+        var = model.addVar(0,1,0,GRB_BINARY, var_str);
+    }
+    else{
+        var = model.addVar(0,1,0,GRB_CONTINUOUS, var_str);
+    }
+    
+    GRBLinExpr grb_expr = var_vector[var_counter+nt_index] - var_vector[var_counter + nt_index - layer->pred_layer->dims] - lb*var;
+    model.addConstr(grb_expr, GRB_LESS_EQUAL, -lb, constr_name1);
+
+    grb_expr = var_vector[var_counter+nt_index] - var_vector[var_counter + nt_index - layer->pred_layer->dims];
+    model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0, constr_name2);
+
+    grb_expr = var_vector[var_counter+nt_index] - pred_nt->ub*var;
+    model.addConstr(grb_expr, GRB_LESS_EQUAL, 0, constr_name3);
+
+    grb_expr = var_vector[var_counter+nt_index];
+    model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0, constr_name4);
+}
+
+void create_deeppoly_encoding_relu(GRBModel& model, Layer_t* layer, size_t nt_index, std::vector<GRBVar>& var_vector, size_t var_counter){
+    std::string contr_name = get_constr_name(layer->layer_index, nt_index);
+    std::string constr_name1 = contr_name+",1";
+    std::string constr_name2 = contr_name+",2";
+    Neuron_t* nt = layer->neurons[nt_index];
+    Neuron_t* pred_nt = layer->pred_layer->neurons[nt_index];
+    double lb = -pred_nt->lb;
+    GRBLinExpr grb_expr = -pred_nt->ub*var_vector[var_counter + nt_index - layer->pred_layer->dims] + pred_nt->ub*lb;
+    grb_expr += (nt->ub - lb)*var_vector[var_counter+nt_index];
+    model.addConstr(grb_expr, GRB_LESS_EQUAL, 0, constr_name1);
+
+    GRBLinExpr grb_expr1 = var_vector[var_counter+nt_index] - var_vector[var_counter + nt_index - layer->pred_layer->dims];
+    model.addConstr(grb_expr1, GRB_GREATER_EQUAL, 0, constr_name2);
+}
+
 void create_milp_constr_relu(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
     assert(layer->is_activation && "Not activation layer\n");
     for(size_t i=0; i< layer->dims; i++){
@@ -301,13 +350,12 @@ void create_milp_constr_relu(Layer_t* layer, GRBModel& model, std::vector<GRBVar
                 model.addConstr(grb_expr, GRB_EQUAL, 0);
             }
             else{
-                double lb = -pred_nt->lb;
-                GRBLinExpr grb_expr = -pred_nt->ub*var_vector[var_counter + i - layer->pred_layer->dims] + pred_nt->ub*lb;
-                grb_expr += (nt->ub - lb)*var_vector[var_counter+i];
-                model.addConstr(grb_expr, GRB_LESS_EQUAL, 0);
-
-                GRBLinExpr grb_expr1 = var_vector[var_counter+i] - var_vector[var_counter + i - layer->pred_layer->dims];
-                model.addConstr(grb_expr1, GRB_GREATER_EQUAL, 0);
+                if(IS_LP_CONSTRAINTS){
+                    create_milp_or_lp_encoding_relu(model, var_vector, var_counter, layer, i, false);
+                }
+                else{
+                    create_deeppoly_encoding_relu(model, layer, i, var_vector, var_counter);
+                }               
             }
         }
 

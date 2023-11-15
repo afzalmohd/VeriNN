@@ -16,6 +16,8 @@ void copy_vector_by_index(std::vector<GRBVar>& var_vector, std::vector<GRBVar>& 
 size_t get_gurobi_var_index(Layer_t* layer, size_t index);
 GRBModel create_env_and_model();
 void update_sat_vals(Network_t* net, std::vector<GRBVar>& var_vec);
-
+std::string get_constr_name(size_t layer_idx, size_t nt_idx);
+void create_milp_or_lp_encoding_relu(GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter, Layer_t* layer, size_t nt_index, bool is_with_binary_var);
+void create_deeppoly_encoding_relu(GRBModel& model, Layer_t* layer, size_t nt_index, std::vector<GRBVar>& var_vector, size_t var_counter);
 
 #endif
