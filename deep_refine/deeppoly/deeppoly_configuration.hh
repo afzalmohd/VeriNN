@@ -14,8 +14,6 @@
 #define NUM_TEST_IMAGES 30
 #define MILP_WITH_MILP_LIMIT 2000
 #define MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT 3
-#define PULL_BACK_WITH_MILP_LIMIT 100
-#define PULL_BACK_WITH_PATH_SPLIT 5000
 #define NUM_GUROBI_THREAD 2
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
@@ -54,9 +52,6 @@ namespace Configuration_deeppoly{
     extern bool is_small_ex;
     extern bool is_parallel;
     extern unsigned int num_thread;
-    extern bool is_unmarked_deeppoly;
-    extern bool is_milp_based_refine;
-    extern bool is_milp_based_mark;
     extern std::string result_file;
     extern size_t image_index;
     extern std::string tool;

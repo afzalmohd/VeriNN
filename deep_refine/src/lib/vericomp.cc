@@ -160,8 +160,62 @@ std::map<size_t, std::map<size_t, std::vector<size_t>>> parse_file(std::string &
 }
 
 void parse_file_and_update_bounds(Network_t* net, std::string &file_path){
+    file_path = "/home/u1411251/Downloads/bounds_1.txt";
+    size_t NUM_LAYERS = 7;
+    size_t upto_layer_index = 2*(NUM_LAYERS -1);
+    size_t image_index;
+    size_t layer_idx;
+    size_t nt_idx;
+    double lb=-INFINITY;
+    double ub=INFINITY;
+    std::fstream newfile;
+    newfile.open(file_path, std::ios::in);
+    if(newfile.is_open()){
+        std::string tp;
+        std::string acc = "";
+        while(getline(newfile, tp)){
+            if(tp != ""){
+                size_t counter = 0;
+                for(size_t i=0; i<tp.size(); i++){
+                    if(std::isspace(tp[i]) && acc != ""){
+                        if(counter == 0){
+                            layer_idx = std::stoul(acc);
+                            layer_idx = layer_idx - 1;
+                        }
+                        if(counter == 1){
+                            nt_idx = std::stoul(acc);
+                        }
+                        else if(counter == 2){
+                            ub = std::stod(acc);
+                        }
+                        else if(counter == 3){
+                            lb = std::stod(acc);
+                            // std::cout<<"Check.. : "<<image_index<<" "<<layer_idx+1<<" "<<nt_idx<<" "<<ub<<" "<<lb<<std::endl;
+                            Layer_t* layer = net->layer_vec[layer_idx];
+                            Neuron_t* nt = layer->neurons[nt_idx];
+                            nt->lb = -lb;
+                            nt->ub = ub;
+                        }
+                        counter++;
+                        acc = "";
+                    }
+                    else if(std::isspace(tp[i])){
+                        continue;
+                    }
+                    else{
+                        acc += tp[i];
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+void parse_file_and_update_bounds_with_image_idx(Network_t* net, std::string &file_path){
     file_path = "/home/u1411251/Downloads/bounds_66.txt";
-    size_t NUM_LAYERS = 16;
+    size_t NUM_LAYERS = 7;
     size_t upto_layer_index = 2*(NUM_LAYERS -1);
     size_t image_index;
     size_t layer_idx;
@@ -194,7 +248,7 @@ void parse_file_and_update_bounds(Network_t* net, std::string &file_path){
                         else if(counter == 4){
                             if(image_index == Configuration_deeppoly::image_index && layer_idx <= upto_layer_index){
                                 lb = std::stod(acc);
-                                std::cout<<"Check.. : "<<image_index<<" "<<layer_idx+1<<" "<<nt_idx<<" "<<ub<<" "<<lb<<std::endl;
+                                // std::cout<<"Check.. : "<<image_index<<" "<<layer_idx+1<<" "<<nt_idx<<" "<<ub<<" "<<lb<<std::endl;
                                 Layer_t* layer = net->layer_vec[layer_idx];
                                 Neuron_t* nt = layer->neurons[nt_idx];
                                 nt->lb = -lb;

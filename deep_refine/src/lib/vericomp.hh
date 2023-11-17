@@ -5,6 +5,7 @@
 
 drefine_status is_verified_by_vericomp(Network_t* net);
 void parse_file_and_update_bounds(Network_t* net, std::string &file_path);
+void parse_file_and_update_bounds_with_image_idx(Network_t* net, std::string &file_path);
 
 
 #endif

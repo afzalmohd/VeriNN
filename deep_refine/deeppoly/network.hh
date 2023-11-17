@@ -16,35 +16,13 @@ class Float_number{
         double sup;
 };
 
-//class Expr_t;
-
-// class Constr_t{
-// 	public:
-// 		Expr_t* expr;
-// 		bool is_positive;
-// 		//size_t layer_index;
-// 		//size_t neuron_index;  //Layer and neuron index by which this constraint generated
-// 		// ~Constr_t(){
-// 		// 	delete expr;
-// 		// }
-// 		void deep_copy(Constr_t* constr);
-// 		void print_constr();
-// 		//bool is_same_generator(Constr_t* constr);
-// };
 
 
-class Sparse_neuron_t{
-	public:
-		size_t neuron_index;
-		int layer_index;
-		bool is_active;
-};
 
 class Expr_t{
 	public:
 		std::vector<double> coeff_inf;
         std::vector<double> coeff_sup;
-		//std::vector<Constr_t*> constr_vec; // Constraints added by other layers neurons in backsubstitutions
 		double cst_inf;
         double cst_sup;
 		size_t size=0;
@@ -67,11 +45,6 @@ class Neuron_t{
 		bool is_active = false; // false means relu is deactivated, true means relu is activated
 		double lb=INFINITY;
 		double ub=INFINITY;
-		double unmarked_lb = INFINITY;
-		double unmarked_ub = INFINITY;
-		bool is_back_prop_active = false;
-		double back_prop_lb;
-		double back_prop_ub;
 		double sat_val;
         Expr_t* uexpr;
         Expr_t* lexpr;
@@ -103,8 +76,6 @@ class Layer_t{
         std::string layer_type;
 		int layer_index; //input layer consider as -1 indexed
 		bool is_marked = false;
-		std::vector<std::vector<Sparse_neuron_t*>> IIS;
-		std::vector<Neuron_t*> marked_neurons;
 		//std::vector<Constr_t*> constr_vec;
 		std::vector<size_t> w_shape;
 		xt::xarray<double> w;

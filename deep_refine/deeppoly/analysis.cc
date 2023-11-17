@@ -18,18 +18,6 @@ bool forward_analysis(Network_t* net){
             }
         }
         else{
-            if(layer->is_marked){
-                is_verified = milp_based_deeppoly(net, layer);
-                if(!is_verified){
-                    for(Neuron_t* nt : net->layer_vec.back()->neurons){
-                        if(nt->is_back_prop_active){
-                            std::cout<<"Neuron: "<<nt->neuron_index<<", backprop val: "<<nt->back_prop_ub<<std::endl;
-                        }
-                    }
-                }
-                return is_verified;
-            }
-            //create_marked_layer_splitting_constraints(layer);
             if(Configuration_deeppoly::is_parallel){
                 forward_layer_FC_parallel(net, layer);
             }
@@ -43,7 +31,7 @@ bool forward_analysis(Network_t* net){
         is_verified = !is_sat;
     }
     else{
-        is_verified = is_image_verified(net);
+        is_verified = is_image_verified_deeppoly(net);
     }
     return is_verified;
 }
@@ -280,7 +268,6 @@ void update_neuron_relu(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
     nt->ub = fmax(0.0, pred_nt->ub);
     update_relu_expr(nt, pred_nt, true, true);
     update_relu_expr(nt, pred_nt, true, false);
-
 }
 
 void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heuristic, bool is_lower){
@@ -338,9 +325,6 @@ void update_relu_expr(Neuron_t* curr_nt, Neuron_t* pred_nt, bool is_default_heur
 void update_neuron_FC(Network_t* net, Layer_t* layer, Neuron_t* nt){
     assert(layer->layer_index >= 0 && "Layer indexing is wrong");
     create_neuron_expr_FC(nt, layer);
-    // if(layer->is_marked){
-    //     copy_layer_constraints(layer, nt);
-    // }
     Layer_t* pred_layer = get_pred_layer(net, layer);
     update_neuron_bound_back_substitution(net, pred_layer, nt);
 }
@@ -405,15 +389,6 @@ void update_neuron_lexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         Layer_t* pred_pred_layer = get_pred_layer(net, pred_layer);
         update_neuron_lexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else{
-        // if(nt->lexpr_b->constr_vec.size() > 0){
-        //     //printf("Check..l\n");
-        //     compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->lexpr_b, true);
-        // }
-        if(Configuration_deeppoly::is_unmarked_deeppoly){
-            nt->unmarked_lb = nt->lb;
-        }
-    } 
 }
 
 void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
@@ -432,16 +407,6 @@ void update_neuron_uexpr_bound_back_substitution(Network_t* net, Layer_t* pred_l
         }
         update_neuron_uexpr_bound_back_substitution(net, pred_pred_layer, nt);
     }
-    else{
-        // if(nt->uexpr_b->constr_vec.size() > 0){
-        //     //printf("Check..u\n");
-        //     compute_bounds_using_gurobi(net, net->layer_vec[pred_layer->layer_index+1], nt, nt->uexpr_b, false);
-        // }
-        if(Configuration_deeppoly::is_unmarked_deeppoly){
-            nt->unmarked_ub = nt->ub;
-        }
-
-    } 
 }
 
 void update_neuron_bound_back_substitution(Network_t* net, Layer_t* pred_layer, Neuron_t* nt){
@@ -493,17 +458,6 @@ Expr_t* update_expr_affine_backsubstitution(Network_t* net, Layer_t* pred_layer,
 
     res_expr->cst_inf = res_expr->cst_inf + curr_expr->cst_inf;
     res_expr->cst_sup = res_expr->cst_sup + curr_expr->cst_sup;
-    // update_constr_vec_cst(new_constr_vec, curr_expr->constr_vec);
-    // free_constr_vector_memory(curr_expr->constr_vec);
-    // res_expr->constr_vec = new_constr_vec;
-    // if(pred_layer->is_marked){
-    //     for(auto con : pred_layer->constr_vec){
-    //         Constr_t* constr = new Constr_t();
-    //         constr->expr = new Expr_t();
-    //         constr->deep_copy(con);
-    //         res_expr->constr_vec.push_back(constr);
-    //     }
-    // }
 
     return res_expr;
 }
@@ -620,6 +574,29 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
         res += temp2;
     }
     return res;
+}
+
+bool is_image_verified_deeppoly(Network_t* net){
+    bool is_verified = true;
+    for(size_t i=0; i<net->output_dim; i++){
+        if(i != net->actual_label){
+            bool is_already_verified = false;
+            for(size_t val : net->verified_out_dims){
+                if(val == i){
+                    is_already_verified = true;
+                }
+            }
+            if(!is_already_verified){
+                if(is_greater(net, net->actual_label, i, true)){
+                    net->verified_out_dims.push_back(i);
+                }
+                else{
+                    is_verified = false;
+                }
+            }
+        }
+    }
+    return is_verified;
 }
 
 
@@ -852,14 +829,6 @@ bool is_sat_with_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_
     int status = model.get(GRB_IntAttr_Status);
     if(status == GRB_OPTIMAL){
         if(is_first){
-            Layer_t* layer = net->layer_vec.back();
-            for(size_t val : indexes_in_prp){
-                Neuron_t* nt = layer->neurons[val];
-                nt->is_back_prop_active = true;
-                size_t grb_var_index = get_gurobi_var_index(layer, val);
-                nt->back_prop_lb = var_vector[grb_var_index].get(GRB_DoubleAttr_X);
-                nt->back_prop_ub = nt->back_prop_lb;
-            }
             update_sat_vals(net, var_vector);
         }
         remove_constr_grb_model(model, constr_vec);

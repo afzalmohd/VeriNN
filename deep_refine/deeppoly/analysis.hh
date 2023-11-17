@@ -28,6 +28,7 @@ void create_input_layer_expr(Network_t* net);
 double compute_lb_from_expr(Layer_t* pred_layer, Expr_t* expr);
 double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr);
 bool is_image_verified(Network_t* net);
+bool is_image_verified_deeppoly(Network_t* net);
 bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_greater);
 bool is_image_verified_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector);
 bool is_sat_property_main(Network_t* net);

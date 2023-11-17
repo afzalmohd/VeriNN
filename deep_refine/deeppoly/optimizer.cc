@@ -2,93 +2,6 @@
 #include "helper.hh"
 #include "deeppoly_configuration.hh"
 
-// void compute_bounds_using_gurobi(Network_t* net, Layer_t* layer, Neuron_t* nt, Expr_t* expr, bool is_minimize){
-//     Layer_t* pred_layer = get_pred_layer(net, layer);
-//     try{
-//         GRBModel model = create_env_and_model();
-//         std::vector<GRBVar> var_vector(pred_layer->dims);
-//         //add variables to the model
-//         for(size_t i=0; i<pred_layer->dims; i++){
-//             Neuron_t* nt1 = pred_layer->neurons[i];
-//             std::string var_str = "i_"+std::to_string(i);
-//             GRBVar x = model.addVar(-nt1->lb, nt1->ub, 0.0, GRB_CONTINUOUS, var_str);
-//             var_vector[i] = x;
-//         }
-
-//         //add objective function to the model
-//         GRBLinExpr obj_expr = 0;
-//         if(is_minimize){
-//             std::vector<double> coeffs;
-//             copy_vector_with_negative_vals(expr->coeff_inf, coeffs);
-//             obj_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
-//             obj_expr -= expr->cst_inf;
-//         }
-//         else{
-//             obj_expr.addTerms(&expr->coeff_sup[0], &var_vector[0], var_vector.size());
-//             obj_expr += expr->cst_sup;
-//         }
-        
-//         if(is_minimize){
-//             model.setObjective(obj_expr, GRB_MINIMIZE);
-//         }
-//         else{
-//             model.setObjective(obj_expr, GRB_MAXIMIZE);
-//         }
-
-//         for(auto con : expr->constr_vec){
-//             Expr_t* con_expr = con->expr;
-//             GRBLinExpr grb_expr = 0;
-//             if(con->is_positive){
-//                 grb_expr.addTerms(&con_expr->coeff_sup[0], &var_vector[0], var_vector.size());
-//                 grb_expr += con_expr->cst_sup;
-//                 model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
-//             }
-//             else{
-//                 std::vector<double> coeffs;
-//                 copy_vector_with_negative_vals(expr->coeff_inf, coeffs);
-//                 grb_expr.addTerms(&coeffs[0], &var_vector[0], var_vector.size());
-//                 grb_expr -= con_expr->cst_inf; //cst_inf already in negative form
-//                 model.addConstr(grb_expr, GRB_LESS_EQUAL, 0); 
-//             }
-//         }
-
-//         model.optimize();
-//         int status = model.get(GRB_IntAttr_Status);
-//         if(status == GRB_OPTIMAL){
-//             if(is_minimize){
-//             double tmp = model.get(GRB_DoubleAttr_ObjVal);
-//             if(tmp > -nt->lb){
-//                 nt->lb = -tmp;
-//             }
-//             }
-//             else{
-//                 double tmp = model.get(GRB_DoubleAttr_ObjVal);
-//                 if(tmp < nt->ub){
-//                     nt->ub = tmp;
-//                 }
-//             }
-//         }
-//         else if(status == GRB_INFEASIBLE){
-//             std::cout<<"Infisible bounds"<<std::endl;
-//         }
-//         else if(status == GRB_UNBOUNDED){
-//             std::cout<<"UNBOUNDED bounds"<<std::endl;
-//         }
-//         else{
-//             std::cout<<"UNKNOWN bounds"<<std::endl;
-//         }
-        
-
-//     }
-//     catch(GRBException e){
-//         std::cout<<e.getMessage()<<std::endl;
-//     }
-//     catch(...){
-//         std::cout<<"Exception during optimization"<<std::endl;
-//     }
-
-// }
-
 std::string get_constr_name(size_t layer_idx, size_t nt_idx){
     std::string name = "c_"+std::to_string(layer_idx)+","+std::to_string(nt_idx);
     return name;
@@ -174,7 +87,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
     GRBLinExpr grb_obj = var_vector[actual_class_var_index] - var_vector[counter_class_var_index];
     model.setObjective(grb_obj, GRB_MINIMIZE);
-    bool is_verified = false;
+    // bool is_verified = false;
     // is_verified = is_verified_model_efficiant(model);
     // if(is_verified){
     //     return true;
@@ -191,24 +104,9 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     if(obj_val > 0){
         return true;
     }
-        
-    // model.optimize();
-    // double obj_val = model.get(GRB_DoubleAttr_ObjVal);
-    // if(obj_val > 0){
-    //     return true;
-    // }
-    // std::cout<<var_vector[actual_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[actual_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
-    // std::cout<<var_vector[counter_class_var_index].get(GRB_StringAttr_VarName)<<" "<<var_vector[counter_class_var_index].get(GRB_DoubleAttr_X)<<std::endl;
+    
     if(is_first){
         std::cout<<"MILP error with ("<<net->actual_label<<","<<counter_class_index<<"): "<<-obj_val<<std::endl;
-        Neuron_t* nt_actual = layer->neurons[net->actual_label];
-        Neuron_t* nt_counter = layer->neurons[counter_class_index];
-        nt_actual->is_back_prop_active = true;
-        nt_actual->back_prop_lb = var_vector[actual_class_var_index].get(GRB_DoubleAttr_X);
-        nt_actual->back_prop_ub = nt_actual->back_prop_lb;
-        nt_counter->is_back_prop_active = true;
-        nt_counter->back_prop_lb = var_vector[counter_class_var_index].get(GRB_DoubleAttr_X);
-        nt_counter->back_prop_ub = nt_counter->back_prop_lb;
         update_sat_vals(net, var_vector);
     }
     net->index_vs_err[counter_class_index] = -obj_val;
@@ -328,7 +226,6 @@ void create_deeppoly_encoding_relu(GRBModel& model, Layer_t* layer, size_t nt_in
 void create_milp_constr_relu(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
     assert(layer->is_activation && "Not activation layer\n");
     for(size_t i=0; i< layer->dims; i++){
-        Neuron_t* nt = layer->neurons[i];
         Neuron_t* pred_nt = layer->pred_layer->neurons[i];
         if(pred_nt->is_marked){
             if(pred_nt->is_active){

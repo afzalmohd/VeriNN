@@ -1,59 +1,21 @@
 #include "milp_mark.hh"
 #include "milp_refine.hh"
-#include "pullback.hh"
 #include "../../deeppoly/optimizer.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
 #include "../../deeppoly/analysis.hh"
 #include <cstdlib>
 #include<map>
 
-
-bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar>& var_vector, size_t var_counter){
-    bool is_marked = false;
-    std::map<Neuron_t*, double> nt_err_map;
-    auto res_iter = start_layer->res.begin();
-    for(size_t i=0; i<start_layer->neurons.size(); i++, res_iter++){
-        Neuron_t* pred_nt = start_layer->pred_layer->neurons[i];
-        GRBVar var = var_vector[var_counter+i];
-        double sat_val = var.get(GRB_DoubleAttr_X);
-        double res = *res_iter;
-        double diff = abs(sat_val - res);
-        // std::cout<<diff<<" , "<<sat_val<<" , "<<res<<std::endl;
-        if(diff > DIFF_TOLERANCE){
-            if(pred_nt->lb > 0 && pred_nt->ub > 0){
-                is_marked = true;
-                nt_err_map[pred_nt] = diff;
-            }
-        }
-    }
-    // std::cout<<std::endl;
-    std::cout<<"Layer index: "<<start_layer->pred_layer->layer_index<<", marked neurons: ";
-    if(nt_err_map.size() > MAX_NUM_MARKED_NEURONS){
-        for(size_t i = 0; i<MAX_NUM_MARKED_NEURONS; i++){
-            if(nt_err_map.size() > 0){
-                Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
-                max_val_nt->is_marked = true;
-                std::cout<<max_val_nt->neuron_index<<", ";
-                nt_err_map.erase(max_val_nt);
-            }
-        }
-    }
-    else{
-        std::map<Neuron_t*, double>::iterator itr;
-        for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
-            itr->first->is_marked = true;
-            std::cout<<itr->first->neuron_index<<", ";
-        }
-    }
-    std::cout<<std::endl;
-
-    if(is_marked){
-        start_layer->pred_layer->is_marked = true;
-        return true;
-    }
-    return false;
+GRBModel create_grb_env_and_model(){
+    GRBEnv env = GRBEnv(true);
+    env.set("LogFile", "milp.log");
+    env.start();
+    GRBModel model = GRBModel(env);
+    model.set(GRB_IntParam_LogToConsole, 0);
+    model.set(GRB_IntParam_OutputFlag, 1);
+    model.set(GRB_IntParam_Threads,NUM_GUROBI_THREAD);
+    return model;
 }
-
 
 void creating_constraints(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
     size_t var_counter = net->input_dim;
@@ -75,14 +37,7 @@ void creating_constraints(Network_t* net, GRBModel& model, std::vector<GRBVar>& 
     }
 }
 
-void update_vars_bounds(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter){
-    for(size_t i=0; i<layer->dims; i++){
-        GRBVar var = var_vector[var_counter+i];
-        double sat_val = var.get(GRB_DoubleAttr_X);
-        var.set(GRB_DoubleAttr_LB, sat_val);
-        var.set(GRB_DoubleAttr_UB, sat_val);
-    }
-}
+
 
 void updated_vars_bounds_by_exact_val(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter){
     auto iter = layer->res.begin();
@@ -103,14 +58,7 @@ void updated_vars_bounds_by_original_bounds(Layer_t* layer, std::vector<GRBVar>&
 }
 
 
-void remove_maxsat_constr(GRBModel& model, Layer_t* layer){
-    for(size_t i=0; i<layer->dims; i++){
-        std::string constr_name = get_consr_name_binary(layer->layer_index, i);
-        GRBConstr constr = model.getConstrByName(constr_name);
-        model.remove(constr);
-    }
-    model.update();
-}
+
 
 void remove_constrs(GRBModel& model, Layer_t* layer){
     if(layer->is_activation){
@@ -155,40 +103,8 @@ void remove_constrs(GRBModel& model, Layer_t* layer){
     model.update();
 }
 
-void get_marked_neurons(Network_t* net){
-    bool is_already_optimized = false;
-    GRBModel model = create_grb_env_and_model();
-    std::vector<GRBVar> var_vector;
-    creating_vars_with_constant_vars(net, model, var_vector, 0);
-    creating_constraints(net, model, var_vector);
-    size_t var_counter = net->input_dim;
-    for(Layer_t* layer : net->layer_vec){
-        if(layer->is_activation){
-            // create_optimization_constraints_layer(layer, model, var_vector, var_counter);
-            model.optimize();
-            int status = model.get(GRB_IntAttr_Status);
-            std::cout<<"Optimized status: "<<status<<std::endl;
-            bool is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
-            is_already_optimized = true;
-            if(is_layer_marked){
-                break;
-            }
-            else{
-                // printf("Check..\n");
-                update_vars_bounds(layer, var_vector, var_counter);
-            }
-
-            // remove_maxsat_constr(model, layer);
-        }
-        else if(is_already_optimized){
-            update_vars_bounds(layer, var_vector, var_counter);
-        }
-        var_counter += layer->dims;
-    }
-}
 
 bool is_found_cex_in_abs_exec(GRBModel& model){
-
     model.optimize();
     int status = model.get(GRB_IntAttr_Status);
     if(status == GRB_OPTIMAL){
@@ -231,43 +147,36 @@ void get_marked_nts_after_spurious_cex_reverse(Network_t* net, GRBModel& model, 
 void get_marked_neurons_reverse(Network_t* net){
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
-    size_t var_counter = net->input_dim;
-    for(Layer_t* layer : net->layer_vec){
-        var_counter += layer->dims;
-    }
-    var_counter -= net->output_dim;
-    size_t affine_layers_counter = 0;
-    creating_vars_with_constant_vars(net, model, var_vector, 0);
-    for(size_t i=0; i<net->output_dim; i++){
-        Neuron_t* nt = net->layer_vec.back()->neurons[i];
-        GRBVar var = var_vector[var_counter+i];
-        var.set(GRB_DoubleAttr_LB, -nt->lb);
-        var.set(GRB_DoubleAttr_UB, nt->ub);
-    }
+    creating_vars_milp(net, model, var_vector);
+    size_t var_counter = var_vector.size();
+    GRBLinExpr neg_prp_expr = var_vector[var_counter - net->output_dim + net->actual_label] - var_vector[var_counter - net->output_dim + net->counter_class_dim];
+    std::string neg_prp_name = "neg_prp";
+    model.addConstr(neg_prp_expr, GRB_LESS_EQUAL, 0, neg_prp_name);
+    bool is_found_marked_nts = false;
     for(int i=net->layer_vec.size() -1; i>=0; i--){
         Layer_t* layer = net->layer_vec[i];
+        var_counter -= layer->dims;
         if(layer->is_activation){
             create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
-            if(affine_layers_counter >= 1){
-                updated_vars_bounds_by_exact_val(layer, var_vector, var_counter);
-                bool is_spurious_cex = is_found_cex_in_abs_exec(model);
-                // model.reset();
-                if(is_spurious_cex){
-                    std::cout<<"Found counter at layer........................ : "<<i<<std::endl;
-                    get_marked_nts_after_spurious_cex_reverse(net, model, layer->layer_index, var_vector, var_counter);
-                    break;
-                }
-                else{
-                    updated_vars_bounds_by_original_bounds(layer, var_vector, var_counter);
-                }
+            updated_vars_bounds_by_exact_val(layer, var_vector, var_counter);
+            bool is_spurious_cex = is_found_cex_in_abs_exec(model);
+            if(is_spurious_cex){
+                std::cout<<"Found counter at layer........................ : "<<i<<std::endl;
+                get_marked_nts_after_spurious_cex_reverse(net, model, layer->layer_index, var_vector, var_counter);
+                is_found_marked_nts = true;
+                break;
+            }
+            else{
+                updated_vars_bounds_by_original_bounds(layer, var_vector, var_counter);
             }
             create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
-            affine_layers_counter++;
         }
-
-        var_counter -= layer->pred_layer->dims;
+    }
+    if(!is_found_marked_nts){
+        std::cout<<"Something wrong!!!!!!!!!!"<<std::endl;
+        assert(0);
     }
 }
 
@@ -277,12 +186,6 @@ bool run_milp_mark_with_milp_refine(Network_t* net){
     if(is_ce){
         return true;
     }
-
-    // get_marked_neurons_reverse(net);
-    // return false;
-
-    get_marked_neurons(net);
-    return false;
     
     for(size_t i=0; i<net->layer_vec.size();i++){
         Layer_t* layer = net->layer_vec[i];
@@ -563,41 +466,6 @@ void create_relu_constr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& va
 }
 
 
-bool is_sat_val_ce(Network_t* net){
-    create_satvals_to_image(net->input_layer);
-    //std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
-    net->forward_propgate_network(0, net->input_layer->res);
-    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && Configuration_deeppoly::bounds_path == ""){
-        bool is_sat = is_prop_sat_vnnlib(net);
-        // if(is_sat){
-        //     std::cout<<"input values"<<std::endl;
-        //     print_xt_array(net->input_layer->res, net->input_dim);
-        //     std::cout<<"Check...."<<std::endl;
-        //     std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
-        //     std::cout<<"output values"<<std::endl;
-        //     print_xt_array(net->layer_vec.back()->res, net->output_dim);
-        // }
-        return is_sat;
-    }
-    if(Configuration_deeppoly::bounds_path != ""){
-        Layer_t* last_layer = net->layer_vec.back();
-        for(size_t i=0; i<last_layer->dims; i++){
-            double val = last_layer->res[i];
-            if(val <= 0){
-                std::cout<<last_layer->res<<std::endl;
-                return true;
-            }
-        }
-        return false;
-    }
-    auto pred_label = xt::argmax(net->layer_vec.back()->res);
-    net->pred_label = pred_label[0];
-    if(net->actual_label != net->pred_label){
-        std::cout<<"Found counter assignment!!"<<std::endl;
-        return true;
-    }
-    return false;
-}
 
 void create_satvals_to_image(Layer_t* layer){
     std::vector<double> vec;
@@ -620,13 +488,3 @@ void get_images_from_satval(xt::xarray<double>& res, Layer_t* layer){
     std::vector<size_t> shape = {layer->dims};
     res = xt::adapt(vec,shape);
 }
-
-// void create_negate_property(GRBModel& model, std::vector<GRBVar>& var_vector, Network_t* net, Layer_t* curr_layer){
-//     size_t var_counter = curr_layer->pred_layer->dims;
-//     int numlayer = net->layer_vec.size();
-//     for(int i=curr_layer->layer_index; i<numlayer-1; i++){
-//         var_counter += net->layer_vec[i]->dims;
-//     }
-//     GRBLinExpr grb_expr = var_vector[var_counter + net->counter_class_dim] - var_vector[var_counter + net->actual_label];
-//     model.addConstr(grb_expr, GRB_GREATER_EQUAL, 0);
-// }

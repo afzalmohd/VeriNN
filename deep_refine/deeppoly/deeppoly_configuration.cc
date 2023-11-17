@@ -21,9 +21,6 @@ namespace Configuration_deeppoly{
     bool is_small_ex;
     bool is_parallel;
     unsigned int num_thread;
-    bool is_unmarked_deeppoly = true;
-    bool is_milp_based_refine;
-    bool is_milp_based_mark;
     std::string result_file;
     size_t image_index;
     std::string tool;
@@ -42,8 +39,6 @@ namespace Configuration_deeppoly{
             ("is-small-example,ise", po::value<bool>(&is_small_ex)->default_value(false), "Small example for testing")
             ("is-parallel", po::value<bool>(&is_parallel)->default_value(false), "Use parallelization")
             ("num-thread", po::value<unsigned int>(&num_thread)->default_value(4), "Number of cores in parallelization")
-            ("is-milp-refine", po::value<bool>(&is_milp_based_refine)->default_value(true), "Is milp based refinement")
-            ("is-optimization-mark", po::value<bool>(&is_milp_based_mark)->default_value(true), "Is optimizationan based refinement")
             ("result-file", po::value<std::string>(&result_file)->default_value(default_result_file), "result file")
             ("image-index", po::value<size_t>(&image_index)->default_value(1), "Image index to be verify")
             ("tool", po::value<std::string>(&tool)->default_value(default_tool), "tool name drefine/deeppoly")
