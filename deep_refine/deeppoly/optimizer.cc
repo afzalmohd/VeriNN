@@ -25,7 +25,7 @@ GRBModel create_env_model_constr(Network_t* net, std::vector<GRBVar>& var_vector
 
 bool is_verified_model_efficiant(GRBModel& model){
     double obj_val;
-    for(size_t counter = 1; counter<11; counter++){
+    for(size_t counter = 1; counter<40; counter++){
         model.set(GRB_DoubleParam_TimeLimit, 5*counter);
         model.optimize();
         obj_val = model.get(GRB_DoubleAttr_ObjVal);
@@ -41,16 +41,19 @@ bool is_verified_model_efficiant(GRBModel& model){
             }
             std::cout<<"Val: "<<obj_val<<" Bounds: "<<bound<<std::endl;
         }
+        if(counter == 5){
+            model.set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_BESTBOUND);
+        }
         std::cout<<"Failed Counter: "<<counter<<std::endl;
     }
 
     
-    model.set(GRB_DoubleParam_TimeLimit, 2000);
-    model.optimize();
-    obj_val = model.get(GRB_DoubleAttr_ObjVal);
-    if(obj_val > 0){
-        return true;
-    }
+    // model.set(GRB_DoubleParam_TimeLimit, 2000);
+    // model.optimize();
+    // obj_val = model.get(GRB_DoubleAttr_ObjVal);
+    // if(obj_val > 0){
+    //     return true;
+    // }
 
     return false;
 }
@@ -87,23 +90,24 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
     GRBLinExpr grb_obj = var_vector[actual_class_var_index] - var_vector[counter_class_var_index];
     model.setObjective(grb_obj, GRB_MINIMIZE);
-    // bool is_verified = false;
-    // is_verified = is_verified_model_efficiant(model);
-    // if(is_verified){
-    //     return true;
-    // }
-
+    bool is_verified = false;
+    double obj_val;
+    is_verified = is_verified_model_efficiant(model);
+    if(is_verified){
+        return true;
+    }
+    obj_val = model.get(GRB_DoubleAttr_ObjVal);
     // is_verified = is_verified_by_sat_query(model, grb_obj);
     // if(is_verified){
     //     return true;
     // }
     
     // model.set(GRB_DoubleParam_TimeLimit, 2000);
-    model.optimize();
-    double obj_val = model.get(GRB_DoubleAttr_ObjVal);
-    if(obj_val > 0){
-        return true;
-    }
+    // model.optimize();
+    // obj_val = model.get(GRB_DoubleAttr_ObjVal);
+    // if(obj_val > 0){
+    //     return true;
+    // }
     
     if(is_first){
         std::cout<<"MILP error with ("<<net->actual_label<<","<<counter_class_index<<"): "<<-obj_val<<std::endl;
