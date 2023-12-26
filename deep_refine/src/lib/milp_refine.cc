@@ -58,8 +58,8 @@ bool run_refinement_cegar(Network_t* net){
         return true;
     }
 
-    get_marked_neurons_reverse(net);
-    return false;
+    // get_marked_neurons_reverse(net);
+    // return false;
 
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
