@@ -264,6 +264,29 @@ Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m){
     return max_val_key;
 }
 
+Neuron_t* get_key_of_min_val(std::map<Neuron_t*, double> & m){
+    assert(m.size() > 0 && "Map is empty");
+    std::map<Neuron_t*, double>::iterator itr;
+    bool is_first = true;
+    double min_val;
+    Neuron_t* min_val_key = NULL;
+    for(itr = m.begin(); itr != m.end(); itr++){
+        if(is_first){
+            min_val_key = itr->first;
+            min_val = itr->second;
+            is_first = false;
+        }
+        else{
+            if(min_val > itr->second){
+                min_val_key = itr->first;
+                min_val = itr->second;
+            }
+        }
+    }
+
+    return min_val_key;
+}
+
 bool is_layer_marked(Network_t* net, Layer_t* start_layer){
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;

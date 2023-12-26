@@ -320,7 +320,13 @@ bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar
     if(nt_err_map.size() > MAX_NUM_MARKED_NEURONS){
         for(size_t i = 0; i<MAX_NUM_MARKED_NEURONS; i++){
             if(nt_err_map.size() > 0){
-                Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
+                Neuron_t* max_val_nt = NULL;
+                if(IS_TOP_MIN_DIFF){
+                    max_val_nt = get_key_of_min_val(nt_err_map);
+                }
+                else{
+                    max_val_nt = get_key_of_max_val(nt_err_map);
+                }
                 max_val_nt->is_marked = true;
                 std::cout<<max_val_nt->neuron_index<<", ";
                 nt_err_map.erase(max_val_nt);

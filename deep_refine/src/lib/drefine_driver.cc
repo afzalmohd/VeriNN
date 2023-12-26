@@ -10,6 +10,7 @@
 #include<iostream>
 #include<chrono>
 #include<queue>
+#include "../../k/findk.hh"
 
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
@@ -22,6 +23,9 @@ int run_refine_poly(int num_args, char* params[]){
     if(is_help || (!is_valid_dataset())){
         return 1;
     }
+
+    // find_k();
+    // return 0;
 
     Network_t* net;
     std::chrono::_V2::system_clock::time_point start_time;

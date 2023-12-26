@@ -14,6 +14,7 @@ void create_satvals_to_image(Layer_t* layer);
 void get_images_from_satval(xt::xarray<double>& res, Layer_t* layer);
 std::string get_consr_name_binary(size_t layer_idx, size_t nt_idx);
 Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m);
+Neuron_t* get_key_of_min_val(std::map<Neuron_t*, double> & m);
 GRBModel create_grb_env_and_model();
 void get_marked_neurons_reverse(Network_t* net);
 

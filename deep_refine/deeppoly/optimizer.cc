@@ -28,11 +28,16 @@ bool is_verified_model_efficiant(GRBModel& model){
     for(size_t counter = 1; counter<40; counter++){
         model.set(GRB_DoubleParam_TimeLimit, 5*counter);
         model.optimize();
+        int status = model.get(GRB_IntAttr_Status);
+        std::cout<<"Verified Opt Status: "<<status<<std::endl;
         obj_val = model.get(GRB_DoubleAttr_ObjVal);
         if(obj_val <= 0){
             std::cout<<"Counter: "<<counter<<std::endl;
             std::cout<<"Val: "<<obj_val<<" Bounds: "<<model.get(GRB_DoubleAttr_ObjBound)<<std::endl;
             return false;
+        }
+        else if(status == GRB_OPTIMAL){
+            return true;
         }
         else{
             double bound = model.get(GRB_DoubleAttr_ObjBound);
