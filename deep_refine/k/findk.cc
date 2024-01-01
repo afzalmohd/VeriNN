@@ -115,12 +115,12 @@ void remove_output_constr(GRBModel& model, Network_t* net1, std::vector<GRBVar>&
 }
 
 void create_output_constraints_optimization(GRBModel& model, Network_t* net1, std::vector<GRBVar>& var_vector1, std::vector<GRBVar>& var_vector2, size_t var_counter){
-    double k=0.5;
+    double k=500;
     double k_lb = 0.0;
     double k_ub = 0.0;
     double prev_k = 100.0;
     double k_diff_tol = 1e-2;
-    size_t bounds_for_k = 10;
+    size_t bounds_for_k = 20;
     bool is_found_k = false;
     size_t i=0;
     for(i=0; i<bounds_for_k; i++){

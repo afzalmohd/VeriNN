@@ -93,8 +93,21 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     Layer_t* layer = net->layer_vec.back();
     size_t actual_class_var_index  = get_gurobi_var_index(layer, net->actual_label);
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
-    GRBLinExpr grb_obj = var_vector[actual_class_var_index] - var_vector[counter_class_var_index];
-    model.setObjective(grb_obj, GRB_MINIMIZE);
+    if(IS_CONF_CE){
+        GRBLinExpr grb_obj = 0;
+        for(size_t i=0; i<net->output_dim; i++){
+            size_t var_idx = get_gurobi_var_index(layer, i);
+            grb_obj += var_vector[var_idx];
+        }
+
+        grb_obj *= CONFIDENCE_OF_CE;
+        grb_obj -= var_vector[counter_class_var_index];
+        model.setObjective(grb_obj, GRB_MINIMIZE);
+    }
+    else{
+        GRBLinExpr grb_obj = var_vector[actual_class_var_index] - var_vector[counter_class_var_index];
+        model.setObjective(grb_obj, GRB_MINIMIZE);
+    }
     bool is_verified = false;
     double obj_val;
     is_verified = is_verified_model_efficiant(model);

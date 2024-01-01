@@ -576,8 +576,37 @@ double compute_ub_from_expr(Layer_t* pred_layer, Expr_t* expr){
     return res;
 }
 
+bool is_no_ce_with_conf(Network_t* net){
+    bool is_verified = true;
+    Layer_t* out_layer = net->layer_vec.back();
+    double denominator = 0.0;
+    for(size_t i=0; i<net->output_dim; i++){
+        double lb = -out_layer->neurons[i]->lb;
+        denominator += lb;
+    }
+    denominator = CONFIDENCE_OF_CE*denominator;
+    for(size_t i=0; i<net->output_dim; i++){
+        if(i != net->actual_label){
+            double ub = out_layer->neurons[i]->ub;
+            std::cout<<"Dim: "<<i<<" , error: "<<(ub - denominator)<<std::endl;
+            if(denominator > ub){
+                net->verified_out_dims.push_back(i);
+            }
+            else{
+                is_verified = false;
+            }
+        }
+    }
+
+    return is_verified;
+}
+
 bool is_image_verified_deeppoly(Network_t* net){
     bool is_verified = true;
+    if(IS_CONF_CE){
+        is_verified = is_no_ce_with_conf(net);
+        return is_verified;
+    }
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             bool is_already_verified = false;

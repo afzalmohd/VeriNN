@@ -21,7 +21,9 @@
 #define MAX_INPUT_DIMS_TO_SPLIT 2
 #define IS_LIGHT_WEIGHT_MARKED_ANALYSIS false
 #define IS_LP_CONSTRAINTS false
-#define IS_TOP_MIN_DIFF true
+#define IS_TOP_MIN_DIFF false
+#define IS_CONF_CE true
+#define CONFIDENCE_OF_CE 0.95
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
