@@ -24,7 +24,7 @@
 #define IS_TOP_MIN_DIFF false
 #define IS_CONF_CE true
 #define CONFIDENCE_OF_CE 0.95
-#define IS_TARGET_CE (IS_CONF_CE && true)
+#define IS_TARGET_CE (IS_CONF_CE && false)
 #define TARGET_CLASS 2
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
