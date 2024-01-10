@@ -55,6 +55,12 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
+
+        if(IS_TARGET_CE){
+            if(net->pred_label == TARGET_CLASS){
+                return 0;
+            }
+        }
         // std::cout<<"Check..."<<std::endl;
         // compute_pre_imp(net);
         // return 0;
@@ -81,8 +87,10 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     // normalize_image(net);
     normalize_input_image(net);
     net->pred_label = execute_network(net);
+    double sum_out = 0;
     for(size_t i=0; i<net->output_dim; i++){
         std::cout<<net->layer_vec.back()->res[i]<<" ";
+        sum_out += net->layer_vec.back()->res[i];
     }
     std::cout<<std::endl;
     if(net->actual_label != net->pred_label){
@@ -93,6 +101,8 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
         return false;
         
     }
+
+    std::cout<<"Correct image conf: "<<((net->layer_vec.back()->res[net->pred_label])/sum_out)<<std::endl;
     return true;
 }
 

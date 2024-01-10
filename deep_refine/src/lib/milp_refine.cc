@@ -75,6 +75,10 @@ bool is_image_verified_by_milp(Network_t* net){
     std::vector<GRBVar> var_vector;
     create_milp_mark_milp_refine_constr(net, model, var_vector);
     size_t i=0;
+    if(IS_TARGET_CE){
+        bool is_verif = verify_by_milp(net, model, var_vector, TARGET_CLASS, true);
+        return is_verif;
+    }
     for(i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             bool is_already_verified = false;
@@ -277,8 +281,8 @@ bool is_sat_val_ce(Network_t* net){
         bool is_sat = is_prop_sat_vnnlib(net);
         return is_sat;
     }
+    Layer_t* last_layer = net->layer_vec.back();
     if(Configuration_deeppoly::bounds_path != ""){
-        Layer_t* last_layer = net->layer_vec.back();
         for(size_t i=0; i<last_layer->dims; i++){
             double val = last_layer->res[i];
             if(val <= 0){
@@ -288,10 +292,47 @@ bool is_sat_val_ce(Network_t* net){
         }
         return false;
     }
+    double sum_out = 0;
+    for(size_t i=0; i<net->output_dim; i++){
+        sum_out += last_layer->res[i];
+    }
+
+    if(IS_CONF_CE){
+        for(size_t i=0; i<net->output_dim; i++){
+            if(i != net->actual_label){
+                double conf = (last_layer->res[i])/sum_out;
+                if(conf >= CONFIDENCE_OF_CE){
+                    IFVERBOSE(
+                        std::cout<<"CE confidence: "<<conf<<std::endl;
+                        for(size_t i=0; i<net->input_dim; i++){
+                            std::cout<<net->input_layer->res[i]<<",";
+                        }
+                        std::cout<<std::endl;
+                    );
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    if(IS_TARGET_CE){
+        double conf = (last_layer->res[TARGET_CLASS])/sum_out;
+        return conf >= CONFIDENCE_OF_CE;
+    }
+
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
     if(net->actual_label != net->pred_label){
         std::cout<<"Found counter assignment!!"<<std::endl;
+        std::cout<<"CE confidence: "<<((net->layer_vec.back()->res[pred_label])/sum_out)<<std::endl;
+        IFVERBOSE(
+            for(size_t i=0; i<net->input_dim; i++){
+                std::cout<<net->input_layer->res[i]<<",";
+            }
+            std::cout<<std::endl;
+        );
         return true;
     }
     return false;

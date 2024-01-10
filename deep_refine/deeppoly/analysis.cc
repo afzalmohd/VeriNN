@@ -585,6 +585,12 @@ bool is_no_ce_with_conf(Network_t* net){
         denominator += lb;
     }
     denominator = CONFIDENCE_OF_CE*denominator;
+
+    if(IS_TARGET_CE){
+        double ub = out_layer->neurons[TARGET_CLASS]->ub;
+        return denominator > ub;
+    }
+
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             double ub = out_layer->neurons[i]->ub;
