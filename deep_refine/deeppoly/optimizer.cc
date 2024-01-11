@@ -2,6 +2,8 @@
 #include "helper.hh"
 #include "deeppoly_configuration.hh"
 
+pthread_mutex_t lcked;
+
 std::string get_constr_name(size_t layer_idx, size_t nt_idx){
     std::string name = "c_"+std::to_string(layer_idx)+","+std::to_string(nt_idx);
     return name;

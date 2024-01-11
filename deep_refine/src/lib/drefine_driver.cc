@@ -11,10 +11,12 @@
 #include<chrono>
 #include<queue>
 #include "../../k/findk.hh"
+#include "../../parallelization/concurrent_run.hh"
 
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
 size_t NUM_MARKED_NEURONS = 0;
+bool concurrent_flag = true;
 std::chrono::duration<double> MARK_NEURONS_TIME = std::chrono::seconds(0);
 std::chrono::duration<double> REFINEMENT_TIME = std::chrono::seconds(0);
 
@@ -329,6 +331,26 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
     // status = is_verified_by_vericomp(net);
     if(status != UNKNOWN){
         return status;
+    }
+
+    if(concurrent_flag){
+        bool is_image_verified = is_image_verified_by_milp(net);
+        if(is_image_verified){
+            return VERIFIED;
+        }
+        bool is_ce = run_milp_mark_with_milp_refine(net);
+        if(is_ce){
+            return FAILED;
+        }
+        
+        std::vector<int > prev_comb;
+        if(rec_con(net,prev_comb,new_list_mn.size())){
+            return VERIFIED;
+        }
+        else{
+            return FAILED;
+        }
+        return UNKNOWN;
     }
     
     size_t loop_counter = 0;

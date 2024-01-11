@@ -20,4 +20,10 @@ std::string get_constr_name(size_t layer_idx, size_t nt_idx);
 void create_milp_or_lp_encoding_relu(GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter, Layer_t* layer, size_t nt_index, bool is_with_binary_var);
 void create_deeppoly_encoding_relu(GRBModel& model, Layer_t* layer, size_t nt_index, std::vector<GRBVar>& var_vector, size_t var_counter);
 
+extern std::vector<int> test_lb;
+extern std::vector<int> test_ub;
+extern std::vector<int> test_satval;
+extern std::vector<int> test_exval;
+extern pthread_mutex_t lcked;
+
 #endif
