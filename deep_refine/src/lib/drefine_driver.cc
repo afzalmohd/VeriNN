@@ -16,7 +16,7 @@
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
 size_t NUM_MARKED_NEURONS = 0;
-bool concurrent_flag = true;
+bool concurrent_flag = false;
 std::chrono::duration<double> MARK_NEURONS_TIME = std::chrono::seconds(0);
 std::chrono::duration<double> REFINEMENT_TIME = std::chrono::seconds(0);
 
