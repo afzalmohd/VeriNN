@@ -94,5 +94,6 @@
         "rope": "cpp",
         "slist": "cpp"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

@@ -57,7 +57,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
-
+        // return 0;
         if(IS_TARGET_CE){
             if(net->pred_label == TARGET_CLASS){
                 return 0;

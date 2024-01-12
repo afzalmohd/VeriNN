@@ -91,6 +91,50 @@ bool is_verified_by_sat_query(GRBModel& model, GRBLinExpr& grb_obj){
     return false;
 }
 
+bool is_verified_model_efficiant_testing(GRBModel& model, std::vector<GRBVar>& var_vector){
+    double obj_val;
+    for(size_t counter = 1; counter<40; counter++){
+        model.set(GRB_DoubleParam_TimeLimit, 5*counter);
+        model.optimize();
+        int status = model.get(GRB_IntAttr_Status);
+        std::cout<<"Verified Opt Status: "<<status<<std::endl;
+        obj_val = model.get(GRB_DoubleAttr_ObjVal);
+        if(obj_val <= 0){
+            size_t var_counter = var_vector.size() - 10;
+            for(size_t i=0; i<10; i++){
+                std::cout<<"Var idx: "<<i<<" , val: "<<var_vector[var_counter+i].get(GRB_DoubleAttr_X)<<std::endl;
+            }
+            std::cout<<"Counter: "<<counter<<std::endl;
+            std::cout<<"Val: "<<obj_val<<" Bounds: "<<model.get(GRB_DoubleAttr_ObjBound)<<std::endl;
+            return false;
+        }
+        else if(status == GRB_OPTIMAL){
+            return true;
+        }
+        else{
+            double bound = model.get(GRB_DoubleAttr_ObjBound);
+            if(bound > 0){
+                return true;
+            }
+            std::cout<<"Val: "<<obj_val<<" Bounds: "<<bound<<std::endl;
+        }
+        if(counter == 5){
+            model.set(GRB_IntParam_MIPFocus, GRB_MIPFOCUS_BESTBOUND);
+        }
+        std::cout<<"Failed Counter: "<<counter<<std::endl;
+    }
+
+    
+    // model.set(GRB_DoubleParam_TimeLimit, 2000);
+    // model.optimize();
+    // obj_val = model.get(GRB_DoubleAttr_ObjVal);
+    // if(obj_val > 0){
+    //     return true;
+    // }
+
+    return false;
+}
+
 bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t counter_class_index, bool is_first){
     Layer_t* layer = net->layer_vec.back();
     size_t actual_class_var_index  = get_gurobi_var_index(layer, net->actual_label);
@@ -328,5 +372,6 @@ void update_sat_vals(Network_t* net, std::vector<GRBVar>& var_vec){
     Layer_t* last_layer = net->layer_vec[layer_index];
     for(Neuron_t* nt : last_layer->neurons){
         nt->sat_val = var_vec[counter+nt->neuron_index].get(GRB_DoubleAttr_X);
+        // std::cout<<"Var idx: "<<nt->neuron_index<<" , val: "<<nt->sat_val<<std::endl;
     }
 }
