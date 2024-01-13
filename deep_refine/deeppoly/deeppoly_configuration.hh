@@ -23,7 +23,7 @@
 #define IS_LP_CONSTRAINTS false
 #define IS_TOP_MIN_DIFF false
 #define IS_CONF_CE true
-#define CONFIDENCE_OF_CE 70
+#define CONFIDENCE_OF_CE .70
 #define IS_TARGET_CE (IS_CONF_CE && false)
 #define TARGET_CLASS 1
 #define NUM_THREADS 20

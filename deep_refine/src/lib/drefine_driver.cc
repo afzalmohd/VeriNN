@@ -104,7 +104,9 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
         
     }
 
-    std::cout<<"Correct image conf: "<<((net->layer_vec.back()->res[net->pred_label])/sum_out)<<std::endl;
+    double orig_im_conf = (net->layer_vec.back()->res[net->pred_label])/sum_out;
+    net->orig_im_conf = orig_im_conf;
+    std::cout<<"Correct image conf: "<<orig_im_conf<<std::endl;
     return true;
 }
 
@@ -475,6 +477,7 @@ bool is_real_ce_mnist_cifar10(Network_t* net){
 }
 
 void write_to_file(std::string& file_path, std::string& s){
+    std::cout<<file_path<<std::endl;
     std::ofstream my_file;
     my_file.open(file_path, std::ios::app);
     if(my_file.is_open()){
@@ -482,6 +485,7 @@ void write_to_file(std::string& file_path, std::string& s){
         my_file.close();
     }
     else{
+        std::cout<<"result file could not open"<<std::endl;
         assert(0 && "result file could not open\n");
     }
 }
@@ -505,9 +509,9 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(net->number_of_refine_iter)+","+std::to_string(net->number_of_marked_neurons)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(net->number_of_refine_iter)+","+std::to_string(net->number_of_marked_neurons)+","+std::to_string(net->orig_im_conf)+","+std::to_string(net->ce_im_conf)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
     write_to_file(Configuration_deeppoly::result_file, str);
-    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(net->number_of_refine_iter)+",num_marked_neurons="+std::to_string(net->number_of_marked_neurons)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(net->number_of_refine_iter)+",num_marked_neurons="+std::to_string(net->number_of_marked_neurons)+",orig image conf="+std::to_string(net->orig_im_conf)+",ce image conf="+std::to_string(net->ce_im_conf)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
     std::cout<<str<<std::endl;
 }
 

@@ -114,6 +114,8 @@ class Network_t{
 		std::vector<size_t> dims_to_split;
 		size_t number_of_marked_neurons=0;
 		size_t number_of_refine_iter=0;
+		double orig_im_conf = 0;
+		double ce_im_conf = 0;
 		
 
 		~Network_t(){

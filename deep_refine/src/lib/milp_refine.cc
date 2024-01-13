@@ -402,11 +402,12 @@ bool is_sat_val_ce(Network_t* net){
         sum_out += last_layer->res[i];
     }
 
-    if(IS_CONF_CE){
+    if(IS_CONF_CE && !IS_TARGET_CE){
         for(size_t i=0; i<net->output_dim; i++){
             if(i != net->actual_label){
                 double conf = (last_layer->res[i])/sum_out;
                 if(conf >= CONFIDENCE_OF_CE){
+                    net->ce_im_conf = conf;
                     IFVERBOSE(
                         std::cout<<"CE confidence: "<<conf<<std::endl;
                         for(size_t i=0; i<net->input_dim; i++){
@@ -424,14 +425,17 @@ bool is_sat_val_ce(Network_t* net){
 
     if(IS_TARGET_CE){
         double conf = (last_layer->res[TARGET_CLASS])/sum_out;
+        net->ce_im_conf = conf;
         return conf >= CONFIDENCE_OF_CE;
     }
 
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
     if(net->actual_label != net->pred_label){
+        double conf = (net->layer_vec.back()->res[pred_label])/sum_out;
         std::cout<<"Found counter assignment!!"<<std::endl;
-        std::cout<<"CE confidence: "<<((net->layer_vec.back()->res[pred_label])/sum_out)<<std::endl;
+        std::cout<<"CE confidence: "<<conf<<std::endl;
+        net->ce_im_conf = conf;
         IFVERBOSE(
             for(size_t i=0; i<net->input_dim; i++){
                 std::cout<<net->input_layer->res[i]<<",";
