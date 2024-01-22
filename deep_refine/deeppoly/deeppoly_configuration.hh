@@ -3,7 +3,7 @@
 #include <boost/program_options.hpp>
 //#define RELU "ReLU"
 //#define FC "FC"
-#define VERBOSE true
+#define VERBOSE false
 #if VERBOSE
     #define IFVERBOSE(x) x
 #else
@@ -14,7 +14,7 @@
 #define NUM_TEST_IMAGES 30
 #define MILP_WITH_MILP_LIMIT 2000
 #define MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT 3
-#define NUM_GUROBI_THREAD 2
+#define NUM_GUROBI_THREAD 4
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
 #define MAX_NUM_MARKED_NEURONS 5
@@ -22,12 +22,9 @@
 #define IS_LIGHT_WEIGHT_MARKED_ANALYSIS false
 #define IS_LP_CONSTRAINTS false
 #define IS_TOP_MIN_DIFF false
-#define IS_CONF_CE true
-#define CONFIDENCE_OF_CE .70
-#define IS_TARGET_CE (IS_CONF_CE && false)
 #define TARGET_CLASS 1
 #define NUM_THREADS 20
-#define IS_MAXSAT_ANALYSIS false
+#define IS_MAXSAT_ANALYSIS true
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
@@ -65,6 +62,9 @@ namespace Configuration_deeppoly{
     extern std::string vnnlib_prp_file_path;
     extern bool is_input_split;
     extern std::string bounds_path;
+    extern bool is_conf_ce;
+    extern bool is_target_ce;
+    extern double conf_of_ce;
 
 }
 

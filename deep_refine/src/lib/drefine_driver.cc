@@ -29,6 +29,8 @@ int run_refine_poly(int num_args, char* params[]){
     // find_k();
     // return 0;
 
+    Configuration_deeppoly::is_target_ce = Configuration_deeppoly::is_target_ce && Configuration_deeppoly::is_conf_ce;
+
     Network_t* net;
     std::chrono::_V2::system_clock::time_point start_time;
     drefine_status status;
@@ -58,7 +60,7 @@ int run_refine_poly(int num_args, char* params[]){
             return 0;
         }
         // return 0;
-        if(IS_TARGET_CE){
+        if(Configuration_deeppoly::is_target_ce){
             if(net->pred_label == TARGET_CLASS){
                 return 0;
             }
@@ -369,7 +371,8 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
         end_time = std::chrono::high_resolution_clock::now();
         MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
         net->number_of_refine_iter += 1;
-        print_logs(net);
+        IFVERBOSE(print_logs(net));
+        
         std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(MARK_NEURONS_TIME.count())<<" , REFINEMENT_TIME: "<<std::to_string(REFINEMENT_TIME.count())<<std::endl;
         if(is_ce){
             return FAILED;

@@ -32,6 +32,9 @@ bool is_verified_model_efficiant(GRBModel& model){
         model.optimize();
         int status = model.get(GRB_IntAttr_Status);
         std::cout<<"Verified Opt Status: "<<status<<std::endl;
+        if(status == GRB_INFEASIBLE || status == GRB_INF_OR_UNBD){
+            return true;
+        }
         obj_val = model.get(GRB_DoubleAttr_ObjVal);
         if(obj_val <= 0){
             std::cout<<"Counter: "<<counter<<std::endl;
@@ -139,17 +142,13 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     Layer_t* layer = net->layer_vec.back();
     size_t actual_class_var_index  = get_gurobi_var_index(layer, net->actual_label);
     size_t counter_class_var_index = get_gurobi_var_index(layer, counter_class_index);
-    if(IS_CONF_CE){
-        // GRBLinExpr grb_obj = 0;
-        // for(size_t i=0; i<net->output_dim; i++){
-        //     size_t var_idx = get_gurobi_var_index(layer, i);
-        //     grb_obj += var_vector[var_idx];
-        // }
+    std::string miss_classified_constr = "miss_classified_constr";
+    if(Configuration_deeppoly::is_conf_ce){
+        model.update();
+        model.addConstr(var_vector[counter_class_var_index]-var_vector[actual_class_var_index], GRB_GREATER_EQUAL, 0, miss_classified_constr);
         size_t var_idx = get_gurobi_var_index(layer, 0);
-        GRBLinExpr grb_obj = CONFIDENCE_OF_CE*(var_vector[var_idx]+var_vector[var_idx+1]+var_vector[var_idx+2]+var_vector[var_idx+3]+var_vector[var_idx+4]+var_vector[var_idx+5]+
+        GRBLinExpr grb_obj = Configuration_deeppoly::conf_of_ce*(var_vector[var_idx]+var_vector[var_idx+1]+var_vector[var_idx+2]+var_vector[var_idx+3]+var_vector[var_idx+4]+var_vector[var_idx+5]+
                                 var_vector[var_idx+6]+var_vector[var_idx+7]+var_vector[var_idx+8]+var_vector[var_idx+9]) - var_vector[counter_class_var_index];
-        // grb_obj *= CONFIDENCE_OF_CE;
-        // grb_obj -= var_vector[counter_class_var_index];
         model.setObjective(grb_obj, GRB_MINIMIZE);
         // std::cout<<grb_obj<<std::endl;
     }
@@ -160,6 +159,10 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
     bool is_verified = false;
     double obj_val;
     is_verified = is_verified_model_efficiant(model);
+    if(Configuration_deeppoly::is_conf_ce){
+        GRBConstr constr = model.getConstrByName(miss_classified_constr);
+        model.remove(constr);
+    }
     if(is_verified){
         return true;
     }

@@ -27,6 +27,9 @@ namespace Configuration_deeppoly{
     std::string vnnlib_prp_file_path;
     bool is_input_split;
     std::string bounds_path;
+    bool is_conf_ce;
+    bool is_target_ce;
+    double conf_of_ce;
 
     int init_options(int num_of_params, char* params[]){
         try{
@@ -45,6 +48,9 @@ namespace Configuration_deeppoly{
             ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
             ("is-input-split", po::value<bool>(&is_input_split)->default_value(false), "run with heuristic input space split")
             ("bounds-path", po::value<std::string>(&bounds_path)->default_value(""), "external bounds")
+            ("is-conf-ce", po::value<bool>(&is_conf_ce)->default_value(false), "is coounter example with high confidence")
+            ("is-target-ce", po::value<bool>(&is_target_ce)->default_value(false), "is coounter example with target class")
+            ("ce-conf", po::value<double>(&conf_of_ce)->default_value(0.90), "counter class confidence")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
@@ -126,6 +132,14 @@ namespace Configuration_deeppoly{
             else{
                 std::cout<<"Is input split: False"<< std::endl;
             }
+        }
+
+        if(vm.count("is-conf-ce")){
+            std::cout<<"Is ce with high confidence: "<<vm["is-conf-ce"].as<bool>()<<std::endl;
+        }
+
+        if(vm.count("ce-conf")){
+            std::cout<<"CE conf: "<<vm["ce-conf"].as<double>()<<std::endl;
         }
 
         return 0;

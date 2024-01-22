@@ -394,16 +394,16 @@ void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std:
         GRBVar var = var_vector[var_counter+i];
         
         std::string var_str = "b,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
-        GRBVar bin_var = model.addVar(0, 1, 0.0, GRB_BINARY, var_str);
+        GRBVar bin_var = model.addVar(0, 1, 0.0, GRB_INTEGER, var_str);
         
         GRBLinExpr expr1 = var - exact_val;
         expr1 -= (1-bin_var)*range;
         model.addConstr(expr1, GRB_LESS_EQUAL, 0, constr_name1);
-        
+        // std::cout<<"node"<<i<<": var_"<<std::to_string(i)<<"-"<<std::to_string(exact_val)<<" <= "<<"(1-"<<var_str<<")*("<<std::to_string(nt->ub)<<"-"<<std::to_string(lb)<<")"<<std::endl;
         GRBLinExpr expr2 = var - exact_val;
         expr2 += (1-bin_var)*range;
         model.addConstr(expr2, GRB_GREATER_EQUAL, 0, constr_name2);
-        
+        // std::cout<<"node"<<i<<": var_"<<std::to_string(i)<<"-"<<std::to_string(exact_val)<<" >= "<<"-(1-"<<var_str<<")*("<<std::to_string(nt->ub)<<"-"<<std::to_string(lb)<<")"<<std::endl;
         obj += bin_var;
     }
     model.setObjective(obj, GRB_MAXIMIZE);

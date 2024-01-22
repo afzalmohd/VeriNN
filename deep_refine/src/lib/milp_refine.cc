@@ -53,19 +53,27 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
     update_vars_bounds_by_prev_satval(net->layer_vec[0], var_vector, var_counter);
     var_counter = var_vector.size() - net->output_dim;
     update_vars_bounds_by_prev_satval(net->layer_vec.back(), var_vector, var_counter);
-    
+    // std::string file_name = "/home/u1411251/Documents/tools/conf_ce/VeriNN/deep_refine/grb_constr";
     var_counter = net->input_dim;
     for(Layer_t* layer : net->layer_vec){
         if(layer->is_activation){
             create_optimization_constraints_layer(layer, model, var_vector, var_counter);
+            // file_name = file_name+std::to_string(net->number_of_refine_iter)+".mps";
+            std::cout<<"Refine iter number: "<<net->number_of_refine_iter<<std::endl;
+            // model.write(file_name);
             model.optimize();
             int status = model.get(GRB_IntAttr_Status);
             std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
             std::cout<<"Optimized status: "<<status<<std::endl;
-            // if(status == GRB_INFEASIBLE){
-            //     testing(net);
+            bool is_layer_marked = false;
+            is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            // if(status = GRB_OPTIMAL){
+            //     is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
             // }
-            bool is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            // else{
+            //     is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer);
+            // }
+            
             is_already_optimized = true;
             if(is_layer_marked){
                 break;
@@ -140,7 +148,6 @@ bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer){
 
 void get_marked_neurons_without_maxsat(Network_t* net){
     
-    size_t var_counter = net->input_dim;
     for(Layer_t* layer : net->layer_vec){
         if(layer->is_activation){
             bool is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer);
@@ -180,7 +187,7 @@ bool is_image_verified_by_milp(Network_t* net){
     std::vector<GRBVar> var_vector;
     create_milp_mark_milp_refine_constr(net, model, var_vector);
     size_t i=0;
-    if(IS_TARGET_CE){
+    if(Configuration_deeppoly::is_target_ce){
         bool is_verif = verify_by_milp(net, model, var_vector, TARGET_CLASS, true);
         return is_verif;
     }
@@ -378,6 +385,18 @@ bool is_prp_verified_ab(Network_t* net){
     return true;
 }
 
+void print_real_ce(Network_t* net){
+    for(size_t i=0; i<net->input_dim; i++){
+        std::cout<<net->input_layer->res[i]<<",";
+    }
+    std::cout<<std::endl;
+}
+
+void print_real_ce_status(double conf){
+     std::cout<<"Found counter assignment!!"<<std::endl;
+    std::cout<<"CE confidence: "<<conf<<std::endl;
+}
+
 bool is_sat_val_ce(Network_t* net){
     create_satvals_to_image(net->input_layer);
     //std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
@@ -397,52 +416,51 @@ bool is_sat_val_ce(Network_t* net){
         }
         return false;
     }
+    
     double sum_out = 0;
     for(size_t i=0; i<net->output_dim; i++){
         sum_out += last_layer->res[i];
     }
 
-    if(IS_CONF_CE && !IS_TARGET_CE){
+    IFVERBOSE(
+        std::cout<<"Output layer: ";
         for(size_t i=0; i<net->output_dim; i++){
-            if(i != net->actual_label){
-                double conf = (last_layer->res[i])/sum_out;
-                if(conf >= CONFIDENCE_OF_CE){
-                    net->ce_im_conf = conf;
-                    IFVERBOSE(
-                        std::cout<<"CE confidence: "<<conf<<std::endl;
-                        for(size_t i=0; i<net->input_dim; i++){
-                            std::cout<<net->input_layer->res[i]<<",";
-                        }
-                        std::cout<<std::endl;
-                    );
-                    return true;
-                }
-            }
+            std::cout<<last_layer->res[i]<<" , ";
         }
+    );
 
-        return false;
-    }
-
-    if(IS_TARGET_CE){
-        double conf = (last_layer->res[TARGET_CLASS])/sum_out;
-        net->ce_im_conf = conf;
-        return conf >= CONFIDENCE_OF_CE;
-    }
 
     auto pred_label = xt::argmax(net->layer_vec.back()->res);
     net->pred_label = pred_label[0];
+
+
     if(net->actual_label != net->pred_label){
-        double conf = (net->layer_vec.back()->res[pred_label])/sum_out;
-        std::cout<<"Found counter assignment!!"<<std::endl;
-        std::cout<<"CE confidence: "<<conf<<std::endl;
-        net->ce_im_conf = conf;
-        IFVERBOSE(
-            for(size_t i=0; i<net->input_dim; i++){
-                std::cout<<net->input_layer->res[i]<<",";
+        double conf = (last_layer->res[pred_label])/sum_out;
+        if(Configuration_deeppoly::is_conf_ce){
+            if(conf >= Configuration_deeppoly::conf_of_ce){
+                if(Configuration_deeppoly::is_target_ce){
+                    if(net->pred_label == TARGET_CLASS){
+                        net->ce_im_conf = conf;
+                        print_real_ce_status(conf);
+                        IFVERBOSE(print_real_ce(net));
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                }
+                net->ce_im_conf = conf;
+                print_real_ce_status(conf);
+                IFVERBOSE(print_real_ce(net));
+                return true;
             }
-            std::cout<<std::endl;
-        );
-        return true;
+        }
+        else{
+            net->ce_im_conf = conf;
+            print_real_ce_status(conf);
+            IFVERBOSE(print_real_ce(net));
+            return true;
+        }
     }
     return false;
 }
