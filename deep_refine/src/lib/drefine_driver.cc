@@ -12,6 +12,7 @@
 #include<queue>
 #include "../../k/findk.hh"
 #include "../../parallelization/concurrent_run.hh"
+#include "bounds_milp.hh"
 
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
@@ -281,6 +282,7 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
     std::string bounds_file_path = "";
     // parse_file_and_update_bounds(net, bounds_file_path);
     bool is_verified = run_deeppoly(net);
+    // net->print_network();
     if(is_verified){
         return DEEPPOLY_VERIFIED;
     }
@@ -288,6 +290,17 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
     if(Configuration_deeppoly::tool == "deeppoly"){
         return UNKNOWN;
     }
+    
+    if(IS_BOUND_TIGHTENING_MILP){
+        forward_analysis_bounds_milp_seq(net);
+        // net->print_network();
+        // is_verified = run_deeppoly(net);
+        // net->print_network();
+        // if(is_verified){
+        //     return VERIFIED;
+        // }
+    }
+
     drefine_status status;
     if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
         status = run_milp_refine_with_milp_mark_vnnlib(net);

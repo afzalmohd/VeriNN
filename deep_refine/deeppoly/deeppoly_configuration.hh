@@ -3,7 +3,7 @@
 #include <boost/program_options.hpp>
 //#define RELU "ReLU"
 //#define FC "FC"
-#define VERBOSE false
+#define VERBOSE true
 #if VERBOSE
     #define IFVERBOSE(x) x
 #else
@@ -25,6 +25,9 @@
 #define TARGET_CLASS 1
 #define NUM_THREADS 20
 #define IS_MAXSAT_ANALYSIS true
+#define IS_BOUND_TIGHTENING_MILP false
+#define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
+#define TIME_LIMIT_BOUND_TIGHTNING 0.1
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 

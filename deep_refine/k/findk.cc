@@ -49,30 +49,10 @@ void create_input_constr(GRBModel& model, std::vector<GRBVar>& var_vector1, std:
     }
 }
 
-void create_all_relu_constr_exact(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
-    assert(layer->is_activation && "Not activation layer\n");
-    for(size_t i=0; i< layer->dims; i++){
-        std::string contr_name = get_constr_name(layer->layer_index, i);
-        Neuron_t* pred_nt = layer->pred_layer->neurons[i];
-        if(pred_nt->lb <= 0){
-            GRBLinExpr grb_expr = var_vector[var_counter+i] - var_vector[var_counter + i - layer->pred_layer->dims];
-            model.addConstr(grb_expr, GRB_EQUAL, 0, contr_name);
-        }
-        else if(pred_nt->ub <= 0){
-            GRBLinExpr grb_expr = var_vector[var_counter + i];
-            model.addConstr(grb_expr, GRB_EQUAL, 0, contr_name);
-        }
-        else{
-            create_milp_or_lp_encoding_relu(model, var_vector, var_counter, layer, i, true);
-        }
-
-    }
-}
-
 void create_model_constr(GRBModel& model, Network_t* net , std::vector<GRBVar>& var_vector, size_t var_counter){
     for(Layer_t* layer : net->layer_vec){
         if(layer->is_activation){
-            create_all_relu_constr_exact(layer, model, var_vector, var_counter);
+            create_exact_relu_constr_milp_refine(layer, model, var_vector, var_counter);
         }
         else{
             create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);

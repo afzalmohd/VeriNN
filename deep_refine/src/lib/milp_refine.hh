@@ -19,4 +19,5 @@ void update_vars_bounds(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t 
 bool run_refinement_cegar(Network_t* net);
 void update_vars_bounds_by_prev_satval(Layer_t* layer, std::vector<GRBVar>& var_vector, size_t var_counter);
 void remove_maxsat_constr(GRBModel& model, Layer_t* layer);
+void create_exact_relu_constr_milp_refine(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 #endif
