@@ -17,7 +17,7 @@
 size_t ITER_COUNTS = 0; //to count the number cegar iterations
 size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
 size_t NUM_MARKED_NEURONS = 0;
-bool concurrent_flag = false;
+bool concurrent_flag = true;
 std::chrono::duration<double> MARK_NEURONS_TIME = std::chrono::seconds(0);
 std::chrono::duration<double> REFINEMENT_TIME = std::chrono::seconds(0);
 
@@ -124,6 +124,9 @@ drefine_status run_refine_poly1(std::queue<Network_t*>& work_q){
         work_q.pop();
         drefine_status status = run_refine_poly_for_one_task(net);
         size_t num_marked_nt = num_marked_neurons(net);
+        if(!Configuration_deeppoly::is_reset_marked_nts){
+            net->number_of_marked_neurons += num_marked_nt;
+        }
         NUM_MARKED_NEURONS += num_marked_nt;
         SUB_PROB_COUNTS += 1;
 
@@ -351,6 +354,7 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
     }
 
     if(concurrent_flag){
+        Configuration_deeppoly::is_reset_marked_nts = false;
         bool is_image_verified = is_image_verified_by_milp(net);
         if(is_image_verified){
             return VERIFIED;
@@ -361,7 +365,7 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
         }
         
         std::vector<int > prev_comb;
-        if(rec_con(net,prev_comb,new_list_mn.size())){
+        if(rec_con(net,prev_comb,Global_vars::new_marked_nts.size())){
             return VERIFIED;
         }
         else{

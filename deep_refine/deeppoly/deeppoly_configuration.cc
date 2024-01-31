@@ -1,6 +1,11 @@
 #include "deeppoly_configuration.hh"
 #include<iostream>
 
+
+namespace Global_vars{
+    std::vector<Neuron_t*> new_marked_nts;    
+}
+
 namespace Configuration_deeppoly{
     po::options_description desc("Options");
     po::variables_map vm;
@@ -13,6 +18,7 @@ namespace Configuration_deeppoly{
     double default_epsilon = 0.03;
     std::vector<std::string> dataset_vec = {"MNIST","CIFAR10","ACASXU"};
     size_t input_dim = 784;
+    bool is_reset_marked_nts = IS_RESET_MARK_FOR_EACH_LABLE;
 
     std::string net_path;
     std::string dataset_path;
@@ -30,6 +36,7 @@ namespace Configuration_deeppoly{
     bool is_conf_ce;
     bool is_target_ce;
     double conf_of_ce;
+    
 
     int init_options(int num_of_params, char* params[]){
         try{

@@ -208,8 +208,10 @@ bool is_image_verified_by_milp(Network_t* net){
                 else{
                     std::cout<<"Dims: "<<i<<", verified"<<std::endl;
                     net->verified_out_dims.push_back(i);
-                    unmark_net(net);
-                    goto verify_dim;
+                    if(Configuration_deeppoly::is_reset_marked_nts){
+                        unmark_net(net);
+                        goto verify_dim;
+                    }
                 }
             }
         }

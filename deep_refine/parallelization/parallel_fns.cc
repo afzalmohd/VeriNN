@@ -158,11 +158,7 @@ bool is_layer_marked_mine(Network_t* net, Layer_t* start_layer){
     for(int layer_index = start_layer->layer_index; layer_index < numlayers; layer_index++){
         Layer_t* layer = net->layer_vec[layer_index];
         if(layer->is_activation){
-            //create_relu_constr(layer, model, var_vector, var_counter);
-            // create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
-            // std::cout<<"New_list mn size = "<<new_list_mn.size()<<std::endl;
-            // std::cout<<"refine mn size = "<<refine_comb.size()<<std::endl;
-            next_marked_index_r=relu_constr_mine(layer, model, var_vector, var_counter,refine_comb,next_marked_index_r,new_list_mn);
+            next_marked_index_r=relu_constr_mine(layer, model, var_vector, var_counter,refine_comb,next_marked_index_r,Global_vars::new_marked_nts);
         }
         else{
             create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
@@ -203,7 +199,7 @@ bool is_layer_marked_mine(Network_t* net, Layer_t* start_layer){
                     Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
                     max_val_nt->is_marked = true;
                     // std::cout<<"Here to push neurons "<<std::endl;
-                    new_list_mn.push_back(max_val_nt);
+                    Global_vars::new_marked_nts.push_back(max_val_nt);
                     std::cout<<max_val_nt->neuron_index<<", ";
                     nt_err_map.erase(max_val_nt);
                 }
@@ -214,7 +210,7 @@ bool is_layer_marked_mine(Network_t* net, Layer_t* start_layer){
             for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
                 itr->first->is_marked = true;
                 // std::cout<<"Here to push neurons "<<std::endl;
-                new_list_mn.push_back(itr->first);
+                Global_vars::new_marked_nts.push_back(itr->first);
                 std::cout<<itr->first->neuron_index<<", ";
             }
         }

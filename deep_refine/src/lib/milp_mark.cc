@@ -342,6 +342,7 @@ bool is_layer_marked(Network_t* net, Layer_t* start_layer){
                 if(nt_err_map.size() > 0){
                     Neuron_t* max_val_nt = get_key_of_max_val(nt_err_map);
                     max_val_nt->is_marked = true;
+                    Global_vars::new_marked_nts.push_back(max_val_nt);
                     std::cout<<max_val_nt->neuron_index<<", ";
                     nt_err_map.erase(max_val_nt);
                 }

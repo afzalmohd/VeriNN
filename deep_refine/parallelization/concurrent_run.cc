@@ -142,26 +142,15 @@ bool add_constraint(Network_t *net, GRBModel &model, std::vector<GRBVar> &var_ve
 
 bool model_gen(std::vector<int> &activations, int index, Network_t *net,std::vector<Neuron_t*> new_list_mn)
 {
-    // reset_backprop_vals(net1);
     if(terminate_flag==1){
         pthread_exit(NULL);
     }
-    // reset_backprop_vals(net);
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
-    // std::cout<<"model_gen -----------------------------"<<std::endl;
-    // for (auto i:activations)
-    // {
-    //     std::cout<<i<<" ";
-    // }
-    // std::cout << std::endl;
-
-    // return add_constraint(net1, model, var_vector, activations, index,new_list_mn);
     return add_constraint(net, model, var_vector, activations, index,new_list_mn);
 }
 
 //--------------------------------------------------------------------------
-std::vector<Neuron_t*> new_list_mn;
 int rec_dep=1;
 std::vector<int> generateBinaryOutput(int m, int n) {
     std::vector<int> binaryOutput(n, 0);
@@ -191,8 +180,8 @@ void *multi_thread(void *p)
         int index = i++;
         pthread_mutex_unlock(&lck);
         // std::cout<<index <<"is being run by "<<std::this_thread::get_id()<<std::endl;
-        std::vector<int> result = generateBinaryOutput(index, new_list_mn.size());
-        model_gen(result, index,net1,new_list_mn);
+        std::vector<int> result = generateBinaryOutput(index, Global_vars::new_marked_nts.size());
+        model_gen(result, index,net1,Global_vars::new_marked_nts);
         // break;
     }
     pthread_exit(NULL);
@@ -202,7 +191,7 @@ void *multi_thread(void *p)
 bool looper(Network_t *net){
     net1=net;
     while(1){
-        size = std::pow(2, new_list_mn.size());
+        size = std::pow(2, Global_vars::new_marked_nts.size());
         i=0;
         // std::cout<<"size = "<<size<<" i = "<<i<<std::endl; 
         for(int i=0;i<NUM_THREADS;i++){
@@ -224,7 +213,7 @@ bool looper(Network_t *net){
         // std::cout<<"after verif result if\n";
         if(is_refine==true)
         {
-            if(new_list_mn.size()<10)
+            if(Global_vars::new_marked_nts.size()<10)
             {
                 run_milp_mark_with_milp_refine_mine(net);
                 ITER_COUNTS++;

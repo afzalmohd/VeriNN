@@ -1,6 +1,7 @@
 #ifndef __DEEPPOLY_CONFIGURATION_HH__
 #define __DEEPPOLY_CONFIGURATION_HH__
 #include <boost/program_options.hpp>
+#include "network.hh"
 //#define RELU "ReLU"
 //#define FC "FC"
 #define VERBOSE true
@@ -25,12 +26,16 @@
 #define TARGET_CLASS 1
 #define NUM_THREADS 20
 #define IS_MAXSAT_ANALYSIS true
+#define IS_RESET_MARK_FOR_EACH_LABLE true
 #define IS_BOUND_TIGHTENING_MILP false
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
 #define TIME_LIMIT_BOUND_TIGHTNING 0.1
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
+namespace Global_vars{
+    extern std::vector<Neuron_t*> new_marked_nts;    
+}
 
 
 namespace po = boost::program_options;
@@ -68,6 +73,7 @@ namespace Configuration_deeppoly{
     extern bool is_conf_ce;
     extern bool is_target_ce;
     extern double conf_of_ce;
+    extern bool is_reset_marked_nts;
 
 }
 
