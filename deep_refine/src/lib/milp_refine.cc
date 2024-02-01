@@ -126,6 +126,7 @@ bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer){
                     max_val_nt = get_key_of_max_val(nt_err_map);
                 }
                 max_val_nt->is_marked = true;
+                update_marked_neurons_in_vec(max_val_nt);
                 std::cout<<max_val_nt->neuron_index<<", ";
                 nt_err_map.erase(max_val_nt);
             }
@@ -135,6 +136,7 @@ bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer){
         std::map<Neuron_t*, double>::iterator itr;
         for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
             itr->first->is_marked = true;
+            update_marked_neurons_in_vec(itr->first);
             std::cout<<itr->first->neuron_index<<", ";
         }
     }
@@ -177,24 +179,6 @@ bool run_refinement_cegar(Network_t* net){
     }
     else{
         get_marked_neurons_without_maxsat(net);
-    }
-
-    if(Configuration_deeppoly::is_concurrent){
-        for(Layer_t* layer : net->layer_vec){
-            for(Neuron_t* nt : layer->neurons){
-                if(nt->is_marked){
-                    bool is_already_exist = false;
-                    for(Neuron_t* nt1 : Global_vars::new_marked_nts){
-                        if(nt == nt1){
-                            is_already_exist = true;
-                        }
-                    }
-                    if(!is_already_exist){
-                        Global_vars::new_marked_nts.push_back(nt);
-                    }
-                }
-            }
-        }
     }
     
     return false;
@@ -548,6 +532,20 @@ bool is_sat_val_ce(Network_t* net){
     return is_counter_example;
 }
 
+void update_marked_neurons_in_vec(Neuron_t* nt){
+    if(Configuration_deeppoly::is_concurrent){
+        bool is_already_exist = false;
+        for(Neuron_t* nt1 : Global_vars::new_marked_nts){
+            if(nt == nt1){
+                is_already_exist = true;
+            }
+        }
+        if(!is_already_exist){
+            Global_vars::new_marked_nts.push_back(nt);
+        }
+    }
+}
+
 bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar>& var_vector, size_t var_counter){
     bool is_marked = false;
     std::map<Neuron_t*, double> nt_err_map;
@@ -580,6 +578,7 @@ bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar
                     max_val_nt = get_key_of_max_val(nt_err_map);
                 }
                 max_val_nt->is_marked = true;
+                update_marked_neurons_in_vec(max_val_nt);
                 std::cout<<max_val_nt->neuron_index<<", ";
                 nt_err_map.erase(max_val_nt);
             }
@@ -589,6 +588,7 @@ bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar
         std::map<Neuron_t*, double>::iterator itr;
         for(itr = nt_err_map.begin(); itr != nt_err_map.end(); itr++){
             itr->first->is_marked = true;
+            update_marked_neurons_in_vec(itr->first);
             std::cout<<itr->first->neuron_index<<", ";
         }
     }

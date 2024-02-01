@@ -39,7 +39,7 @@ int relu_constr_mine(Layer_t *layer, GRBModel &model, std::vector<GRBVar> &var_v
             model.addConstr(grb_expr, GRB_EQUAL, 0);
         }
         else if (pred_nt->is_marked)
-        {   int b;
+        {   size_t b;
             for(b=0;b<new_list_mn.size();b++){
                 if(pred_nt==new_list_mn[b]){
                     break;
@@ -98,6 +98,9 @@ bool add_constraint(Network_t *net, GRBModel &model, std::vector<GRBVar> &var_ve
         }
 
         var_counter += layer->dims;
+    }
+    if(Configuration_deeppoly::is_softmax_conf_ce){
+        return is_image_verified_softmax_concurrent(net, model, var_vector, activations);
     }
     for (size_t i = 0; i < net->output_dim && verif_result != false; i++)
     // for (size_t i = 0; i < net->output_dim; i++)
@@ -220,7 +223,8 @@ bool looper(Network_t *net){
                 is_refine=false;
             }
             else{
-                return run_milp_refine_with_milp_mark_input_split_mine(net);
+                Configuration_deeppoly::is_concurrent = false;
+                return run_cegar_milp_mark_milp_refine(net);
             }
 
         }

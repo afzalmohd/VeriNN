@@ -23,4 +23,5 @@ void create_exact_relu_constr_milp_refine(Layer_t* layer, GRBModel& model, std::
 bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer);
 double compute_softmax_conf(Network_t* net, size_t label);
 double compute_conf(Network_t* net, size_t label);
+void update_marked_neurons_in_vec(Neuron_t* nt);
 #endif

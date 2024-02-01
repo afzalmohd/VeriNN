@@ -20,4 +20,5 @@ extern pthread_t thread_id[NUM_THREADS];
 extern bool is_refine;
 extern std::vector<int> refine_comb;
 extern volatile sig_atomic_t terminate_flag;
+extern bool verif_result;
 #endif
