@@ -522,6 +522,13 @@ bool is_sat_val_ce(Network_t* net){
         }
         else{
             is_counter_example = true;
+            Layer_t* last_layer = net->layer_vec.back();
+            double sum_out = 0;
+            for(size_t i=0; i<net->output_dim; i++){
+                sum_out += last_layer->res[i];
+            }
+            double conf = (last_layer->res[net->pred_label])/sum_out;
+            Global_vars::ce_im_conf = conf; 
         }
 
         if(is_counter_example){
@@ -531,6 +538,9 @@ bool is_sat_val_ce(Network_t* net){
                 std::cout<<last_layer->res[i]<<" , ";
             }
             std::cout<<std::endl;
+            print_real_ce(net);
+            std::cout<<std::endl;
+
         }
     }
     return is_counter_example;
