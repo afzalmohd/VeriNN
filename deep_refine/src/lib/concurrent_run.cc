@@ -1,10 +1,10 @@
 #include "concurrent_run.hh"
 #include <pthread.h>
 #include <bits/stdc++.h>
-#include "../src/lib/drefine_driver.hh"
-#include "../src/lib/milp_refine.hh"
-#include "../deeppoly/optimizer.hh"
-#include "../src/lib/milp_mark.hh"
+#include "drefine_driver.hh"
+#include "milp_refine.hh"
+#include "../../deeppoly/optimizer.hh"
+#include "milp_mark.hh"
 #include "parallel_fns.hh"
 pthread_mutex_t lck;
 // pthread_mutex_t lck_model;
@@ -216,7 +216,7 @@ bool looper(Network_t *net){
             if(Global_vars::new_marked_nts.size()<10)
             {
                 run_milp_mark_with_milp_refine_mine(net);
-                ITER_COUNTS++;
+                Global_vars::iter_counts++;
                 is_refine=false;
             }
             else{

@@ -1,9 +1,9 @@
 #include "concurrent_run.hh"
-#include "../deeppoly/optimizer.hh"
-#include "../src/lib/milp_mark.hh"
+#include "../../deeppoly/optimizer.hh"
+#include "milp_mark.hh"
 #include "parallel_fns.hh"
-#include "../src/lib/milp_refine.hh"
-#include "../src/lib/drefine_driver.hh"
+#include "milp_refine.hh"
+#include "drefine_driver.hh"
 bool verify_by_milp_mine(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector, size_t counter_class_index, bool is_first,std::vector<int>activations){
     // model.update();
     // model.write("debug_original.lp");
@@ -143,7 +143,7 @@ bool run_milp_refine_with_milp_mark_input_split_mine(Network_t* net){
             }
         }
         loop_counter++;
-        ITER_COUNTS += 1;
+        Global_vars::iter_counts += 1;
     }
     return 0; //DUMMY RETURN
 }

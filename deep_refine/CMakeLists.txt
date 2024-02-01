@@ -130,7 +130,7 @@ message("LIBS Path: ${LIBS}")
 
 ADD_DEFINITIONS(-std=c++14 -Wall)
 
-SET(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/lib/vericomp.cc ${SRC_DIR}/lib/drefine_driver.cc ${SRC_DIR}/lib/milp_refine.cc ${SRC_DIR}/lib/milp_mark.cc ${SRC_DIR}/lib/bounds_milp.cc ${SRC_DIR}/../k/findk.cc ${SRC_DIR}/../parallelization/concurrent_run.cc ${SRC_DIR}/../parallelization/parallel_fns.cc ${DEEPPOLY_DIR}/analysis.cc ${DEEPPOLY_DIR}/deeppoly_configuration.cc ${DEEPPOLY_DIR}/deeppoly_driver.cc ${DEEPPOLY_DIR}/helper.cc ${DEEPPOLY_DIR}/interval.cc ${DEEPPOLY_DIR}/network.cc ${DEEPPOLY_DIR}/optimizer.cc ${DEEPPOLY_DIR}/parser.cc ${DEEPPOLY_DIR}/vnnlib.cc)
+SET(SOURCES ${SRC_DIR}/main.cpp ${SRC_DIR}/lib/vericomp.cc ${SRC_DIR}/lib/drefine_driver.cc ${SRC_DIR}/lib/milp_refine.cc ${SRC_DIR}/lib/milp_mark.cc ${SRC_DIR}/lib/bounds_milp.cc ${SRC_DIR}/../k/findk.cc ${SRC_DIR}/lib/concurrent_run.cc ${SRC_DIR}/lib/parallel_fns.cc ${DEEPPOLY_DIR}/analysis.cc ${DEEPPOLY_DIR}/deeppoly_configuration.cc ${DEEPPOLY_DIR}/deeppoly_driver.cc ${DEEPPOLY_DIR}/helper.cc ${DEEPPOLY_DIR}/interval.cc ${DEEPPOLY_DIR}/network.cc ${DEEPPOLY_DIR}/optimizer.cc ${DEEPPOLY_DIR}/parser.cc ${DEEPPOLY_DIR}/vnnlib.cc)
 add_executable(${DREFINE} ${SOURCES})
 
 

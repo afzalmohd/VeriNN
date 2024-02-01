@@ -30,11 +30,19 @@
 #define IS_BOUND_TIGHTENING_MILP false
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
 #define TIME_LIMIT_BOUND_TIGHTNING 0.1
+#define IS_CONCURRENT_RUN true
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
 namespace Global_vars{
-    extern std::vector<Neuron_t*> new_marked_nts;    
+    extern std::vector<Neuron_t*> new_marked_nts;  
+    extern size_t iter_counts; //to count the number cegar iterations
+    extern size_t sub_prob_counts; // to count the number of sub problems when input_split on
+    extern size_t num_marked_neurons; // to count the number of marked neurons
+    extern std::chrono::duration<double> marking_time;
+    extern std::chrono::duration<double> refinement_time;  
+	extern double orig_im_conf;
+	extern double ce_im_conf;
 }
 
 
@@ -74,6 +82,7 @@ namespace Configuration_deeppoly{
     extern bool is_target_ce;
     extern double conf_of_ce;
     extern bool is_reset_marked_nts;
+    extern bool is_concurrent;
 
 }
 

@@ -42,5 +42,4 @@ void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point
 drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net);
 drefine_status run_cegar_milp_mark_milp_refine(Network_t* net);
 
-extern size_t ITER_COUNTS;
 #endif

@@ -1,8 +1,8 @@
 #ifndef __CONCURRENT_RUN_HH__
 #define __CONCURRENT_RUN_HH__
-#include "../deeppoly/network.hh"
+#include "../../deeppoly/network.hh"
 #include "gurobi_c++.h"
-#include "../deeppoly/deeppoly_configuration.hh"
+#include "../../deeppoly/deeppoly_configuration.hh"
 #include <bits/stdc++.h>
 #include <pthread.h>
 

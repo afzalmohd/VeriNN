@@ -11,7 +11,7 @@ void unmark_net(Network_t* net){
             for(Neuron_t* nt : layer->neurons){
                 if(nt->is_marked){
                     nt->is_marked = false;
-                    net->number_of_marked_neurons += 1;
+                    Global_vars::num_marked_neurons += 1;
                 }
             }
         }
@@ -59,20 +59,20 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
         if(layer->is_activation){
             create_optimization_constraints_layer(layer, model, var_vector, var_counter);
             // file_name = file_name+std::to_string(net->number_of_refine_iter)+".mps";
-            std::cout<<"Refine iter number: "<<net->number_of_refine_iter<<std::endl;
+            std::cout<<"Refine iter number: "<<Global_vars::iter_counts<<std::endl;
             // model.write(file_name);
             model.optimize();
             int status = model.get(GRB_IntAttr_Status);
             std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
             std::cout<<"Optimized status: "<<status<<std::endl;
             bool is_layer_marked = false;
-            is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
-            // if(status = GRB_OPTIMAL){
-            //     is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
-            // }
-            // else{
-            //     is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer);
-            // }
+            // is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            if(status = GRB_OPTIMAL){
+                is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
+            }
+            else{
+                is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer);
+            }
             
             is_already_optimized = true;
             if(is_layer_marked){
@@ -86,6 +86,7 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
             // std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
             update_vars_bounds(layer, var_vector, var_counter);
             remove_maxsat_constr(model, layer->pred_layer);
+            model.update();
             // std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
         }
         var_counter += layer->dims;
@@ -176,6 +177,24 @@ bool run_refinement_cegar(Network_t* net){
     }
     else{
         get_marked_neurons_without_maxsat(net);
+    }
+
+    if(Configuration_deeppoly::is_concurrent){
+        for(Layer_t* layer : net->layer_vec){
+            for(Neuron_t* nt : layer->neurons){
+                if(nt->is_marked){
+                    bool is_already_exist = false;
+                    for(Neuron_t* nt1 : Global_vars::new_marked_nts){
+                        if(nt == nt1){
+                            is_already_exist = true;
+                        }
+                    }
+                    if(!is_already_exist){
+                        Global_vars::new_marked_nts.push_back(nt);
+                    }
+                }
+            }
+        }
     }
     
     return false;
@@ -463,7 +482,7 @@ bool is_sat_val_ce(Network_t* net){
             if(conf >= Configuration_deeppoly::conf_of_ce){
                 if(Configuration_deeppoly::is_target_ce){
                     if(net->pred_label == TARGET_CLASS){
-                        net->ce_im_conf = conf;
+                        Global_vars::ce_im_conf = conf;
                         print_real_ce_status(conf);
                         IFVERBOSE(print_real_ce(net));
                         return true;
@@ -472,14 +491,14 @@ bool is_sat_val_ce(Network_t* net){
                         return false;
                     }
                 }
-                net->ce_im_conf = conf;
+                Global_vars::ce_im_conf = conf;
                 print_real_ce_status(conf);
                 IFVERBOSE(print_real_ce(net));
                 return true;
             }
         }
         else{
-            net->ce_im_conf = conf;
+            Global_vars::ce_im_conf = conf;
             print_real_ce_status(conf);
             IFVERBOSE(print_real_ce(net));
             return true;

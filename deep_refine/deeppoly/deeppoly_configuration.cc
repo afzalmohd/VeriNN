@@ -4,6 +4,13 @@
 
 namespace Global_vars{
     std::vector<Neuron_t*> new_marked_nts;    
+    size_t iter_counts = 0; //to count the number cegar iterations
+    size_t sub_prob_counts = 0; // to count the number of sub problems when input_split on
+    size_t num_marked_neurons = 0; // to count the number of marked neurons
+    std::chrono::duration<double> marking_time = std::chrono::seconds(0);
+    std::chrono::duration<double> refinement_time = std::chrono::seconds(0);
+    double orig_im_conf = 0;
+    double ce_im_conf = 0;
 }
 
 namespace Configuration_deeppoly{
@@ -36,6 +43,7 @@ namespace Configuration_deeppoly{
     bool is_conf_ce;
     bool is_target_ce;
     double conf_of_ce;
+    bool is_concurrent = IS_CONCURRENT_RUN;
     
 
     int init_options(int num_of_params, char* params[]){

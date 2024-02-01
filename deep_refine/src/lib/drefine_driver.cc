@@ -11,15 +11,9 @@
 #include<chrono>
 #include<queue>
 #include "../../k/findk.hh"
-#include "../../parallelization/concurrent_run.hh"
+#include "concurrent_run.hh"
 #include "bounds_milp.hh"
 
-size_t ITER_COUNTS = 0; //to count the number cegar iterations
-size_t SUB_PROB_COUNTS = 0; // to count the number of sub problems when input_split on
-size_t NUM_MARKED_NEURONS = 0;
-bool concurrent_flag = true;
-std::chrono::duration<double> MARK_NEURONS_TIME = std::chrono::seconds(0);
-std::chrono::duration<double> REFINEMENT_TIME = std::chrono::seconds(0);
 
 int run_refine_poly(int num_args, char* params[]){
     int is_help = deeppoly_set_params(num_args, params);
@@ -108,7 +102,7 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     }
 
     double orig_im_conf = (net->layer_vec.back()->res[net->pred_label])/sum_out;
-    net->orig_im_conf = orig_im_conf;
+    Global_vars::orig_im_conf = orig_im_conf;
     std::cout<<"Correct image conf: "<<orig_im_conf<<std::endl;
     return true;
 }
@@ -125,12 +119,11 @@ drefine_status run_refine_poly1(std::queue<Network_t*>& work_q){
         drefine_status status = run_refine_poly_for_one_task(net);
         size_t num_marked_nt = num_marked_neurons(net);
         if(!Configuration_deeppoly::is_reset_marked_nts){
-            net->number_of_marked_neurons += num_marked_nt;
+            Global_vars::num_marked_neurons += num_marked_nt;
         }
-        NUM_MARKED_NEURONS += num_marked_nt;
-        SUB_PROB_COUNTS += 1;
+        Global_vars::sub_prob_counts += 1;
 
-        if(status == DEEPPOLY_VERIFIED && SUB_PROB_COUNTS == 1){
+        if(status == DEEPPOLY_VERIFIED && Global_vars::sub_prob_counts == 1){
             verified_by_deeppoly = true;
         }
         if(status == VERIFIED || status == DEEPPOLY_VERIFIED){
@@ -329,7 +322,7 @@ void print_logs(Network_t* net){
     }
     std::cout<<std::endl;
 
-    std::cout<<"Iteration number: "<<net->number_of_refine_iter<<std::endl;
+    std::cout<<"Iteration number: "<<Global_vars::iter_counts<<std::endl;
     for(Layer_t* layer : net->layer_vec){
         if(layer->is_marked){
             std::cout<<"Layer index::: "<<layer->layer_index<<",";
@@ -353,13 +346,14 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
         return status;
     }
 
-    if(concurrent_flag){
+    if(Configuration_deeppoly::is_concurrent){
         Configuration_deeppoly::is_reset_marked_nts = false;
         bool is_image_verified = is_image_verified_by_milp(net);
         if(is_image_verified){
             return VERIFIED;
         }
-        bool is_ce = run_milp_mark_with_milp_refine(net);
+        // bool is_ce = run_milp_mark_with_milp_refine(net);
+        bool is_ce = run_refinement_cegar(net);
         if(is_ce){
             return FAILED;
         }
@@ -379,18 +373,18 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
         auto start_time = std::chrono::high_resolution_clock::now();
         bool is_image_verified = is_image_verified_by_milp(net);
         auto end_time = std::chrono::high_resolution_clock::now();
-        REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::refinement_time += std::chrono::duration<double>(end_time - start_time);
         if(is_image_verified){
             return VERIFIED;
         }
         start_time = std::chrono::high_resolution_clock::now();
         bool is_ce = run_refinement_cegar(net);
         end_time = std::chrono::high_resolution_clock::now();
-        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
-        net->number_of_refine_iter += 1;
+        Global_vars::marking_time += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::iter_counts += 1;
         IFVERBOSE(print_logs(net));
         
-        std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(MARK_NEURONS_TIME.count())<<" , REFINEMENT_TIME: "<<std::to_string(REFINEMENT_TIME.count())<<std::endl;
+        std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(Global_vars::marking_time.count())<<" , REFINEMENT_TIME: "<<std::to_string(Global_vars::refinement_time.count())<<std::endl;
         if(is_ce){
             return FAILED;
         }
@@ -403,7 +397,7 @@ drefine_status run_cegar_milp_mark_milp_refine(Network_t* net){
 
 drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
     size_t loop_upper_bound = MILP_WITH_MILP_LIMIT;
-    if(Configuration_deeppoly::is_input_split && SUB_PROB_COUNTS < 3){
+    if(Configuration_deeppoly::is_input_split && Global_vars::sub_prob_counts < 3){
         loop_upper_bound = MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT;
     }
     bool generate_data = false;
@@ -426,7 +420,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             is_ce = run_milp_mark_with_milp_refine(net);
         }
         auto end_time = std::chrono::high_resolution_clock::now();
-        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::marking_time += std::chrono::duration<double>(end_time - start_time);
         if(is_ce){
             if(generate_data){
                 print_image_with_label(net, prev_input_point);
@@ -434,8 +428,7 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             return FAILED;
         }
         else{
-            ITER_COUNTS += 1;
-            net->number_of_refine_iter += 1;
+            Global_vars::iter_counts += 1;
             print_logs(net);
             get_images_from_satval(prev_input_point, net->input_layer);
             if(loop_counter > 0 && generate_data){
@@ -444,8 +437,8 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net){
             start_time = std::chrono::high_resolution_clock::now();
             bool is_image_verified = is_image_verified_by_milp(net);
             end_time = std::chrono::high_resolution_clock::now();
-            REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
-            std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(MARK_NEURONS_TIME.count())<<" , REFINEMENT_TIME: "<<std::to_string(REFINEMENT_TIME.count())<<std::endl;
+            Global_vars::refinement_time += std::chrono::duration<double>(end_time - start_time);
+            std::cout<<"MARK_NEURONS_TIME: "<<std::to_string(Global_vars::marking_time.count())<<" , REFINEMENT_TIME: "<<std::to_string(Global_vars::refinement_time.count())<<std::endl;
             if(is_image_verified){
                return VERIFIED;
             }
@@ -529,9 +522,9 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(SUB_PROB_COUNTS)+","+std::to_string(net->number_of_refine_iter)+","+std::to_string(net->number_of_marked_neurons)+","+std::to_string(net->orig_im_conf)+","+std::to_string(net->ce_im_conf)+","+std::to_string(duration.count())+","+std::to_string(MARK_NEURONS_TIME.count())+","+std::to_string(REFINEMENT_TIME.count());
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(Global_vars::sub_prob_counts)+","+std::to_string(Global_vars::iter_counts)+","+std::to_string(Global_vars::num_marked_neurons)+","+std::to_string(Global_vars::orig_im_conf)+","+std::to_string(Global_vars::ce_im_conf)+","+std::to_string(duration.count())+","+std::to_string(Global_vars::marking_time.count())+","+std::to_string(Global_vars::refinement_time.count());
     write_to_file(Configuration_deeppoly::result_file, str);
-    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(SUB_PROB_COUNTS)+",num_cegar_iterations:"+std::to_string(net->number_of_refine_iter)+",num_marked_neurons="+std::to_string(net->number_of_marked_neurons)+",orig image conf="+std::to_string(net->orig_im_conf)+",ce image conf="+std::to_string(net->ce_im_conf)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(MARK_NEURONS_TIME.count())+",refinement_time="+std::to_string(REFINEMENT_TIME.count());
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(Global_vars::sub_prob_counts)+",num_cegar_iterations:"+std::to_string(Global_vars::iter_counts)+",num_marked_neurons="+std::to_string(Global_vars::num_marked_neurons)+",orig image conf="+std::to_string(Global_vars::orig_im_conf)+",ce image conf="+std::to_string(Global_vars::ce_im_conf)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(Global_vars::marking_time.count())+",refinement_time="+std::to_string(Global_vars::refinement_time.count());
     std::cout<<str<<std::endl;
 }
 
@@ -761,7 +754,7 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
         auto start_time = std::chrono::high_resolution_clock::now();
         bool is_ce = run_milp_mark_with_milp_refine(net);
         auto end_time = std::chrono::high_resolution_clock::now();
-        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::marking_time += std::chrono::duration<double>(end_time - start_time);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
         if(is_ce){
             is_bound_exceeded = false;
@@ -772,7 +765,7 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
             start_time = std::chrono::high_resolution_clock::now();
             bool is_verified = is_prp_verified_by_milp(net);
             end_time = std::chrono::high_resolution_clock::now();
-            REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
+            Global_vars::refinement_time += std::chrono::duration<double>(end_time - start_time);
             if(is_verified){
                 is_bound_exceeded = false;
                 status = VERIFIED;
@@ -780,7 +773,7 @@ drefine_status run_milp_refine_with_milp_mark_vnnlib(Network_t* net){
             }
         }
         loop_counter++;
-        ITER_COUNTS += 1;
+        Global_vars::iter_counts += 1;
     }
     if(is_bound_exceeded){
         status = UNKNOWN;
@@ -803,7 +796,7 @@ drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net){
         auto start_time = std::chrono::high_resolution_clock::now();
         bool is_verified = is_prp_verified_ab(net);
         auto end_time = std::chrono::high_resolution_clock::now();
-        REFINEMENT_TIME += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::refinement_time += std::chrono::duration<double>(end_time - start_time);
         if(is_verified){
             is_bound_exceeded = false;
             status = VERIFIED;
@@ -812,9 +805,9 @@ drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net){
         start_time = std::chrono::high_resolution_clock::now();
         bool is_ce = run_milp_mark_with_milp_refine(net);
         end_time = std::chrono::high_resolution_clock::now();
-        MARK_NEURONS_TIME += std::chrono::duration<double>(end_time - start_time);
+        Global_vars::marking_time += std::chrono::duration<double>(end_time - start_time);
         std::cout<<"refinement iteration: "<<loop_counter<<std::endl;
-        ITER_COUNTS += 1;
+        Global_vars::iter_counts += 1;
 
         if(is_ce){
             is_bound_exceeded = false;
@@ -827,7 +820,7 @@ drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net){
         status = UNKNOWN;
     }
     // std::tuple<int, size_t> tup1(status, loop_counter);
-    NUM_MARKED_NEURONS = num_marked_neurons(net);
+    Global_vars::num_marked_neurons = num_marked_neurons(net);
     return status;
 }
 

@@ -112,10 +112,6 @@ class Network_t{
 		std::map<size_t, std::vector<size_t>> index_map_dims_to_split;
 		std::map<size_t, double> index_vs_err;
 		std::vector<size_t> dims_to_split;
-		size_t number_of_marked_neurons=0;
-		size_t number_of_refine_iter=0;
-		double orig_im_conf = 0;
-		double ce_im_conf = 0;
 		
 
 		~Network_t(){
