@@ -23,6 +23,8 @@ namespace Configuration_deeppoly{
     std::string default_dataset = "MNIST";
     std::string default_tool = "drefine";
     double default_epsilon = 0.03;
+    double default_conf_ce = 0.50;
+    double default_softmax_conf_ce = 0.85;
     std::vector<std::string> dataset_vec = {"MNIST","CIFAR10","ACASXU"};
     size_t input_dim = 784;
     bool is_reset_marked_nts = IS_RESET_MARK_FOR_EACH_LABLE;
@@ -42,7 +44,9 @@ namespace Configuration_deeppoly{
     std::string bounds_path;
     bool is_conf_ce;
     bool is_target_ce;
-    double conf_of_ce;
+    double conf_value;
+    bool is_softmax_conf_ce;
+    double softmax_conf_value;
     bool is_concurrent = IS_CONCURRENT_RUN;
     
 
@@ -63,9 +67,11 @@ namespace Configuration_deeppoly{
             ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
             ("is-input-split", po::value<bool>(&is_input_split)->default_value(false), "run with heuristic input space split")
             ("bounds-path", po::value<std::string>(&bounds_path)->default_value(""), "external bounds")
-            ("is-conf-ce", po::value<bool>(&is_conf_ce)->default_value(false), "is coounter example with high confidence")
             ("is-target-ce", po::value<bool>(&is_target_ce)->default_value(false), "is coounter example with target class")
-            ("ce-conf", po::value<double>(&conf_of_ce)->default_value(0.90), "counter class confidence")
+            ("is-conf-ce", po::value<bool>(&is_conf_ce)->default_value(false), "Is run with confidence counter-example")
+            ("conf-val", po::value<double>(&conf_value)->default_value(default_conf_ce), "Counter example confidence value")
+            ("is-soft-conf-ce", po::value<bool>(&is_softmax_conf_ce)->default_value(false), "Is run with softmax confidence counter-example")
+            ("soft-conf-val", po::value<double>(&softmax_conf_value)->default_value(default_softmax_conf_ce), "Counter example softmax confidence value")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
@@ -150,12 +156,31 @@ namespace Configuration_deeppoly{
         }
 
         if(vm.count("is-conf-ce")){
-            std::cout<<"Is ce with high confidence: "<<vm["is-conf-ce"].as<bool>()<<std::endl;
+            if(vm["is-conf-ce"].as<bool>()){
+                std::cout<<"Is confidence ce: True"<< std::endl;
+            }
+            else{
+                std::cout<<"Is confidence ce: False"<< std::endl;
+            }
         }
 
-        if(vm.count("ce-conf")){
-            std::cout<<"CE conf: "<<vm["ce-conf"].as<double>()<<std::endl;
+        if(vm.count("conf-val")){
+            std::cout<<"CE Confidence value: "<<vm["conf-val"].as<double>()<<std::endl;
         }
+
+        if(vm.count("is-soft-conf-ce")){
+            if(vm["is-soft-conf-ce"].as<bool>()){
+                std::cout<<"Is softmax confidence ce: True"<< std::endl;
+            }
+            else{
+                std::cout<<"Is softmax confidence ce: False"<< std::endl;
+            }
+        }
+
+        if(vm.count("soft-conf-val")){
+            std::cout<<"CE Softmax Confidence value: "<<vm["soft-conf-val"].as<double>()<<std::endl;
+        }
+
 
         return 0;
     }

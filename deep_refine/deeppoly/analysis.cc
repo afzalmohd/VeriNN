@@ -585,7 +585,7 @@ bool is_no_ce_with_conf(Network_t* net){
         double lb = -out_layer->neurons[i]->lb;
         denominator += lb;
     }
-    denominator = Configuration_deeppoly::conf_of_ce*denominator;
+    denominator = Configuration_deeppoly::conf_value*denominator;
 
     if(Configuration_deeppoly::is_target_ce){
         double ub = out_layer->neurons[TARGET_CLASS]->ub;

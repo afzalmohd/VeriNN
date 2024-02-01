@@ -41,5 +41,6 @@ drefine_status run_milp_refine_with_milp_mark_input_split(Network_t* net);
 void print_image_with_label(Network_t* net, xt::xarray<double>& prev_input_point);
 drefine_status run_milp_refine_with_milp_mark_ab(Network_t* net);
 drefine_status run_cegar_milp_mark_milp_refine(Network_t* net);
+void set_confidence(Network_t* net);
 
 #endif

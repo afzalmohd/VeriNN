@@ -31,6 +31,7 @@
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
 #define TIME_LIMIT_BOUND_TIGHTNING 0.1
 #define IS_CONCURRENT_RUN true
+#define EULER_C 2.7182
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 
@@ -80,7 +81,9 @@ namespace Configuration_deeppoly{
     extern std::string bounds_path;
     extern bool is_conf_ce;
     extern bool is_target_ce;
-    extern double conf_of_ce;
+    extern double conf_value;
+    extern bool is_softmax_conf_ce;
+    extern double softmax_conf_value;
     extern bool is_reset_marked_nts;
     extern bool is_concurrent;
 

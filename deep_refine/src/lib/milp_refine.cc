@@ -439,72 +439,113 @@ void print_real_ce_status(double conf){
     std::cout<<"CE confidence: "<<conf<<std::endl;
 }
 
-bool is_sat_val_ce(Network_t* net){
-    create_satvals_to_image(net->input_layer);
-    //std::cout<<net->input_layer->res[683]<<" "<<net->input_layer->res[684]<<std::endl;
-    net->forward_propgate_network(0, net->input_layer->res);
-    if(Configuration_deeppoly::vnnlib_prp_file_path != "" && Configuration_deeppoly::bounds_path == ""){
-        bool is_sat = is_prop_sat_vnnlib(net);
-        return is_sat;
-    }
+double compute_softmax_conf(Network_t* net, size_t label){
     Layer_t* last_layer = net->layer_vec.back();
-    if(Configuration_deeppoly::bounds_path != ""){
-        for(size_t i=0; i<last_layer->dims; i++){
-            double val = last_layer->res[i];
-            if(val <= 0){
-                std::cout<<last_layer->res<<std::endl;
-                return true;
+    double label_val = last_layer->res[label] + DIFF_TOLERANCE;
+    double denominator = 0;
+    for(size_t i=0; i<net->output_dim; i++){
+        double val = last_layer->res[i];
+        denominator += pow(EULER_C, val);
+    }
+
+    double conf = pow(EULER_C, label_val)/denominator;
+    return conf;
+}
+
+double compute_conf(Network_t* net, size_t label){
+    Layer_t* last_layer = net->layer_vec.back();
+    double label_val = last_layer->res[label] + DIFF_TOLERANCE;
+    double denominator = 0;
+    for(size_t i=0; i<net->output_dim; i++){
+        denominator += last_layer->res[i];
+    }
+
+    double conf = label_val/denominator;
+    return conf;
+}
+
+bool is_ce_with_softmax_conf(Network_t* net){
+    Layer_t* last_layer = net->layer_vec.back();
+    double max_val = last_layer->res[net->pred_label] + DIFF_TOLERANCE;
+    double denominator = 0;
+    for(size_t i=0; i<net->output_dim; i++){
+        double val = last_layer->res[i];
+        denominator += pow(EULER_C, val);
+        if(i != net->pred_label){
+            if(max_val < (val + Configuration_deeppoly::softmax_conf_value)){
+                return false;
             }
         }
-        return false;
     }
+
+    Global_vars::ce_im_conf = pow(EULER_C, max_val)/denominator;
+    return true;
+}
+
+bool is_ce_with_conf(Network_t* net){
+    Layer_t* last_layer = net->layer_vec.back();
     
     double sum_out = 0;
     for(size_t i=0; i<net->output_dim; i++){
         sum_out += last_layer->res[i];
     }
 
-    IFVERBOSE(
-        std::cout<<"Output layer: ";
-        for(size_t i=0; i<net->output_dim; i++){
-            std::cout<<last_layer->res[i]<<" , ";
-        }
-    );
-
-
-    auto pred_label = xt::argmax(net->layer_vec.back()->res);
-    net->pred_label = pred_label[0];
-
-
-    if(net->actual_label != net->pred_label){
-        double conf = (last_layer->res[pred_label])/sum_out;
-        if(Configuration_deeppoly::is_conf_ce){
-            if(conf >= Configuration_deeppoly::conf_of_ce){
-                if(Configuration_deeppoly::is_target_ce){
-                    if(net->pred_label == TARGET_CLASS){
-                        Global_vars::ce_im_conf = conf;
-                        print_real_ce_status(conf);
-                        IFVERBOSE(print_real_ce(net));
-                        return true;
-                    }
-                    else{
-                        return false;
-                    }
-                }
-                Global_vars::ce_im_conf = conf;
-                print_real_ce_status(conf);
-                IFVERBOSE(print_real_ce(net));
-                return true;
-            }
-        }
-        else{
-            Global_vars::ce_im_conf = conf;
-            print_real_ce_status(conf);
-            IFVERBOSE(print_real_ce(net));
-            return true;
-        }
+    double conf = (last_layer->res[net->pred_label])/sum_out;
+    if(conf >= Configuration_deeppoly::conf_value){
+        Global_vars::ce_im_conf = conf;
+        std::cout<<"CE confidence - "<<conf<<std::endl;    
+        std::cout<<"Found counter assignment!!"<<" --- "<<pthread_self()<<std::endl;
+        return true;
     }
     return false;
+}
+
+void assign_net_pred(Network_t* net){
+    Layer_t* last_layer = net->layer_vec.back();
+    double max_val = last_layer->res[net->actual_label];
+    for(size_t i=0; i<net->output_dim; i++){
+        double val = last_layer->res[i];
+        if(net->actual_label != i){
+            if(max_val <= (val+DIFF_TOLERANCE)){
+                max_val = val+DIFF_TOLERANCE;
+                net->pred_label = i;
+            }
+        }
+    }
+}
+
+bool is_sat_val_ce(Network_t* net){
+    bool is_counter_example = false;
+    create_satvals_to_image(net->input_layer);
+    net->forward_propgate_network(0, net->input_layer->res);
+    if(Configuration_deeppoly::vnnlib_prp_file_path != ""){
+        bool is_sat = is_prop_sat_vnnlib(net);
+        return is_sat;
+    }
+
+    assign_net_pred(net);
+
+    if(net->actual_label != net->pred_label){
+        if(Configuration_deeppoly::is_conf_ce){
+            is_counter_example = is_ce_with_conf(net);
+        }
+        else if(Configuration_deeppoly::is_softmax_conf_ce){
+            is_counter_example = is_ce_with_softmax_conf(net);
+        }
+        else{
+            is_counter_example = true;
+        }
+
+        if(is_counter_example){
+            std::cout<<"CE output values: ";
+            Layer_t* last_layer = net->layer_vec.back();
+            for(size_t i=0; i<net->output_dim; i++){
+                std::cout<<last_layer->res[i]<<" , ";
+            }
+            std::cout<<std::endl;
+        }
+    }
+    return is_counter_example;
 }
 
 bool is_layer_marked_after_optimization(Layer_t* start_layer, std::vector<GRBVar>& var_vector, size_t var_counter){

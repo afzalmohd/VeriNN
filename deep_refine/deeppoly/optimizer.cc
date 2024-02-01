@@ -147,7 +147,7 @@ bool verify_by_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_ve
         model.update();
         model.addConstr(var_vector[counter_class_var_index]-var_vector[actual_class_var_index], GRB_GREATER_EQUAL, 0, miss_classified_constr);
         size_t var_idx = get_gurobi_var_index(layer, 0);
-        GRBLinExpr grb_obj = Configuration_deeppoly::conf_of_ce*(var_vector[var_idx]+var_vector[var_idx+1]+var_vector[var_idx+2]+var_vector[var_idx+3]+var_vector[var_idx+4]+var_vector[var_idx+5]+
+        GRBLinExpr grb_obj = Configuration_deeppoly::conf_value*(var_vector[var_idx]+var_vector[var_idx+1]+var_vector[var_idx+2]+var_vector[var_idx+3]+var_vector[var_idx+4]+var_vector[var_idx+5]+
                                 var_vector[var_idx+6]+var_vector[var_idx+7]+var_vector[var_idx+8]+var_vector[var_idx+9]) - var_vector[counter_class_var_index];
         model.setObjective(grb_obj, GRB_MINIMIZE);
         // std::cout<<grb_obj<<std::endl;

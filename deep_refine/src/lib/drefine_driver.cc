@@ -54,6 +54,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
+
         // return 0;
         if(Configuration_deeppoly::is_target_ce){
             if(net->pred_label == TARGET_CLASS){
@@ -79,6 +80,28 @@ int run_refine_poly(int num_args, char* params[]){
     return 0;
 }
 
+void set_confidence(Network_t* net){
+    double orig_im_conf = 0;
+    if(Configuration_deeppoly::is_softmax_conf_ce){
+        orig_im_conf = compute_softmax_conf(net, net->actual_label);
+    }
+    else{
+        orig_im_conf = compute_conf(net, net->actual_label);
+    }
+    Global_vars::orig_im_conf = orig_im_conf;
+    std::cout<<"Correct image conf: "<<orig_im_conf<<std::endl;
+
+    if(Configuration_deeppoly::conf_value == -1.0){
+        Configuration_deeppoly::conf_value = orig_im_conf;
+        Configuration_deeppoly::softmax_conf_value = orig_im_conf;
+    }
+
+    if(Configuration_deeppoly::conf_value == 0){
+        Configuration_deeppoly::is_conf_ce = false;
+        Configuration_deeppoly::is_softmax_conf_ce = false;
+    }
+}
+
 bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     std::cout<<"Image index: "<<image_index<<std::endl;
     std::string image_str = get_image_str(Configuration_deeppoly::dataset_path, image_index);
@@ -86,10 +109,8 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
     // normalize_image(net);
     normalize_input_image(net);
     net->pred_label = execute_network(net);
-    double sum_out = 0;
     for(size_t i=0; i<net->output_dim; i++){
         std::cout<<net->layer_vec.back()->res[i]<<" ";
-        sum_out += net->layer_vec.back()->res[i];
     }
     std::cout<<std::endl;
     if(net->actual_label != net->pred_label){
@@ -100,10 +121,7 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
         return false;
         
     }
-
-    double orig_im_conf = (net->layer_vec.back()->res[net->pred_label])/sum_out;
-    Global_vars::orig_im_conf = orig_im_conf;
-    std::cout<<"Correct image conf: "<<orig_im_conf<<std::endl;
+    set_confidence(net);
     return true;
 }
 
