@@ -5,6 +5,7 @@
 #include "deeppoly_configuration.hh"
 #include<thread>
 #include<unordered_set>
+#include "../src/lib/milp_refine.hh"
 
 bool forward_analysis(Network_t* net){
     bool is_verified = false;
@@ -614,20 +615,26 @@ bool is_image_verified_deeppoly(Network_t* net){
         is_verified = is_no_ce_with_conf(net);
         return is_verified;
     }
-    for(size_t i=0; i<net->output_dim; i++){
-        if(i != net->actual_label){
-            bool is_already_verified = false;
-            for(size_t val : net->verified_out_dims){
-                if(val == i){
-                    is_already_verified = true;
+    else if(Configuration_deeppoly::is_softmax_conf_ce){
+        is_verified = is_image_verified_softmax_deeppoly(net);
+        return is_verified;
+    }
+    else{
+        for(size_t i=0; i<net->output_dim; i++){
+            if(i != net->actual_label){
+                bool is_already_verified = false;
+                for(size_t val : net->verified_out_dims){
+                    if(val == i){
+                        is_already_verified = true;
+                    }
                 }
-            }
-            if(!is_already_verified){
-                if(is_greater(net, net->actual_label, i, true)){
-                    net->verified_out_dims.push_back(i);
-                }
-                else{
-                    is_verified = false;
+                if(!is_already_verified){
+                    if(is_greater(net, net->actual_label, i, true)){
+                        net->verified_out_dims.push_back(i);
+                    }
+                    else{
+                        is_verified = false;
+                    }
                 }
             }
         }

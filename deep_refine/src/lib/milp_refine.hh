@@ -24,4 +24,7 @@ bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer);
 double compute_softmax_conf(Network_t* net, size_t label);
 double compute_conf(Network_t* net, size_t label);
 void update_marked_neurons_in_vec(Neuron_t* nt);
+bool is_image_verified_softmax_deeppoly(Network_t* net);
+bool is_image_verified_softmax(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec);
+double get_umax_i(Layer_t* layer, size_t i);
 #endif

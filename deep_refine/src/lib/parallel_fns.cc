@@ -223,19 +223,6 @@ bool is_layer_marked_mine(Network_t* net, Layer_t* start_layer){
     return false;
 }
 
-double get_umax_i(Layer_t* layer, size_t i){
-    double max_val = -INFINITY;
-    for(size_t j=0; j<layer->dims; j++){
-        Neuron_t* nt = layer->neurons[j];
-        if(j != i){
-            if(nt->ub > max_val){
-                max_val = nt->ub;
-            }
-        }
-    }
-    return max_val;
-}
-
 
 bool is_image_verified_softmax_concurrent(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec, std::vector<int>& activations){  
     Layer_t* out_layer = net->layer_vec.back();
