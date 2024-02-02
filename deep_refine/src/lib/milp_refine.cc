@@ -416,15 +416,21 @@ bool is_prp_verified_ab(Network_t* net){
 }
 
 void print_real_ce(Network_t* net){
+    std::cout<<"CE input values: ";
     for(size_t i=0; i<net->input_dim; i++){
         std::cout<<net->input_layer->res[i]<<",";
     }
     std::cout<<std::endl;
 }
 
-void print_real_ce_status(double conf){
-     std::cout<<"Found counter assignment!!"<<std::endl;
-    std::cout<<"CE confidence: "<<conf<<std::endl;
+void print_real_ce_status(Network_t* net, double conf){
+    std::cout<<"Found real counter example with confidence: "<<conf<<std::endl;
+    std::cout<<"CE output values: ";
+    Layer_t* last_layer = net->layer_vec.back();
+    for(size_t i=0; i<net->output_dim; i++){
+        std::cout<<last_layer->res[i]<<" , ";
+    }
+    std::cout<<std::endl;
 }
 
 double compute_softmax_conf(Network_t* net, size_t label){
@@ -481,7 +487,6 @@ bool is_ce_with_conf(Network_t* net){
     double conf = (last_layer->res[net->pred_label])/sum_out;
     if(conf >= Configuration_deeppoly::conf_value){
         Global_vars::ce_im_conf = conf;
-        std::cout<<"CE confidence - "<<conf<<std::endl;    
         std::cout<<"Found counter assignment!!"<<" --- "<<pthread_self()<<std::endl;
         return true;
     }
@@ -490,6 +495,7 @@ bool is_ce_with_conf(Network_t* net){
 
 void assign_net_pred(Network_t* net){
     Layer_t* last_layer = net->layer_vec.back();
+    net->pred_label = net->actual_label;
     double max_val = last_layer->res[net->actual_label];
     for(size_t i=0; i<net->output_dim; i++){
         double val = last_layer->res[i];
@@ -522,25 +528,12 @@ bool is_sat_val_ce(Network_t* net){
         }
         else{
             is_counter_example = true;
-            Layer_t* last_layer = net->layer_vec.back();
-            double sum_out = 0;
-            for(size_t i=0; i<net->output_dim; i++){
-                sum_out += last_layer->res[i];
-            }
-            double conf = (last_layer->res[net->pred_label])/sum_out;
-            Global_vars::ce_im_conf = conf; 
+            Global_vars::ce_im_conf = compute_conf(net, net->pred_label); 
         }
 
         if(is_counter_example){
-            std::cout<<"CE output values: ";
-            Layer_t* last_layer = net->layer_vec.back();
-            for(size_t i=0; i<net->output_dim; i++){
-                std::cout<<last_layer->res[i]<<" , ";
-            }
-            std::cout<<std::endl;
-            print_real_ce(net);
-            std::cout<<std::endl;
-
+            print_real_ce_status(net, Global_vars::ce_im_conf);
+            IFVERBOSE(print_real_ce(net));
         }
     }
     return is_counter_example;
