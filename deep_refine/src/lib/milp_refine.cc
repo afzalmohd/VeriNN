@@ -66,8 +66,7 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
             std::cout<<"Layer index: "<<layer->layer_index<<std::endl;
             std::cout<<"Optimized status: "<<status<<std::endl;
             bool is_layer_marked = false;
-            // is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
-            if(status = GRB_OPTIMAL){
+            if(status == GRB_OPTIMAL){
                 is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
             }
             else{
