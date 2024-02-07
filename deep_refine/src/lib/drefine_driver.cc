@@ -306,13 +306,15 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
     }
     
     if(IS_BOUND_TIGHTENING_MILP){
-        forward_analysis_bounds_milp_seq(net);
+        bounds_tighting_by_milp(net);
+        // forward_analysis_bounds_milp_seq(net);
         // net->print_network();
         // is_verified = run_deeppoly(net);
         // net->print_network();
         // if(is_verified){
         //     return VERIFIED;
         // }
+        // return UNKNOWN;
     }
 
     drefine_status status;

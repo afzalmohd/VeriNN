@@ -24,12 +24,12 @@
 #define IS_LP_CONSTRAINTS false
 #define IS_TOP_MIN_DIFF false
 #define TARGET_CLASS 1
-#define NUM_THREADS 20
+#define NUM_THREADS 10
 #define IS_MAXSAT_ANALYSIS true
 #define IS_RESET_MARK_FOR_EACH_LABLE true
-#define IS_BOUND_TIGHTENING_MILP false
+#define IS_BOUND_TIGHTENING_MILP true
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
-#define TIME_LIMIT_BOUND_TIGHTNING 0.1
+#define TIME_LIMIT_BOUND_TIGHTNING 0.3
 #define IS_CONCURRENT_RUN true
 #define EULER_C 2.7182
 
@@ -86,6 +86,7 @@ namespace Configuration_deeppoly{
     extern double softmax_conf_value;
     extern bool is_reset_marked_nts;
     extern bool is_concurrent;
+    extern bool num_threads;
 
 }
 

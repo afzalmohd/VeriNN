@@ -48,6 +48,7 @@ namespace Configuration_deeppoly{
     bool is_softmax_conf_ce;
     double softmax_conf_value;
     bool is_concurrent = IS_CONCURRENT_RUN;
+    bool num_threads = NUM_THREADS;
     
 
     int init_options(int num_of_params, char* params[]){

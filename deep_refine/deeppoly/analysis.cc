@@ -185,6 +185,7 @@ bool set_neurons_bounds(Layer_t* layer, Neuron_t* nt, GRBModel& model, bool is_l
 
 void forward_layer_FC_parallel(Network_t* net, Layer_t* curr_layer){
     unsigned int num_thread = get_num_thread();
+    num_thread = NUM_THREADS;
     std::vector<std::thread> threads;
     size_t num_neurons = curr_layer->dims;
     size_t pool_size = num_neurons/num_thread;

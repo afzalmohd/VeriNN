@@ -224,6 +224,7 @@ bool looper(Network_t *net){
             }
             else{
                 Configuration_deeppoly::is_concurrent = false;
+                // Configuration_deeppoly::is_reset_marked_nts = true;
                 return run_cegar_milp_mark_milp_refine(net);
             }
 
