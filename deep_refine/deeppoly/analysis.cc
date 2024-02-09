@@ -591,14 +591,17 @@ bool is_no_ce_with_conf(Network_t* net){
 
     if(Configuration_deeppoly::is_target_ce){
         double ub = out_layer->neurons[TARGET_CLASS]->ub;
-        return denominator > ub || actual_label_nt->lb > ub;
+        bool is_great = is_greater(net, net->actual_label, TARGET_CLASS, true);
+        return denominator > ub || is_great;
     }
 
     for(size_t i=0; i<net->output_dim; i++){
         if(i != net->actual_label){
             double ub = out_layer->neurons[i]->ub;
-            std::cout<<"Dim: "<<i<<" , error: "<<(ub - denominator)<<std::endl;
-            if(denominator > ub || actual_label_nt->lb > ub){
+            // std::cout<<"Dim: "<<i<<" , error: "<<(ub - denominator)<<std::endl;
+            bool is_great = is_greater(net, net->actual_label, i, true);
+            if(denominator > ub || is_great){
+                // std::cout<<"Verified dims: "<<i<<std::endl;
                 net->verified_out_dims.push_back(i);
             }
             else{
@@ -717,7 +720,6 @@ bool is_greater(Network_t* net, size_t index1, size_t index2, bool is_stricly_gr
         }
     }
     
-
     Neuron_t* nt = new Neuron_t();
     nt->lb = INFINITY;
     nt->lexpr_b = new Expr_t();

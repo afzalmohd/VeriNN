@@ -645,7 +645,7 @@ bool is_image_verified_softmax_deeppoly(Network_t* net){
     for(size_t i=0; i<net->output_dim; i++){
         if(net->actual_label != i){
             Neuron_t* nt = out_layer->neurons[i];
-            if(correct_lb > (nt->ub - Configuration_deeppoly::softmax_conf_value)){
+            if(correct_lb > (nt->ub - Configuration_deeppoly::softmax_conf_value) || is_greater(net, net->actual_label, i, true)){
                 //verified
             }
             else{
