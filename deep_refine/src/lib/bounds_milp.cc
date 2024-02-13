@@ -63,6 +63,7 @@ void update_bounds_nt(GRBModel& model, Layer_t* layer, Neuron_t* nt, std::vector
             double lb = -nt->lb;
             if(val > lb){
                 nt->lb = -val;
+                var.set(GRB_DoubleAttr_LB, -nt->lb);
             }
         }
         catch(GRBException e){
@@ -83,6 +84,7 @@ void update_bounds_nt(GRBModel& model, Layer_t* layer, Neuron_t* nt, std::vector
             double val = var.get(GRB_DoubleAttr_X);
             if(val < nt->ub){
                 nt->ub = val;
+                var.set(GRB_DoubleAttr_UB, nt->ub);
             }
         }
         catch(GRBException e){
