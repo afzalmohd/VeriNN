@@ -70,7 +70,15 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
                 is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
             }
             else{
-                is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer);
+                for(size_t i=layer->layer_index; i<net->layer_vec.size(); i++){
+                    Layer_t* layer_without_maxsat = net->layer_vec[i];
+                    is_layer_marked = is_layer_marked_after_optimization_without_maxsat(layer_without_maxsat);
+                    if(is_layer_marked){
+                        break;
+                    }
+                }
+
+                std::cout<<"Is layer marked: "<<is_layer_marked<<std::endl;
             }
             
             is_already_optimized = true;
@@ -104,7 +112,7 @@ bool is_layer_marked_after_optimization_without_maxsat(Layer_t* start_layer){
         // double sat_val = var.get(GRB_DoubleAttr_X);
         double res = *res_iter;
         double diff = abs(nt->sat_val - res);
-        // std::cout<<diff<<" , "<<sat_val<<" , "<<res<<std::endl;
+        std::cout<<"diff: "<<diff<<std::endl;
         if(diff > DIFF_TOLERANCE){
             if(pred_nt->lb > 0 && pred_nt->ub > 0){
                 is_marked = true;

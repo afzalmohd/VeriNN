@@ -107,7 +107,7 @@ void bounds_tighten_for_one_layer_one_thread(Network_t* net, Layer_t* layer, siz
     GRBModel model = GRBModel(env);
     model.set(GRB_IntParam_LogToConsole, 0);
     model.set(GRB_IntParam_OutputFlag, 1);
-    model.set(GRB_IntParam_Threads,NUM_GUROBI_THREAD);
+    model.set(GRB_IntParam_Threads,Configuration_deeppoly::grb_num_thread);
     std::vector<GRBVar> var_vector;
     create_vars_layer(net->input_layer, model, var_vector);
     size_t var_counter = net->input_dim;
@@ -262,7 +262,9 @@ void forward_analysis_bounds_milp_seq(Network_t* net){
 
 void bounds_tighting_by_milp(Network_t* net){
     if(Configuration_deeppoly::is_parallel){
+        Configuration_deeppoly::grb_num_thread = 1;
         forward_analysis_bounds_milp_parallel(net);
+        Configuration_deeppoly::grb_num_thread = NUM_GUROBI_THREAD;
     }
     else{
         forward_analysis_bounds_milp_seq(net);

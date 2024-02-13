@@ -310,7 +310,7 @@ drefine_status run_refine_poly_for_one_task(Network_t* net){
         // forward_analysis_bounds_milp_seq(net);
         // net->print_network();
         // is_verified = run_deeppoly(net);
-        // net->print_network();
+        net->print_network();
         // if(is_verified){
         //     return VERIFIED;
         // }

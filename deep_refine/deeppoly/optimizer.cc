@@ -358,7 +358,7 @@ GRBModel create_env_and_model(){
     env.start();
     GRBModel model = GRBModel(env); 
     model.set(GRB_IntParam_LogToConsole, 0);
-    model.set(GRB_IntParam_Threads,NUM_GUROBI_THREAD);
+    model.set(GRB_IntParam_Threads,Configuration_deeppoly::grb_num_thread);
     return model;
 }
 

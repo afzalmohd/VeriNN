@@ -15,7 +15,7 @@
 #define NUM_TEST_IMAGES 30
 #define MILP_WITH_MILP_LIMIT 2000
 #define MILP_WITH_MILP_LIMIT_WITH_INPUT_SPLIT 3
-#define NUM_GUROBI_THREAD 2
+#define NUM_GUROBI_THREAD 4
 #define DIFF_TOLERANCE 1e-5
 #define NUM_RANDOM_IMAGES 20
 #define MAX_NUM_MARKED_NEURONS 5
@@ -27,9 +27,9 @@
 #define NUM_THREADS 4
 #define IS_MAXSAT_ANALYSIS true
 #define IS_RESET_MARK_FOR_EACH_LABLE true
-#define IS_BOUND_TIGHTENING_MILP true
+#define IS_BOUND_TIGHTENING_MILP false  
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
-#define TIME_LIMIT_BOUND_TIGHTNING 0.5
+#define TIME_LIMIT_BOUND_TIGHTNING 1.0
 #define IS_CONCURRENT_RUN true
 #define EULER_C 2.7182
 
@@ -86,7 +86,8 @@ namespace Configuration_deeppoly{
     extern double softmax_conf_value;
     extern bool is_reset_marked_nts;
     extern bool is_concurrent;
-    extern bool num_threads;
+    extern size_t num_threads;
+    extern size_t grb_num_thread;
 
 }
 

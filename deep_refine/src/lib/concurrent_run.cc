@@ -224,6 +224,7 @@ bool looper(Network_t *net){
             }
             else{
                 Configuration_deeppoly::is_concurrent = false;
+                Configuration_deeppoly::grb_num_thread = NUM_GUROBI_THREAD;
                 // Configuration_deeppoly::is_reset_marked_nts = true;
                 return run_cegar_milp_mark_milp_refine(net);
             }
@@ -236,6 +237,7 @@ bool looper(Network_t *net){
 }
 bool rec_con(Network_t *net, std::vector<int> prev_comb, int new_mn)
 {   
+    Configuration_deeppoly::grb_num_thread = 1;
     std::cout<<std::endl;
     std::vector<std::vector<int>> new_combs;
     bool retval =looper(net);
