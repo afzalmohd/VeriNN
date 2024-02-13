@@ -13,13 +13,16 @@ import csv
 import sys
 import time
 import random
-
+import pandas as pd
+import copy
 NUM_CPU = 7
-TIMEOUT = 2000
+TIMEOUT = 1200
 DATASET = "MNIST"
 NUM_IMAGES = 100
-num_cores = 1
+num_cores = 4
 tool_name = "drefine" #drefine
+IS_CONF = 1
+IS_SOFTMAX_CONF=0
 
 root_dir = os.getcwd()
 TOOL = os.path.join(root_dir, 'drefine')
@@ -263,24 +266,54 @@ def get_task_from_file_random():
 
     return tasks
 
-
+def get_diff_tasks():
+    csv_file_path = 'safe_to_safe_0.0.csv'
+    df=pd.read_csv(csv_file_path,header=None)
+    df.columns = [f"Column_{i}" for i in range(df.shape[1])]
+    df = df[['Column_0','Column_1','Column_2']].copy(deep=True)
+    result_list_of_lists=[] 
+    temp1= df.values.tolist()
+    temp2=copy.deepcopy(temp1)
+    for l in temp1:
+        l.append(0.0)
+    for l in temp2:
+        l.append(0.4)
+    result_list_of_lists= temp1+temp2
+    print(result_list_of_lists)
+    return result_list_of_lists
+    # tasks = []
+    # NETWORK_FILE = ["mnist_relu_6_100.tf", "mnist_relu_6_200.tf"]
+    # confidences = [0, 0.4, 0.6]
+    # epsilons = [0.06]
+    # for image_index in range(NUM_IMAGES):
+    #     for ep in epsilons:
+    #         for nt in NETWORK_FILE:
+    #             for conf in confidences:
+    #                 tasks.append([nt, ep, image_index, conf])
+    return tasks
+    
 def get_all_tasks():
     tasks = []
     # net_dir = '/home/afzal/Documents/tools/networks/tf/mnist'
     NETWORK_FILE = []
-    NETWORK_FILE = ["mnist_relu_3_50.tf","mnist_relu_3_100.tf"]
-    NETWORK_FILE += ["mnist_relu_6_100.tf", "mnist_relu_5_100.tf", "mnist_relu_6_200.tf"]
-    NETWORK_FILE += ["mnist_relu_4_1024.tf"]
-    NETWORK_FILE += ["mnist_relu_9_100.tf", "mnist_relu_9_200.tf"]
-    NETWORK_FILE += ["ffnnRELU__Point_6_500.tf", "ffnnRELU__PGDK_w_0.1_6_500.tf", "ffnnRELU__PGDK_w_0.3_6_500.tf"]
+    NETWORK_FILE += ["mnist_relu_3_50.tf"]
+    NETWORK_FILE += ["mnist_relu_3_100.tf"]
+    # NETWORK_FILE += ["mnist_relu_5_100.tf"]
+    # NETWORK_FILE += ["mnist_relu_6_100.tf", "mnist_relu_6_200.tf"]
+    # NETWORK_FILE += ["mnist_relu_4_1024.tf"]
+    # NETWORK_FILE += ["mnist_relu_9_100.tf", "mnist_relu_9_200.tf"]
+    # NETWORK_FILE += ["ffnnRELU__Point_6_500.tf", "ffnnRELU__PGDK_w_0.1_6_500.tf", "ffnnRELU__PGDK_w_0.3_6_500.tf"]
 
-    epsilons = [0.005,0.01,0.015,0.02,0.025,0.03,0.04,0.05]
+    epsilons = [0.06,0.1]
+    confidences = [0, 0.4, 0.6]
 
     for image_index in range(NUM_IMAGES):
         for ep in epsilons:
             for nt in NETWORK_FILE:
-                tasks.append([nt, ep, image_index])
-
+                for conf in confidences:
+                    tasks.append([nt, ep, image_index, conf])
+    # tasks=get_diff_tasks()
+    # print(tasks)
     return tasks
 
 def print_cmnds_all(num_cpu, log_dir):
@@ -311,11 +344,12 @@ def print_cmnds_all(num_cpu, log_dir):
             net_name = l[0][:-3]
             ep = l[1]
             image_index = l[2]
+            conf = l[3]
             net_path = os.path.join(net_dir, net_name+".tf")
-            log_file = net_name+"+"+str(image_index)+"+"+str(ep)
+            log_file = net_name+"+"+str(image_index)+"+"+str(ep)+"+"+str(conf)
             log_file = os.path.join(log_dir, log_file)
             result_file = os.path.join(result_dir, f"file_{idx}.txt")
-            command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --result-file {result_file} >> {log_file}"
+            command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --is-conf-ce {IS_CONF} --conf-val {conf} --is-soft-conf-ce {IS_SOFTMAX_CONF} --soft-conf-val {conf} --result-file {result_file} >> {log_file}"
             cmds.append(command)
         file_name = os.path.join(log_dir, f"script_{idx}.sh")
         write_script_file(file_name, cmds)
