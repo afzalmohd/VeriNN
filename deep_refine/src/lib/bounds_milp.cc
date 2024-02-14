@@ -229,7 +229,8 @@ void bounds_tighten_for_one_layer(Network_t* net, Layer_t* layer){
 }
 
 void forward_analysis_bounds_milp_parallel(Network_t* net){
-    for(Layer_t* layer : net->layer_vec){
+    for(size_t i=0; i<net->layer_vec.size() && i <= LAYER_INDEX_UPTO_BOUND_TIGHTEN; i++){
+        Layer_t* layer = net->layer_vec[i];
         bounds_tighten_for_one_layer(net, layer);
     }
 }
