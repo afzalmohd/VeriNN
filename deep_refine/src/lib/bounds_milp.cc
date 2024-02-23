@@ -108,6 +108,7 @@ void bounds_tighten_for_one_layer_one_thread(Network_t* net, Layer_t* layer, siz
     model.set(GRB_IntParam_LogToConsole, 0);
     model.set(GRB_IntParam_OutputFlag, 1);
     model.set(GRB_IntParam_Threads,Configuration_deeppoly::grb_num_thread);
+    model.set(GRB_DoubleParam_MIPGap, GRB_MIP_GAP_VAL);
     std::vector<GRBVar> var_vector;
     create_vars_layer(net->input_layer, model, var_vector);
     size_t var_counter = net->input_dim;
