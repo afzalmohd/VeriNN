@@ -290,7 +290,7 @@ void create_deeppoly_encoding_relu(GRBModel& model, Layer_t* layer, size_t nt_in
     Neuron_t* pred_nt = layer->pred_layer->neurons[nt_index];
     double lb = -pred_nt->lb;
     GRBLinExpr grb_expr = -pred_nt->ub*var_vector[var_counter + nt_index - layer->pred_layer->dims] + pred_nt->ub*lb;
-    grb_expr += (nt->ub - lb)*var_vector[var_counter+nt_index];
+    grb_expr += (pred_nt->ub - lb)*var_vector[var_counter+nt_index];
     model.addConstr(grb_expr, GRB_LESS_EQUAL, 0, constr_name1);
 
     GRBLinExpr grb_expr1 = var_vector[var_counter+nt_index] - var_vector[var_counter + nt_index - layer->pred_layer->dims];

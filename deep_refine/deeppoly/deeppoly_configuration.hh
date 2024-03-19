@@ -32,7 +32,7 @@
 #define TIME_LIMIT_BOUND_TIGHTNING 1.5
 #define IS_CONCURRENT_RUN true
 #define EULER_C 2.7182
-#define GRB_MIP_GAP_VAL 1e-5
+#define GRB_MIP_GAP_VAL 1e-4
 
 enum drefine_status {FAILED, DEEPPOLY_VERIFIED, VERIFIED, UNKNOWN};
 

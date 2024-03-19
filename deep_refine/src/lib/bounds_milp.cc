@@ -19,6 +19,23 @@ bool is_verified_by_bound_tighten_milp(Network_t* net){
     return is_verified;
 }
 
+void update_relu_bounds_with_previous_layers_bounds(Layer_t* layer){
+    if(layer->is_activation){
+        Layer_t* pred_layer = layer->pred_layer;
+        assert(layer->dims == pred_layer->dims && "Number of neurons in affine and relu layers should be same\n");
+        for(size_t i=0; i<pred_layer->dims; i++){
+            Neuron_t* pred_nt = pred_layer->neurons[i];
+            Neuron_t* nt = layer->neurons[i];
+            nt->ub = pred_nt->ub;
+            double pred_lb = -pred_nt->lb;
+            double lb = -nt->lb;
+            if(pred_lb > lb){
+                nt->lb = pred_nt->lb;
+            }
+        }
+    }
+}
+
 void create_layer_constraints(Network_t* net, Layer_t* layer, size_t var_counter){
     if(layer->layer_index == -1){
         for(size_t i=0; i<NUM_THREADS; i++){
@@ -191,10 +208,12 @@ void bounds_tighten_for_one_layer_one_thread(Network_t* net, Layer_t* layer, siz
 // }
 
 void bounds_tighten_for_one_layer(Network_t* net, Layer_t* layer){
+    // if(layer->is_activation){
+    //     update_relu_bounds_with_previous_layers_bounds(layer);
+    // }
     unsigned int num_thread = NUM_THREADS;
     std::vector<std::thread> threads;
     size_t num_neurons = layer->dims;
-    
     std::vector<size_t> loads_per_cpu;
     if(num_neurons <= num_thread){
         for(size_t i=0; i<num_neurons; i++){
@@ -245,6 +264,9 @@ void forward_analysis_bounds_milp_seq(Network_t* net){
     size_t var_counter = net->input_dim;
     for(size_t i=0; i<net->layer_vec.size() && i <= LAYER_INDEX_UPTO_BOUND_TIGHTEN; i++){
         Layer_t* layer = net->layer_vec[i];
+        // if(layer->is_activation){
+        //     update_relu_bounds_with_previous_layers_bounds(layer);
+        // }
         create_vars_layer(layer, model, var_vector);
         if(layer->is_activation){
             create_exact_relu_constr_milp_refine(layer, model, var_vector, var_counter);

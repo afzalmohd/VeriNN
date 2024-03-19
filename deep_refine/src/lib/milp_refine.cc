@@ -191,10 +191,111 @@ bool run_refinement_cegar(Network_t* net){
     return false;
 }
 
+void create_constrnt_testing(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vector){
+    // creating_vars_milp(net, model, var_vector);
+    create_vars_layer(net->input_layer, model, var_vector);
+    for(size_t i=0; i<net->input_dim; i++){
+        Neuron_t* nt = net->input_layer->neurons[i];
+        GRBLinExpr grb_expr = var_vector[i];
+        std::string constr_name = "Eq_-1_"+std::to_string(nt->neuron_index);
+        model.addConstr(grb_expr, GRB_EQUAL, net->input_layer->res[i], constr_name);
+    }
+
+    // model.optimize();
+    // std::string dumb_file = "dumb_constr.lp";
+    // model.write(dumb_file);
+    // int status1 = model.get(GRB_IntAttr_Status);
+    // std::cout<<"model testing optimized status: "<<status1<<std::endl;
+    // return;
+
+    int layer_idx_upto_fix_val = 3;
+    for(int i=0; i<=layer_idx_upto_fix_val; i++){
+        create_vars_layer(net->layer_vec[i], model, var_vector);
+    }
+
+    size_t var_counter = net->input_layer->dims;
+    // Layer_t* layer = net->layer_vec[0];
+    // create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+    // for(size_t j=0; j<layer->dims; j++){
+    //     std::string constr_name = "Eq_"+std::to_string(layer->layer_index)+","+std::to_string(j);
+    //     Neuron_t* nt = layer->neurons[j];
+    //     if(layer->res[j] < -nt->lb || nt->ub < layer->res[j]){
+    //         std::cout<<"Bounds: "<<-nt->lb<<","<<layer->res[j]<<","<<nt->ub<<std::endl;
+    //     }
+    //     GRBLinExpr grb_expr = var_vector[var_counter+j];
+    //     model.addConstr(grb_expr, GRB_EQUAL, layer->res[j], constr_name);
+    // }
+
+    int layer_index = 0;
+    for(auto layer : net->layer_vec){
+        if(layer->is_activation){
+            create_relu_constr_milp_refine(layer, model, var_vector, var_counter);
+        }
+        else{
+            create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
+        }
+        if(layer_index == layer_idx_upto_fix_val){
+            break;
+        }
+        var_counter += layer->dims;
+        layer_index++;
+    }
+
+    // var_counter = net->input_dim;
+    // for(int i=0; i <= layer_idx_upto_fix_val; i++){
+    //     Layer_t* ly = net->layer_vec[i];
+    //     for(size_t j=0; j<ly->dims; j++){
+    //         std::string constr_name = "Eq_"+std::to_string(ly->layer_index)+","+std::to_string(j);
+    //         // Neuron_t* nt = ly->neurons[j];
+    //         // if(ly->res[j] < -nt->lb || nt->ub < ly->res[j]){
+    //         //     std::cout<<"Bounds: "<<-nt->lb<<","<<ly->res[j]<<","<<nt->ub<<std::endl;
+    //         // }
+    //         GRBLinExpr grb_expr = var_vector[var_counter+j];
+    //         model.addConstr(grb_expr, GRB_EQUAL, ly->res[j], constr_name);
+    //     }
+
+    //     var_counter += ly->dims;
+    // }
+
+    model.update();
+    std::string dumb_file = "dumb_constr.lp";
+    model.write(dumb_file);
+
+    model.optimize();
+    int status = model.get(GRB_IntAttr_Status);
+    std::cout<<"model testing optimized status: "<<status<<std::endl;
+    // var_counter = 0;
+    // for(size_t i=0; i<net->input_dim; i++){
+    //     double val1 = var_vector[i].get(GRB_DoubleAttr_X);
+    //     double val2 = net->input_layer->res[i];
+    //     if(val1 != val2){
+    //         std::cout<<"Layer: -1 (sat,res): ("<<val1<<","<<val2<<")"<<std::endl;
+    //     }
+    // }
+    // var_counter = net->input_dim;
+    // layer_index = 0;
+    // for(auto layer : net->layer_vec){
+    //     for(size_t i=0; i<layer->dims; i++){
+    //         double val1 = var_vector[var_counter+i].get(GRB_DoubleAttr_X);
+    //         double val2 = net->input_layer->res[i];
+    //         if(val1 != val2){
+    //             std::cout<<"Layer: "<<layer_index<<" (sat,res): ("<<val1<<","<<val2<<")"<<std::endl;
+    //         }
+    //     }
+    //     if(layer_index == layer_idx_upto_fix_val){
+    //         break;
+    //     }
+    //     layer_index++;
+        
+    // }
+}
+
 bool is_image_verified_by_milp(Network_t* net){
     verify_dim:
     GRBModel model = create_grb_env_and_model();
     std::vector<GRBVar> var_vector;
+    // create_constrnt_testing(net, model, var_vector);
+    // return true;
     create_milp_mark_milp_refine_constr(net, model, var_vector);
     size_t i=0;
     if(Configuration_deeppoly::is_target_ce){
