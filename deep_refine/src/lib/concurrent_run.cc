@@ -193,6 +193,7 @@ void *multi_thread(void *p)
 
 bool looper(Network_t *net){
     net1=net;
+    Configuration_deeppoly::grb_num_thread = 1;
     while(1){
         size = std::pow(2, Global_vars::new_marked_nts.size());
         i=0;
