@@ -23,6 +23,7 @@ num_cores = 4
 tool_name = "drefine" #drefine
 IS_CONF = 1
 IS_SOFTMAX_CONF=0
+IS_PARALLEL = 1
 
 root_dir = os.getcwd()
 TOOL = os.path.join(root_dir, 'drefine')
@@ -297,15 +298,16 @@ def get_all_tasks():
     # net_dir = '/home/afzal/Documents/tools/networks/tf/mnist'
     NETWORK_FILE = []
     NETWORK_FILE += ["mnist_relu_3_50.tf"]
-    NETWORK_FILE += ["mnist_relu_3_100.tf"]
+    # NETWORK_FILE += ["mnist_relu_3_100.tf"]
     # NETWORK_FILE += ["mnist_relu_5_100.tf"]
     # NETWORK_FILE += ["mnist_relu_6_100.tf", "mnist_relu_6_200.tf"]
     # NETWORK_FILE += ["mnist_relu_4_1024.tf"]
-    # NETWORK_FILE += ["mnist_relu_9_100.tf", "mnist_relu_9_200.tf"]
+    # NETWORK_FILE += ["mnist_relu_9_100.tf"]
+    # NETWORK_FILE += ["mnist_relu_9_200.tf"]
     # NETWORK_FILE += ["ffnnRELU__Point_6_500.tf", "ffnnRELU__PGDK_w_0.1_6_500.tf", "ffnnRELU__PGDK_w_0.3_6_500.tf"]
 
-    epsilons = [0.06,0.1]
-    confidences = [0, 0.4, 0.6]
+    epsilons = [0.06]
+    confidences =[0.8, 0.95]
 
     for image_index in range(NUM_IMAGES):
         for ep in epsilons:
@@ -349,7 +351,8 @@ def print_cmnds_all(num_cpu, log_dir):
             log_file = net_name+"+"+str(image_index)+"+"+str(ep)+"+"+str(conf)
             log_file = os.path.join(log_dir, log_file)
             result_file = os.path.join(result_dir, f"file_{idx}.txt")
-            command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --is-conf-ce {IS_CONF} --conf-val {conf} --is-soft-conf-ce {IS_SOFTMAX_CONF} --soft-conf-val {conf} --result-file {result_file} >> {log_file}"
+            # command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --is-parallel {IS_PARALLEL} --is-conf-ce {IS_CONF} --conf-val {conf} --is-soft-conf-ce {IS_SOFTMAX_CONF} --soft-conf-val {conf} --result-file {result_file} >> {log_file}"
+            command = f"timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --is-parallel {IS_PARALLEL} --is-conf-ce {IS_CONF} --conf-val {conf} --is-soft-conf-ce {IS_SOFTMAX_CONF} --soft-conf-val {conf} --result-file {result_file} >> {log_file}"
             cmds.append(command)
         file_name = os.path.join(log_dir, f"script_{idx}.sh")
         write_script_file(file_name, cmds)
