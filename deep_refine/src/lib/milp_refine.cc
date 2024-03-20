@@ -574,7 +574,7 @@ bool is_ce_with_softmax_conf(Network_t* net){
         double val = last_layer->res[i];
         denominator += pow(EULER_C, val);
         if(i != net->pred_label){
-            if(max_val < (val + Configuration_deeppoly::softmax_conf_value)){
+            if(max_val < (val + Global_vars::soft_max_conf_approx)){
                 return false;
             }
         }
@@ -754,7 +754,7 @@ bool is_image_verified_softmax_deeppoly(Network_t* net){
     for(size_t i=0; i<net->output_dim; i++){
         if(net->actual_label != i){
             Neuron_t* nt = out_layer->neurons[i];
-            if(correct_lb > (nt->ub - Configuration_deeppoly::softmax_conf_value) || is_greater(net, net->actual_label, i, true)){
+            if(correct_lb > (nt->ub - Global_vars::soft_max_conf_approx) || is_greater(net, net->actual_label, i, true)){
                 //verified
             }
             else{
@@ -800,7 +800,7 @@ bool is_image_verified_softmax(Network_t* net, GRBModel& model, std::vector<GRBV
     std::string max_var_str = "softmax_max_var_"+std::to_string(out_layer->layer_index);
     GRBVar max_var = model.addVar(l_max_var, u_max_var, 0.0, GRB_CONTINUOUS,max_var_str);
     size_t correct_var_idx = get_gurobi_var_index(out_layer, net->actual_label);
-    model.addConstr(max_var - var_vec[correct_var_idx] - Configuration_deeppoly::softmax_conf_value, GRB_GREATER_EQUAL, 0);
+    model.addConstr(max_var - var_vec[correct_var_idx] - Global_vars::soft_max_conf_approx, GRB_GREATER_EQUAL, 0);
     // for(size_t i=0; i<net->output_dim; i++){
     //     Neuron_t* nt = net->layer_vec.back()->neurons[i];
     //     std::cout<<"("<<-nt->lb<<","<<nt->ub<<")"<<std::endl;
@@ -818,7 +818,7 @@ bool is_image_verified_softmax(Network_t* net, GRBModel& model, std::vector<GRBV
                 double umax_i = get_umax_i(out_layer, i);
                 GRBLinExpr grb_expr1 = max_var - var_vec[var_idx] - (1-bin_var)*(umax_i - lb);
                 model.addConstr(grb_expr1, GRB_LESS_EQUAL, 0);
-                GRBLinExpr grb_expr2 = max_var - var_vec[var_idx] - (1-bin_var)*Configuration_deeppoly::softmax_conf_value;
+                GRBLinExpr grb_expr2 = max_var - var_vec[var_idx] - (1-bin_var)*Global_vars::soft_max_conf_approx;
                 model.addConstr(grb_expr2, GRB_GREATER_EQUAL, 0);
             }
         }

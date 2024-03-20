@@ -11,6 +11,7 @@ namespace Global_vars{
     std::chrono::duration<double> refinement_time = std::chrono::seconds(0);
     double orig_im_conf = 0;
     double ce_im_conf = 0;
+    double soft_max_conf_approx = 0;
 }
 
 namespace Configuration_deeppoly{
@@ -23,8 +24,8 @@ namespace Configuration_deeppoly{
     std::string default_dataset = "MNIST";
     std::string default_tool = "drefine";
     double default_epsilon = 0.03;
-    double default_conf_ce = 0.50;
-    double default_softmax_conf_ce = 0.85;
+    double default_conf_ce = 50;
+    double default_softmax_conf_ce = 85;
     std::vector<std::string> dataset_vec = {"MNIST","CIFAR10","ACASXU"};
     size_t input_dim = 784;
     bool is_reset_marked_nts = IS_RESET_MARK_FOR_EACH_LABLE;

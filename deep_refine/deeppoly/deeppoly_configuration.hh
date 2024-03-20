@@ -28,7 +28,7 @@
 #define IS_MAXSAT_ANALYSIS true
 #define IS_RESET_MARK_FOR_EACH_LABLE true
 #define IS_BOUND_TIGHTENING_MILP true 
-#define LAYER_INDEX_UPTO_BOUND_TIGHTEN 3
+#define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
 #define TIME_LIMIT_BOUND_TIGHTNING 2.5
 #define IS_CONCURRENT_RUN true
 #define EULER_C 2.7182
@@ -45,6 +45,7 @@ namespace Global_vars{
     extern std::chrono::duration<double> refinement_time;  
 	extern double orig_im_conf;
 	extern double ce_im_conf;
+    extern double soft_max_conf_approx;
 }
 
 

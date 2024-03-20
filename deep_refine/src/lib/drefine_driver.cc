@@ -54,7 +54,7 @@ int run_refine_poly(int num_args, char* params[]){
         if(!is_same_label){
             return 0;
         }
-        
+        set_confidence(net);
         // return 0;
         if(Configuration_deeppoly::is_target_ce){
             if(net->pred_label == TARGET_CLASS){
@@ -80,12 +80,20 @@ int run_refine_poly(int num_args, char* params[]){
     return 0;
 }
 
+void set_softmax_conf_approx(){
+    double val = (100/Configuration_deeppoly::softmax_conf_value) - 1;
+    double ln = log2(val)/log(EULER_C);
+    Global_vars::soft_max_conf_approx = -ln;
+}
+
 void set_confidence(Network_t* net){
     double orig_im_conf = 0;
     if(Configuration_deeppoly::is_softmax_conf_ce){
+        set_softmax_conf_approx();
         orig_im_conf = compute_softmax_conf(net, net->actual_label);
     }
     else{
+        Configuration_deeppoly::conf_value = Configuration_deeppoly::conf_value/100;
         orig_im_conf = compute_conf(net, net->actual_label);
     }
     Global_vars::orig_im_conf = orig_im_conf;
@@ -280,7 +288,6 @@ bool is_actual_and_pred_label_same(Network_t* net, size_t image_index){
         return false;
         
     }
-    set_confidence(net);
     return true;
 }
 
