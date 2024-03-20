@@ -26,12 +26,10 @@ void update_relu_bounds_with_previous_layers_bounds(Layer_t* layer){
         for(size_t i=0; i<pred_layer->dims; i++){
             Neuron_t* pred_nt = pred_layer->neurons[i];
             Neuron_t* nt = layer->neurons[i];
-            nt->ub = pred_nt->ub;
-            double pred_lb = -pred_nt->lb;
-            double lb = -nt->lb;
-            if(pred_lb > lb){
-                nt->lb = pred_nt->lb;
-            }
+            // std::cout<<"Prev bounds "<<i<<": ("<<-pred_nt->lb<<","<<pred_nt->ub<<")"<<std::endl;
+            nt->ub = fmax(0, pred_nt->ub);
+            nt->lb = -fmax(0, -pred_nt->lb);
+            // std::cout<<"Curr bounds "<<i<<": ("<<-nt->lb<<","<<nt->ub<<")"<<std::endl;
         }
     }
 }
@@ -208,9 +206,10 @@ void bounds_tighten_for_one_layer_one_thread(Network_t* net, Layer_t* layer, siz
 // }
 
 void bounds_tighten_for_one_layer(Network_t* net, Layer_t* layer){
-    // if(layer->is_activation){
-    //     update_relu_bounds_with_previous_layers_bounds(layer);
-    // }
+    if(layer->is_activation){
+        update_relu_bounds_with_previous_layers_bounds(layer);
+        return;
+    }
     unsigned int num_thread = NUM_THREADS;
     std::vector<std::thread> threads;
     size_t num_neurons = layer->dims;
@@ -264,9 +263,9 @@ void forward_analysis_bounds_milp_seq(Network_t* net){
     size_t var_counter = net->input_dim;
     for(size_t i=0; i<net->layer_vec.size() && i <= LAYER_INDEX_UPTO_BOUND_TIGHTEN; i++){
         Layer_t* layer = net->layer_vec[i];
-        // if(layer->is_activation){
-        //     update_relu_bounds_with_previous_layers_bounds(layer);
-        // }
+        if(layer->is_activation){
+            update_relu_bounds_with_previous_layers_bounds(layer);
+        }
         create_vars_layer(layer, model, var_vector);
         if(layer->is_activation){
             create_exact_relu_constr_milp_refine(layer, model, var_vector, var_counter);
@@ -274,9 +273,10 @@ void forward_analysis_bounds_milp_seq(Network_t* net){
         else{
             create_milp_constr_FC_without_marked(layer, model, var_vector, var_counter);
         }
-
-        update_bounds(layer, model, var_vector);
-
+        if(!layer->is_activation){
+            update_bounds(layer, model, var_vector);
+        }
+        // update_bounds(layer, model, var_vector);
         var_counter += layer->dims;
     }
 
