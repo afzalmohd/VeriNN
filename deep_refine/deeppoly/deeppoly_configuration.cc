@@ -12,6 +12,7 @@ namespace Global_vars{
     double orig_im_conf = 0;
     double ce_im_conf = 0;
     double soft_max_conf_approx = 0;
+    double given_ce_conf = 0;
 }
 
 namespace Configuration_deeppoly{

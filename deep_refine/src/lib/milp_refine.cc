@@ -551,7 +551,7 @@ double compute_softmax_conf(Network_t* net, size_t label){
     }
 
     double conf = pow(EULER_C, label_val)/denominator;
-    return conf;
+    return 100*conf;
 }
 
 double compute_conf(Network_t* net, size_t label){
@@ -563,7 +563,7 @@ double compute_conf(Network_t* net, size_t label){
     }
 
     double conf = label_val/denominator;
-    return conf;
+    return 100*conf;
 }
 
 bool is_ce_with_softmax_conf(Network_t* net){
@@ -580,7 +580,7 @@ bool is_ce_with_softmax_conf(Network_t* net){
         }
     }
 
-    Global_vars::ce_im_conf = pow(EULER_C, max_val)/denominator;
+    Global_vars::ce_im_conf = 100*(pow(EULER_C, max_val)/denominator);
     return true;
 }
 
@@ -594,7 +594,7 @@ bool is_ce_with_conf(Network_t* net){
 
     double conf = (last_layer->res[net->pred_label])/sum_out;
     if(conf >= Configuration_deeppoly::conf_value){
-        Global_vars::ce_im_conf = conf;
+        Global_vars::ce_im_conf = 100*conf;
         std::cout<<"Found counter assignment!!"<<" --- "<<pthread_self()<<std::endl;
         return true;
     }

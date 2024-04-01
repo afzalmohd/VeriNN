@@ -46,6 +46,7 @@ namespace Global_vars{
 	extern double orig_im_conf;
 	extern double ce_im_conf;
     extern double soft_max_conf_approx;
+    extern double given_ce_conf;
 }
 
 

@@ -87,26 +87,33 @@ void set_softmax_conf_approx(){
 }
 
 void set_confidence(Network_t* net){
+    if(Configuration_deeppoly::is_conf_ce && Configuration_deeppoly::is_softmax_conf_ce){
+        assert(0 && "Both confidence can not be active at a time\n");
+    }
+
     double orig_im_conf = 0;
     if(Configuration_deeppoly::is_softmax_conf_ce){
+        Global_vars::given_ce_conf = Configuration_deeppoly::softmax_conf_value;
         set_softmax_conf_approx();
         orig_im_conf = compute_softmax_conf(net, net->actual_label);
     }
-    else{
+    else if(Configuration_deeppoly::is_conf_ce){
+        Global_vars::given_ce_conf = Configuration_deeppoly::conf_value;
         Configuration_deeppoly::conf_value = Configuration_deeppoly::conf_value/100;
         orig_im_conf = compute_conf(net, net->actual_label);
     }
     Global_vars::orig_im_conf = orig_im_conf;
     std::cout<<"Correct image conf: "<<orig_im_conf<<std::endl;
 
-    if(Configuration_deeppoly::conf_value == -1.0){
-        Configuration_deeppoly::conf_value = orig_im_conf;
-        Configuration_deeppoly::softmax_conf_value = orig_im_conf;
-    }
-
-    if(Configuration_deeppoly::conf_value == 0){
+    if(Global_vars::given_ce_conf == 0){
         Configuration_deeppoly::is_conf_ce = false;
         Configuration_deeppoly::is_softmax_conf_ce = false;
+    }
+
+    else if(Global_vars::given_ce_conf == -1.0){
+        Configuration_deeppoly::conf_value = orig_im_conf/100;
+        Configuration_deeppoly::softmax_conf_value = orig_im_conf;
+        set_softmax_conf_approx();
     }
 }
 
@@ -725,13 +732,13 @@ void print_status_string(Network_t* net, size_t tool_status, std::string tool_na
     if(base_prp_name == ""){
         base_prp_name = "null";
     }
-    double given_conf = Configuration_deeppoly::conf_value;
-    if(Configuration_deeppoly::is_softmax_conf_ce){
-        given_conf = Configuration_deeppoly::softmax_conf_value;
-    }
-    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(Global_vars::sub_prob_counts)+","+std::to_string(Global_vars::iter_counts)+","+std::to_string(Global_vars::num_marked_neurons)+","+std::to_string(given_conf)+","+std::to_string(Global_vars::orig_im_conf)+","+std::to_string(Global_vars::ce_im_conf)+","+std::to_string(duration.count())+","+std::to_string(Global_vars::marking_time.count())+","+std::to_string(Global_vars::refinement_time.count());
+    // double given_conf = Configuration_deeppoly::conf_value;
+    // if(Configuration_deeppoly::is_softmax_conf_ce){
+    //     given_conf = Configuration_deeppoly::softmax_conf_value;
+    // }
+    std::string str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+","+std::to_string(image_index)+","+std::to_string(net->pred_label)+","+base_prp_name+","+status_string+","+tool_name+","+std::to_string(Global_vars::sub_prob_counts)+","+std::to_string(Global_vars::iter_counts)+","+std::to_string(Global_vars::num_marked_neurons)+","+std::to_string(Global_vars::given_ce_conf)+","+std::to_string(Global_vars::orig_im_conf)+","+std::to_string(Global_vars::ce_im_conf)+","+std::to_string(duration.count())+","+std::to_string(Global_vars::marking_time.count())+","+std::to_string(Global_vars::refinement_time.count());
     write_to_file(Configuration_deeppoly::result_file, str);
-    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(Global_vars::sub_prob_counts)+",num_cegar_iterations:"+std::to_string(Global_vars::iter_counts)+",num_marked_neurons="+std::to_string(Global_vars::num_marked_neurons)+",given conf="+std::to_string(given_conf)+",orig image conf="+std::to_string(Global_vars::orig_im_conf)+",ce image conf="+std::to_string(Global_vars::ce_im_conf)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(Global_vars::marking_time.count())+",refinement_time="+std::to_string(Global_vars::refinement_time.count());
+    str = base_net_name+","+std::to_string(Configuration_deeppoly::epsilon)+",image_index="+std::to_string(image_index)+",image_label="+std::to_string(net->pred_label)+",prop_name="+base_prp_name+","+status_string+","+tool_name+",num_sub_prob="+std::to_string(Global_vars::sub_prob_counts)+",num_cegar_iterations:"+std::to_string(Global_vars::iter_counts)+",num_marked_neurons="+std::to_string(Global_vars::num_marked_neurons)+",given conf="+std::to_string(Global_vars::given_ce_conf)+",orig image conf="+std::to_string(Global_vars::orig_im_conf)+",ce image conf="+std::to_string(Global_vars::ce_im_conf)+",total_time="+std::to_string(duration.count())+",marking_time="+std::to_string(Global_vars::marking_time.count())+",refinement_time="+std::to_string(Global_vars::refinement_time.count());
     std::cout<<str<<std::endl;
 }
 
