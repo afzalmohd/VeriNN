@@ -47,6 +47,8 @@ namespace Global_vars{
 	extern double ce_im_conf;
     extern double soft_max_conf_approx;
     extern double given_ce_conf;
+    extern bool is_soft_ce_by_user;
+    extern bool is_conf_ce_by_user;
 }
 
 

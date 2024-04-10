@@ -91,6 +91,9 @@ void set_confidence(Network_t* net){
         assert(0 && "Both confidence can not be active at a time\n");
     }
 
+    Global_vars::is_soft_ce_by_user = Configuration_deeppoly::is_softmax_conf_ce;
+    Global_vars::is_conf_ce_by_user = Configuration_deeppoly::is_conf_ce;
+
     double orig_im_conf = 0;
     if(Configuration_deeppoly::is_softmax_conf_ce){
         Global_vars::given_ce_conf = Configuration_deeppoly::softmax_conf_value;

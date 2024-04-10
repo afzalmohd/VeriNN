@@ -636,7 +636,10 @@ bool is_sat_val_ce(Network_t* net){
         }
         else{
             is_counter_example = true;
-            Global_vars::ce_im_conf = compute_conf(net, net->pred_label); 
+            Global_vars::ce_im_conf = compute_conf(net, net->pred_label);
+            if(Global_vars::is_soft_ce_by_user){
+                Global_vars::ce_im_conf = compute_softmax_conf(net, net->pred_label);
+            } 
         }
 
         if(is_counter_example){

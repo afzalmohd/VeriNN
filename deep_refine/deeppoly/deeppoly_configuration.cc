@@ -13,6 +13,8 @@ namespace Global_vars{
     double ce_im_conf = 0;
     double soft_max_conf_approx = 0;
     double given_ce_conf = 0;
+    bool is_soft_ce_by_user = false;
+    bool is_conf_ce_by_user = false;
 }
 
 namespace Configuration_deeppoly{
