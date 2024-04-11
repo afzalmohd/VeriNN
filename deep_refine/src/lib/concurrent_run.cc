@@ -217,7 +217,7 @@ bool looper(Network_t *net){
         // std::cout<<"after verif result if\n";
         if(is_refine==true)
         {
-            if(Global_vars::new_marked_nts.size()<10)
+            if(Global_vars::new_marked_nts.size()<7)
             {
                 run_milp_mark_with_milp_refine_mine(net);
                 Global_vars::iter_counts++;
