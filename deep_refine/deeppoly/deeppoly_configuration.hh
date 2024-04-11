@@ -27,10 +27,11 @@
 #define NUM_THREADS 2
 #define IS_MAXSAT_ANALYSIS true
 #define IS_RESET_MARK_FOR_EACH_LABLE true
-#define IS_BOUND_TIGHTENING_MILP true 
+#define IS_BOUND_TIGHTENING_MILP true
 #define LAYER_INDEX_UPTO_BOUND_TIGHTEN 5
 #define TIME_LIMIT_BOUND_TIGHTNING 2.5
 #define IS_CONCURRENT_RUN true
+#define IS_INCREMENTAL_SOL true
 #define EULER_C 2.7182
 #define GRB_MIP_GAP_VAL 1e-4
 
@@ -49,6 +50,7 @@ namespace Global_vars{
     extern double given_ce_conf;
     extern bool is_soft_ce_by_user;
     extern bool is_conf_ce_by_user;
+    extern std::vector<double> sol_val_vec;
 }
 
 

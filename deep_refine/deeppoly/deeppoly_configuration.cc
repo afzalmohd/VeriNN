@@ -15,6 +15,7 @@ namespace Global_vars{
     double given_ce_conf = 0;
     bool is_soft_ce_by_user = false;
     bool is_conf_ce_by_user = false;
+    std::vector<double> sol_val_vec;
 }
 
 namespace Configuration_deeppoly{

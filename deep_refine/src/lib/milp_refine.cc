@@ -3,6 +3,9 @@
 #include "../../deeppoly/optimizer.hh"
 #include "../../deeppoly/deeppoly_configuration.hh"
 #include "milp_mark.hh"
+#include <iostream>
+#include <fstream>
+
 
 void unmark_net(Network_t* net){
     for(Layer_t* layer : net->layer_vec){
@@ -360,9 +363,24 @@ void creating_vars_milp(Network_t* net, GRBModel& model, std::vector<GRBVar>& va
 }
 
 void create_vars_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector){
+    size_t count=0;
+    if(layer->layer_index >= 0){
+        Layer_t* pred_layer = layer->pred_layer;
+        while(pred_layer->layer_index >= 0){
+            count += pred_layer->dims;
+            pred_layer = pred_layer->pred_layer;
+        }
+        if(pred_layer->layer_index == -1){
+            count += pred_layer->dims;
+        }
+    }
+
     for(auto nt: layer->neurons){
         std::string var_str = "x,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
         GRBVar x = model.addVar(-nt->lb, nt->ub, 0.0, GRB_CONTINUOUS, var_str);
+        if(IS_INCREMENTAL_SOL && Global_vars::sol_val_vec.size() > 0){
+            x.set(GRB_DoubleAttr_Start, Global_vars::sol_val_vec[count+nt->neuron_index]);
+        }
         var_vector.push_back(x);
     }
 }
@@ -782,6 +800,36 @@ double get_umax_i(Layer_t* layer, size_t i){
     return max_val;
 }
 
+void store_spurious_ce(std::vector<GRBVar>& var_vec){
+    // std::ofstream sol_file("sol_file.txt");
+    std::cout<<"Vector size............................"<<Global_vars::sol_val_vec.size()<<std::endl;
+    Global_vars::sol_val_vec.clear();
+    for(auto var : var_vec){
+        // std::cout<<var.get(GRB_StringAttr_VarName)<<"="<<var.get(GRB_DoubleAttr_X)<<std::endl;
+        // sol_file << var.get(GRB_StringAttr_VarName)+"="+std::to_string(var.get(GRB_DoubleAttr_X))+"\n";
+        Global_vars::sol_val_vec.push_back(var.get(GRB_DoubleAttr_X));
+    }
+    // std::cout<<"Number of variable: "<<var_vec.size()<<std::endl;
+}
+
+// void start_var_initializations(GRBModel& model, std::vector<double> val_vec){
+//     std::ifstream my_read_file("sol_file.txt");
+//     std::string txt_line;
+//     if(my_read_file.good()){
+//         while(getline(my_read_file, txt_line)){
+//             std::cout<<txt_line<<std::endl;
+//             std::stringstream ss(txt_line);
+//             std::string token1, token2;
+//             std::getline(ss, token1, '=');
+//             std::getline(ss, token2, '=');
+//             val_vec.push_back(std::stod(token2));
+//         }
+//     }
+//     else{
+//         std::cout<<"Solution file not available..."<<std::endl;
+//     }
+// }
+
 bool is_image_verified_softmax(Network_t* net, GRBModel& model, std::vector<GRBVar>& var_vec){
     Layer_t* out_layer = net->layer_vec.back();
     double l_max_var = -INFINITY;
@@ -846,12 +894,16 @@ bool is_image_verified_softmax(Network_t* net, GRBModel& model, std::vector<GRBV
     // std::string model_file_path = "/home/u1411251/jawwad/code/VeriNN/deep_refine";
     // model_file_path += "/model.lp";
     // model.write(model_file_path);
+
     model.optimize();
     int status = model.get(GRB_IntAttr_Status);
     std::cout<<"Optimization status: "<<status<<std::endl;
     if(status == GRB_OPTIMAL){
         // std::cout<<"Max value: "<<max_var.get(GRB_DoubleAttr_X)<<std::endl;
         update_sat_vals(net, var_vec);
+        if(IS_INCREMENTAL_SOL){
+            store_spurious_ce(var_vec);
+        }
         return false;
     }
 

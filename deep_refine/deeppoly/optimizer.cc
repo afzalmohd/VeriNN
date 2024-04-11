@@ -353,6 +353,7 @@ size_t get_gurobi_var_index(Layer_t* layer, size_t index){
     return count;
 }
 
+
 GRBModel create_env_and_model(){
     GRBEnv env = GRBEnv(true);
     env.start();
