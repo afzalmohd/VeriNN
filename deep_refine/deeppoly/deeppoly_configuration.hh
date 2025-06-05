@@ -22,7 +22,7 @@
 #define IS_LIGHT_WEIGHT_MARKED_ANALYSIS false
 #define IS_LP_CONSTRAINTS false
 #define IS_TOP_MIN_DIFF false
-#define IS_CONF_CE true
+#define IS_CONF_CE false
 #define CONFIDENCE_OF_CE 0.95
 #define IS_TARGET_CE (IS_CONF_CE && false)
 #define TARGET_CLASS 2
@@ -63,6 +63,7 @@ namespace Configuration_deeppoly{
     extern std::string vnnlib_prp_file_path;
     extern bool is_input_split;
     extern std::string bounds_path;
+    extern bool is_backprop_marking;
 
 }
 

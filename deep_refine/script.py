@@ -270,9 +270,9 @@ def get_all_tasks():
     NETWORK_FILE = []
     NETWORK_FILE = ["mnist_relu_3_50.tf","mnist_relu_3_100.tf"]
     NETWORK_FILE += ["mnist_relu_6_100.tf", "mnist_relu_5_100.tf", "mnist_relu_6_200.tf"]
-    NETWORK_FILE += ["mnist_relu_4_1024.tf"]
+    # NETWORK_FILE += ["mnist_relu_4_1024.tf"]
     NETWORK_FILE += ["mnist_relu_9_100.tf", "mnist_relu_9_200.tf"]
-    NETWORK_FILE += ["ffnnRELU__Point_6_500.tf", "ffnnRELU__PGDK_w_0.1_6_500.tf", "ffnnRELU__PGDK_w_0.3_6_500.tf"]
+    # NETWORK_FILE += ["ffnnRELU__Point_6_500.tf", "ffnnRELU__PGDK_w_0.1_6_500.tf", "ffnnRELU__PGDK_w_0.3_6_500.tf"]
 
     epsilons = [0.005,0.01,0.015,0.02,0.025,0.03,0.04,0.05]
 

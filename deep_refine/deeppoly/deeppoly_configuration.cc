@@ -27,6 +27,7 @@ namespace Configuration_deeppoly{
     std::string vnnlib_prp_file_path;
     bool is_input_split;
     std::string bounds_path;
+    bool is_backprop_marking;
 
     int init_options(int num_of_params, char* params[]){
         try{
@@ -45,6 +46,7 @@ namespace Configuration_deeppoly{
             ("vnnlib-prp-file,vnnlib", po::value<std::string>(&vnnlib_prp_file_path)->default_value(""), "vnnlib prp file path")
             ("is-input-split", po::value<bool>(&is_input_split)->default_value(false), "run with heuristic input space split")
             ("bounds-path", po::value<std::string>(&bounds_path)->default_value(""), "external bounds")
+            ("backprop-marking,bm", po::value<bool>(&is_backprop_marking)->default_value(false), "mark neuron in backprop way")
             ;
             po::store(po::parse_command_line(num_of_params, params, desc), vm);
             po::notify(vm);
@@ -125,6 +127,15 @@ namespace Configuration_deeppoly{
             }
             else{
                 std::cout<<"Is input split: False"<< std::endl;
+            }
+        }
+
+        if(vm.count("backprop-marking")){
+            if(vm["backprop-marking"].as<bool>()){
+                std::cout<<"Is backprop marking: True"<< std::endl;
+            }
+            else{
+                std::cout<<"Is backprop marking: False"<< std::endl;
             }
         }
 

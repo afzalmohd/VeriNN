@@ -58,14 +58,15 @@ bool run_refinement_cegar(Network_t* net){
         return true;
     }
 
-    // get_marked_neurons_reverse(net);
-    // return false;
-
-    GRBModel model = create_grb_env_and_model();
-    std::vector<GRBVar> var_vector;
-    create_milp_mark_milp_refine_constr(net, model, var_vector);
-
-    get_marked_neurons(model, net, var_vector);
+    if(Configuration_deeppoly::is_backprop_marking){
+        get_marked_neurons_reverse(net);
+    }
+    else{
+        GRBModel model = create_grb_env_and_model();
+        std::vector<GRBVar> var_vector;
+        create_milp_mark_milp_refine_constr(net, model, var_vector);
+        get_marked_neurons(model, net, var_vector);
+    }
     return false;
 }
 
