@@ -19,8 +19,7 @@ void unmark_net(Network_t* net){
 }
 
 void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& var_vector){
-    bool is_already_optimized = false;
-    
+    bool is_already_optimized = false;   
     size_t var_counter = 0;
     update_vars_bounds_by_prev_satval(net->input_layer, var_vector, var_counter);
     var_counter = net->input_dim;
@@ -34,6 +33,10 @@ void get_marked_neurons(GRBModel& model,  Network_t* net, std::vector<GRBVar>& v
             create_optimization_constraints_layer(layer, model, var_vector, var_counter);
             model.optimize();
             int status = model.get(GRB_IntAttr_Status);
+            if (status == GRB_INFEASIBLE){
+                bool temp = mark_neurons_with_light_analysis(net);
+                return;
+            }
             std::cout<<"Optimized status: "<<status<<std::endl;
             bool is_layer_marked = is_layer_marked_after_optimization(layer, var_vector, var_counter);
             is_already_optimized = true;
