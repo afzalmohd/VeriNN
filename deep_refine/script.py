@@ -18,7 +18,7 @@ NUM_CPU = 7
 TIMEOUT = 2000
 DATASET = "MNIST"
 NUM_IMAGES = 100
-num_cores = 1
+num_cores = 2
 tool_name = "drefine" #drefine
 
 root_dir = os.getcwd()
@@ -286,7 +286,7 @@ def get_all_tasks():
 def print_cmnds_all(num_cpu, log_dir):
     tasks = get_all_tasks()
     # tasks = get_task_from_file_random()
-    net_dir = '/home/afzal/tools/networks/tf/mnist'
+    net_dir = '/home/afzal/tools/networks_old/tf/mnist'
     random.shuffle(tasks)
 
     num_tasks = len(tasks)
