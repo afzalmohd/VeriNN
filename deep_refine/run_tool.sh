@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-num_cpu=55
+num_cpu=62
 root_dir=`pwd`
 log_dir=$root_dir/logs
 rm -rf $log_dir

@@ -20,6 +20,8 @@ DATASET = "MNIST"
 NUM_IMAGES = 100
 num_cores = 2
 tool_name = "drefine" #drefine
+is_backprop_marking = True
+
 
 root_dir = os.getcwd()
 TOOL = os.path.join(root_dir, 'drefine')
@@ -315,7 +317,7 @@ def print_cmnds_all(num_cpu, log_dir):
             log_file = net_name+"+"+str(image_index)+"+"+str(ep)
             log_file = os.path.join(log_dir, log_file)
             result_file = os.path.join(result_dir, f"file_{idx}.txt")
-            command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --result-file {result_file} >> {log_file}"
+            command = f"taskset --cpu-list {num_cores*idx}-{(num_cores*idx)+(num_cores -1)} timeout -k 2s {TIMEOUT} {TOOL} --tool {tool_name} --network {net_path} --dataset-file {dataset_file} --image-index {image_index} --epsilon {ep} --dataset {DATASET} --result-file {result_file} --bm {is_backprop_marking} >> {log_file}"
             cmds.append(command)
         file_name = os.path.join(log_dir, f"script_{idx}.sh")
         write_script_file(file_name, cmds)
