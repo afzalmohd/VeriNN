@@ -1,0 +1,7 @@
+PROJECT_DIR=/home/afzal/tools/VeriNN
+
+BIN_NAME=drefine
+
+export LD_LIBRARY_PATH=${PROJECT_DIR}/deep_refine/ex_tools/boost_1_68_0/installed/lib:${PROJECT_DIR}/deep_refine/ex_tools/gurobi912/linux64/lib:/home/afzal/anaconda3/envs/verinn/lib
+
+g++ deeppoly/*.cc src/main.cpp src/lib/*.cc k/findk.cc -I${PROJECT_DIR}/deep_refine/ex_tools/gurobi912/linux64/include -I${PROJECT_DIR}/deep_refine/ex_tools/xt-build/include -I/home/afzal/tools/VeriNN/deep_refine/ex_tools/boost_1_68_0/installed/include -L/home/afzal/tools/VeriNN/deep_refine/ex_tools/boost_1_68_0/installed/lib -L/home/afzal/tools/VeriNN/deep_refine/ex_tools/gurobi912/linux64/lib -L/home/afzal/anaconda3/envs/verinn/lib  -lblas -lboost_program_options -lpthread -lgurobi_c++ -lgurobi91 -o ${BIN_NAME}
