@@ -426,8 +426,8 @@ void remove_maxsat_constr(GRBModel& model, Layer_t* layer){
         else{
             // std::cout<<"Const name: ---------: "<<constr_name<<std::endl;
             // GRBGenConstr ind = model.getGen ("indConstr");
-            GRBConstr constr = model.getConstrByName(constr_name);
-            model.remove(constr);
+            // GRBConstr constr = model.getConstrByName(constr_name);
+            // model.remove(constr);
         }
     }
     model.update();
