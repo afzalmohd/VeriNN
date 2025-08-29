@@ -64,6 +64,7 @@ namespace Configuration_deeppoly{
     extern bool is_input_split;
     extern std::string bounds_path;
     extern bool is_backprop_marking;
+    extern bool is_modified_maxsat_encoding;
 
 }
 

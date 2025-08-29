@@ -19,25 +19,31 @@
             "program": "${workspaceFolder}/my_drefine",
             "args": [
                 "--network",
-                "${workspaceFolder}/converter/test.tf",
+                "/home/u1411251/tools/networks/tf/mnist/mnist_relu_3_50.tf",
                 "--dataset-file",
                 "${workspaceFolder}/benchmarks/dataset/mnist/mnist_test.csv",
                 "--dataset",
-                "ACASXU",
+                "MNIST",
                 "--tool",
                 "drefine",
                 "--image-index",
                 "1",
-                "--vnnlib-prp-file",
-                "/home/u1411251/Documents/Phd/tools/vnncomp2021/benchmarks/acasxu/prop_6.vnnlib"
+                "--epsilon",
+                "0.05",
+                "--is-mod-maxsat",
+                "1"
+                // "--vnnlib-prp-file",
+                // "/home/u1411251/Documents/Phd/tools/vnncomp2021/benchmarks/acasxu/prop_6.vnnlib"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [
                 {
                     "name": "LD_LIBRARY_PATH",
-                    // "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib:${workspaceFolder}/build/lapack-release/installed/lib:${workspaceFolder}/build/boost_1_78_0/installed/lib",
-                    "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib"
+                    "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib:${workspaceFolder}/build/lapack-release/installed/lib:${workspaceFolder}/build/boost_1_78_0/installed/lib",
+                    // "value": "${workspaceFolder}/build/gurobi912/linux64/lib:${workspaceFolder}/build/xt-build/lib",
+                    "name": "GRB_LICENSE_FILE",
+                    "value": "/home/u1411251/tools/grb/gurobi.lic"
                 }
             ],
             "externalConsole": false,

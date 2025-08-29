@@ -17,6 +17,6 @@ Neuron_t* get_key_of_max_val(std::map<Neuron_t*, double> & m);
 Neuron_t* get_key_of_min_val(std::map<Neuron_t*, double> & m);
 GRBModel create_grb_env_and_model();
 void get_marked_neurons_reverse(Network_t* net);
-
+void create_optimization_constraints_layer_using_indicatConstr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter);
 
 #endif

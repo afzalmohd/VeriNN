@@ -381,6 +381,9 @@ std::string get_consr_name_binary(size_t layer_idx, size_t nt_idx){
 }
 
 void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    if(!Configuration_deeppoly::is_modified_maxsat_encoding){
+        create_optimization_constraints_layer_using_indicatConstr(layer, model, var_vector, var_counter);
+    }
     auto iter = layer->res.begin();
     GRBLinExpr obj=0;
     for(size_t i=0; i<layer->dims; i++, iter++){
@@ -404,6 +407,26 @@ void create_optimization_constraints_layer(Layer_t* layer, GRBModel& model, std:
         expr2 += (1-bin_var)*range;
         model.addConstr(expr2, GRB_GREATER_EQUAL, 0, constr_name2);
         
+        obj += bin_var;
+    }
+    model.setObjective(obj, GRB_MAXIMIZE);
+}
+
+void create_optimization_constraints_layer_using_indicatConstr(Layer_t* layer, GRBModel& model, std::vector<GRBVar>& var_vector, size_t var_counter){
+    auto iter = layer->res.begin();
+    GRBLinExpr obj=0;
+    for(size_t i=0; i<layer->dims; i++, iter++){
+        std::string constr_name = get_consr_name_binary(layer->layer_index, i);
+        Neuron_t* nt = layer->neurons[i];
+        double exact_val = *iter;
+        GRBVar var = var_vector[var_counter+i];
+        
+        std::string var_str = "b,"+std::to_string(layer->layer_index)+","+std::to_string(nt->neuron_index);
+        GRBVar bin_var = model.addVar(0, 1, 0.0, GRB_BINARY, var_str);
+
+        GRBLinExpr expr = var_vector[var_counter+i] - exact_val;
+        model.addGenConstrIndicator(bin_var, 1, expr, GRB_EQUAL, 0, constr_name);
+        // std::cout<<"Constr: "<<constr_name<<std::endl;
         obj += bin_var;
     }
     model.setObjective(obj, GRB_MAXIMIZE);

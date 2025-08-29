@@ -417,11 +417,18 @@ void remove_maxsat_constr(GRBModel& model, Layer_t* layer){
         std::string constr_name = get_consr_name_binary(layer->layer_index, i);
         std::string constr_name1 = constr_name+",1";
         std::string constr_name2 = constr_name+",2";
-        
-        GRBConstr constr = model.getConstrByName(constr_name1);
-        model.remove(constr);
-        constr = model.getConstrByName(constr_name2);
-        model.remove(constr);
+        if(Configuration_deeppoly::is_modified_maxsat_encoding){
+            GRBConstr constr = model.getConstrByName(constr_name1);
+            model.remove(constr);
+            constr = model.getConstrByName(constr_name2);
+            model.remove(constr);
+        }
+        else{
+            // std::cout<<"Const name: ---------: "<<constr_name<<std::endl;
+            // GRBGenConstr ind = model.getGen ("indConstr");
+            GRBConstr constr = model.getConstrByName(constr_name);
+            model.remove(constr);
+        }
     }
     model.update();
 }
